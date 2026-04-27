@@ -41,6 +41,13 @@ import {
 } from "../compliance/review/service";
 import { compileDraftBundle } from "../compliance/bundles/compiler";
 import { publishBundle, getPublishedBundle } from "../compliance/bundles/publisher";
+import {
+  createSource,
+  createDocument,
+  createDocumentVersion,
+  findSourceByCodeOrId,
+  serialiseSource,
+} from "../compliance/sources/service";
 import { writeAuditTx } from "../services/audit";
 
 const router = Router();
@@ -157,6 +164,151 @@ router.post("/obligations/:id/transition", async (req, res) => {
   } catch (err: any) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
     if (err.message?.includes("Invalid transition")) return res.status(409).json({ error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// REGULATORY SOURCES — manual upload (no sync adapter required)
+// ═══════════════════════════════════════════════════════════════════════
+
+const createSourceSchema = z.object({
+  code: z.string().min(2).max(40),
+  name: z.string().min(1),
+  regulator: z.string().min(1),
+  jurisdiction: z.string().min(2).max(8),
+  localeScope: z.array(z.string().min(2)).default([]),
+  sourceType: z.string().min(1),
+  canonicality: z.string().min(1),
+  parserKey: z.string().optional(),
+  pollCadence: z.string().optional(),
+  active: z.boolean().optional(),
+  baseUrl: z.string().url().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+router.post("/sources", async (req, res) => {
+  try {
+    const payload = createSourceSchema.parse(req.body);
+    const row = await prisma.$transaction(async (tx) => {
+      const created = await createSource(payload, tx);
+      await writeAuditTx(tx, req, {
+        action: "compliance.source.create",
+        entityType: "RegulatorySource",
+        entityId: created.id,
+        after: serialiseSource(created),
+      });
+      return created;
+    });
+    res.status(201).json({ source: serialiseSource(row) });
+  } catch (err: any) {
+    if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
+    if (err?.code === "P2002") return res.status(409).json({ error: `Source code already exists: ${req.body?.code}` });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const createDocumentSchema = z.object({
+  externalRef: z.string().min(1).max(200),
+  title: z.string().min(1),
+  url: z.string().url().nullable().optional(),
+  language: z.string().min(2).max(10).nullable().optional(),
+  active: z.boolean().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+router.post("/sources/:codeOrId/documents", async (req, res) => {
+  try {
+    const payload = createDocumentSchema.parse(req.body);
+    const row = await prisma.$transaction(async (tx) => {
+      const source = await findSourceByCodeOrId(req.params.codeOrId, tx);
+      if (!source) throw new Error("__NOT_FOUND__");
+      const created = await createDocument({ ...payload, sourceId: source.id }, tx);
+      await writeAuditTx(tx, req, {
+        action: "compliance.document.create",
+        entityType: "SourceDocument",
+        entityId: created.id,
+        after: {
+          id: created.id,
+          sourceId: source.id,
+          sourceCode: source.code,
+          externalRef: created.externalRef,
+          title: created.title,
+          url: created.url,
+          language: created.language,
+        },
+      });
+      return created;
+    });
+    res.status(201).json({ document: row });
+  } catch (err: any) {
+    if (err?.message === "__NOT_FOUND__") return res.status(404).json({ error: "Source not found." });
+    if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
+    if (err?.code === "P2002") return res.status(409).json({ error: "A document with that externalRef already exists for this source." });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const uploadVersionSchema = z.object({
+  versionLabel: z.string().min(1).max(100),
+  parsedText: z.string().min(1).max(2_000_000),  // ≤ 2 MB of text — sized for handbook chapters, not whole legal codes
+  effectiveFrom: z.string().datetime().nullable().optional(),
+  effectiveUntil: z.string().datetime().nullable().optional(),
+});
+
+router.post("/documents/:id/versions", async (req, res) => {
+  try {
+    const documentId = Number(req.params.id);
+    if (!Number.isInteger(documentId) || documentId <= 0) {
+      return res.status(400).json({ error: "Invalid document id." });
+    }
+    const payload = uploadVersionSchema.parse(req.body);
+    const fetchedBy = `manual:${req.authUser?.id ?? "unknown"}`;
+
+    const result = await prisma.$transaction(async (tx) => {
+      const doc = await tx.sourceDocument.findUnique({ where: { id: documentId } });
+      if (!doc) throw new Error("__NOT_FOUND__");
+
+      const { version, dedup } = await createDocumentVersion({
+        documentId,
+        versionLabel: payload.versionLabel,
+        parsedText: payload.parsedText,
+        fetchedBy,
+        effectiveFrom: payload.effectiveFrom ? new Date(payload.effectiveFrom) : null,
+        effectiveUntil: payload.effectiveUntil ? new Date(payload.effectiveUntil) : null,
+      }, tx);
+
+      // Only audit on actual insert. A dedup hit means the operator re-uploaded
+      // identical text; that's a no-op, no point cluttering the audit log.
+      if (!dedup && version) {
+        await writeAuditTx(tx, req, {
+          action: "compliance.document_version.create",
+          entityType: "SourceDocumentVersion",
+          entityId: version.id,
+          after: {
+            id: version.id,
+            documentId,
+            versionLabel: version.versionLabel,
+            contentHash: version.contentHash,
+            parsedTextLength: payload.parsedText.length,
+            effectiveFrom: version.effectiveFrom,
+            effectiveUntil: version.effectiveUntil,
+          },
+          metadata: { fetchedBy },
+        });
+      }
+      return { version, dedup };
+    });
+
+    if (!result.version) return res.status(500).json({ error: "Version creation returned no row." });
+
+    // Strip rawContent / parsedText from response — caller already has them and
+    // they can be huge.
+    const { rawContent: _r, parsedText: _p, ...rest } = result.version;
+    res.status(result.dedup ? 200 : 201).json({ version: rest, dedup: result.dedup });
+  } catch (err: any) {
+    if (err?.message === "__NOT_FOUND__") return res.status(404).json({ error: "Document not found." });
+    if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
     res.status(500).json({ error: err.message });
   }
 });

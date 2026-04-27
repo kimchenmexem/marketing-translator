@@ -61,7 +61,11 @@ function SourcesPanel() {
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<any[] | null>(null);
 
-  useEffect(() => { api.listSources().then(setSources).catch(console.error); }, []);
+  const refreshSources = useCallback(async () => {
+    try { setSources(await api.listSources()); } catch (e) { console.error(e); }
+  }, []);
+
+  useEffect(() => { void refreshSources(); }, [refreshSources]);
 
   const selectSource = async (code: string) => {
     const res = await api.getSource(code);
@@ -97,11 +101,14 @@ function SourcesPanel() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {/* Add new source */}
+      <AddSourceForm onCreated={refreshSources} />
+
       {/* Source list */}
       <div className="card">
         <div className="card-header">
           <span className="card-title">Regulatory Sources</span>
-          <button className="btn btn-sm btn-secondary" onClick={() => api.triggerSync().then(setSyncResult).finally(() => api.listSources().then(setSources))} disabled={syncing}>
+          <button className="btn btn-sm btn-secondary" onClick={() => api.triggerSync().then(setSyncResult).finally(refreshSources)} disabled={syncing}>
             {syncing ? "Syncing..." : "Sync All"}
           </button>
         </div>
@@ -139,9 +146,10 @@ function SourcesPanel() {
               {syncing ? "Syncing..." : `Sync ${selected.code}`}
             </button>
           </div>
+          <AddDocumentForm sourceCode={selected.code} onCreated={() => selectSource(selected.code)} />
           <div className="card-body" style={{ padding: 0 }}>
             {docs.length === 0
-              ? <p style={{ padding: "1rem", color: "var(--text-3)", fontSize: "0.8125rem" }}>No documents yet. Run a sync or use the ManualAdapter.</p>
+              ? <p style={{ padding: "1rem", color: "var(--text-3)", fontSize: "0.8125rem" }}>No documents yet. Add one above, or run a sync.</p>
               : (
                 <table style={{ width: "100%", fontSize: "0.8125rem", borderCollapse: "collapse" }}>
                   <thead>
@@ -181,30 +189,33 @@ function SourcesPanel() {
         </div>
       )}
 
-      {/* Versions + diff */}
-      {selectedDoc && versions.length > 0 && (
+      {/* Versions + diff (only when a doc is selected) */}
+      {selectedDoc && (
         <div className="card">
           <div className="card-header"><span className="card-title">{selectedDoc.externalRef} — Versions ({versions.length})</span></div>
-          <div className="card-body" style={{ padding: 0 }}>
-            <table style={{ width: "100%", fontSize: "0.8125rem", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid var(--border)", textAlign: "left" }}>
-                  <Th>ID</Th><Th>Label</Th><Th>Hash</Th><Th>Fetched</Th><Th>By</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {versions.map(v => (
-                  <tr key={v.id} style={{ borderBottom: "1px solid var(--border)" }}>
-                    <Td>{v.id}</Td>
-                    <Td>{v.versionLabel}</Td>
-                    <Td><code style={{ fontSize: "0.6875rem" }}>{v.contentHash?.substring(0, 12)}...</code></Td>
-                    <Td>{new Date(v.fetchedAt).toLocaleDateString()}</Td>
-                    <Td>{v.fetchedBy}</Td>
+          {versions.length > 0 && (
+            <div className="card-body" style={{ padding: 0 }}>
+              <table style={{ width: "100%", fontSize: "0.8125rem", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid var(--border)", textAlign: "left" }}>
+                    <Th>ID</Th><Th>Label</Th><Th>Hash</Th><Th>Fetched</Th><Th>By</Th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {versions.map(v => (
+                    <tr key={v.id} style={{ borderBottom: "1px solid var(--border)" }}>
+                      <Td>{v.id}</Td>
+                      <Td>{v.versionLabel}</Td>
+                      <Td><code style={{ fontSize: "0.6875rem" }}>{v.contentHash?.substring(0, 12)}...</code></Td>
+                      <Td>{new Date(v.fetchedAt).toLocaleDateString()}</Td>
+                      <Td>{v.fetchedBy}</Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <UploadVersionForm documentId={selectedDoc.id} onCreated={() => selectDoc(selectedDoc)} />
           {diff && diff.hasChanges && (
             <div className="card-body" style={{ borderTop: "1px solid var(--border)" }}>
               <div style={{ fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.5rem" }}>
@@ -505,6 +516,224 @@ function BundlesPanel() {
 // ═══════════════════════════════════════════════════════════════════════
 // SHARED SMALL COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════
+
+// ─── Admin upload forms (Step 8.x: source + document + version) ──────
+
+function MiniField({
+  label,
+  v,
+  on,
+  required,
+  type = "text",
+  placeholder,
+}: {
+  label: string;
+  v: string;
+  on: (val: string) => void;
+  required?: boolean;
+  type?: string;
+  placeholder?: string;
+}) {
+  return (
+    <label style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+      <span style={{ color: "var(--text-3)", fontSize: "0.7rem" }}>
+        {label}{required ? " *" : ""}
+      </span>
+      <input
+        type={type}
+        value={v}
+        placeholder={placeholder}
+        onChange={(e) => on(e.target.value)}
+        required={required}
+        style={{ padding: "0.3rem 0.4rem", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: "0.8125rem" }}
+      />
+    </label>
+  );
+}
+
+function ErrorLine({ msg }: { msg: string | null }) {
+  if (!msg) return null;
+  return <div style={{ gridColumn: "1 / -1", color: "var(--danger, #c00)", fontSize: "0.75rem" }}>{msg}</div>;
+}
+
+function readError(e: any): string {
+  const data = e?.response?.data?.error;
+  if (typeof data === "string") return data;
+  if (Array.isArray(data)) return data.map((d: any) => d.message ?? JSON.stringify(d)).join("; ");
+  return e?.message ?? "Request failed.";
+}
+
+function AddSourceForm({ onCreated }: { onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const initial = {
+    code: "", name: "", regulator: "",
+    jurisdiction: "EU",
+    localeScope: "",
+    sourceType: "REGULATION",
+    canonicality: "PRIMARY",
+    baseUrl: "", notes: "",
+  };
+  const [f, setF] = useState(initial);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true); setErr(null);
+    try {
+      await api.createSource({
+        code: f.code, name: f.name, regulator: f.regulator,
+        jurisdiction: f.jurisdiction,
+        localeScope: f.localeScope.split(",").map(s => s.trim()).filter(Boolean),
+        sourceType: f.sourceType, canonicality: f.canonicality,
+        baseUrl: f.baseUrl.trim() ? f.baseUrl.trim() : null,
+        notes: f.notes.trim() ? f.notes.trim() : null,
+      });
+      onCreated();
+      setOpen(false);
+      setF(initial);
+    } catch (e: any) { setErr(readError(e)); } finally { setBusy(false); }
+  }
+
+  if (!open) {
+    return (
+      <button className="btn btn-sm btn-secondary" onClick={() => setOpen(true)} style={{ alignSelf: "flex-start" }}>
+        + Add source
+      </button>
+    );
+  }
+  return (
+    <form className="card" onSubmit={submit}>
+      <div className="card-header">
+        <span className="card-title">New regulatory source</span>
+        <button type="button" className="btn btn-sm btn-ghost" onClick={() => setOpen(false)}>×</button>
+      </div>
+      <div className="card-body" style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: "1fr 1fr" }}>
+        <MiniField label="Code (uppercase, unique)" required v={f.code} on={(v) => setF({ ...f, code: v.toUpperCase() })} placeholder="e.g. FCA" />
+        <MiniField label="Display name" required v={f.name} on={(v) => setF({ ...f, name: v })} placeholder="Financial Conduct Authority" />
+        <MiniField label="Regulator" required v={f.regulator} on={(v) => setF({ ...f, regulator: v })} />
+        <MiniField label="Jurisdiction (EU | IT | FR | NL | BE | ES | GB | CY)" required v={f.jurisdiction} on={(v) => setF({ ...f, jurisdiction: v.toUpperCase() })} />
+        <MiniField label="Locale scope (comma-separated, e.g. en-GB,it-IT)" v={f.localeScope} on={(v) => setF({ ...f, localeScope: v })} />
+        <MiniField label="Source type" required v={f.sourceType} on={(v) => setF({ ...f, sourceType: v })} placeholder="REGULATION | DIRECTIVE | GUIDANCE" />
+        <MiniField label="Canonicality" required v={f.canonicality} on={(v) => setF({ ...f, canonicality: v.toUpperCase() })} placeholder="PRIMARY | SECONDARY | ADVISORY" />
+        <MiniField label="Base URL" v={f.baseUrl} on={(v) => setF({ ...f, baseUrl: v })} placeholder="https://…" />
+        <div style={{ gridColumn: "1 / -1" }}>
+          <MiniField label="Notes" v={f.notes} on={(v) => setF({ ...f, notes: v })} />
+        </div>
+        <ErrorLine msg={err} />
+        <div style={{ gridColumn: "1 / -1", display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+          <button type="button" className="btn btn-sm btn-ghost" onClick={() => setOpen(false)} disabled={busy}>Cancel</button>
+          <button type="submit" className="btn btn-sm btn-primary" disabled={busy}>{busy ? "Creating…" : "Create"}</button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function AddDocumentForm({ sourceCode, onCreated }: { sourceCode: string; onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const initial = { externalRef: "", title: "", url: "", language: "", notes: "" };
+  const [f, setF] = useState(initial);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true); setErr(null);
+    try {
+      await api.createDocument(sourceCode, {
+        externalRef: f.externalRef,
+        title: f.title,
+        url: f.url.trim() ? f.url.trim() : null,
+        language: f.language.trim() ? f.language.trim() : null,
+        notes: f.notes.trim() ? f.notes.trim() : null,
+      });
+      onCreated();
+      setOpen(false);
+      setF(initial);
+    } catch (e: any) { setErr(readError(e)); } finally { setBusy(false); }
+  }
+
+  if (!open) {
+    return (
+      <div style={{ padding: "0.5rem 1rem" }}>
+        <button className="btn btn-sm btn-secondary" onClick={() => setOpen(true)}>+ Add document</button>
+      </div>
+    );
+  }
+  return (
+    <form onSubmit={submit} style={{ padding: "0.75rem 1rem", borderTop: "1px solid var(--border)", display: "grid", gap: "0.5rem", gridTemplateColumns: "1fr 1fr" }}>
+      <MiniField label="External ref (unique within source)" required v={f.externalRef} on={(v) => setF({ ...f, externalRef: v })} placeholder='e.g. "COBS 4.2"' />
+      <MiniField label="Title" required v={f.title} on={(v) => setF({ ...f, title: v })} />
+      <MiniField label="URL" v={f.url} on={(v) => setF({ ...f, url: v })} placeholder="https://…" />
+      <MiniField label="Language (ISO)" v={f.language} on={(v) => setF({ ...f, language: v })} placeholder="en, it, fr, …" />
+      <div style={{ gridColumn: "1 / -1" }}>
+        <MiniField label="Notes" v={f.notes} on={(v) => setF({ ...f, notes: v })} />
+      </div>
+      <ErrorLine msg={err} />
+      <div style={{ gridColumn: "1 / -1", display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+        <button type="button" className="btn btn-sm btn-ghost" onClick={() => setOpen(false)} disabled={busy}>Cancel</button>
+        <button type="submit" className="btn btn-sm btn-primary" disabled={busy}>{busy ? "Adding…" : "Add document"}</button>
+      </div>
+    </form>
+  );
+}
+
+function UploadVersionForm({ documentId, onCreated }: { documentId: number; onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const initial = { versionLabel: "", parsedText: "" };
+  const [f, setF] = useState(initial);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true); setErr(null); setInfo(null);
+    try {
+      const res = await api.uploadDocumentVersion(documentId, {
+        versionLabel: f.versionLabel,
+        parsedText: f.parsedText,
+      });
+      setInfo(res.dedup
+        ? `Identical content already exists (version #${res.version.id}). No new version created.`
+        : `Created version #${res.version.id}.`);
+      onCreated();
+      setF(initial);
+    } catch (e: any) { setErr(readError(e)); } finally { setBusy(false); }
+  }
+
+  if (!open) {
+    return (
+      <div style={{ padding: "0.5rem 1rem", borderTop: "1px solid var(--border)" }}>
+        <button className="btn btn-sm btn-secondary" onClick={() => setOpen(true)}>+ Upload new version</button>
+        {info && <span style={{ marginLeft: "0.75rem", color: "var(--text-3)", fontSize: "0.75rem" }}>{info}</span>}
+      </div>
+    );
+  }
+  return (
+    <form onSubmit={submit} style={{ padding: "0.75rem 1rem", borderTop: "1px solid var(--border)", display: "grid", gap: "0.5rem" }}>
+      <MiniField label="Version label" required v={f.versionLabel} on={(v) => setF({ ...f, versionLabel: v })} placeholder='e.g. "2026-04-27" or "v1.2"' />
+      <label style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+        <span style={{ color: "var(--text-3)", fontSize: "0.7rem" }}>Document text (paste regulatory text here) *</span>
+        <textarea
+          value={f.parsedText}
+          onChange={(e) => setF({ ...f, parsedText: e.target.value })}
+          required
+          rows={10}
+          style={{ padding: "0.4rem", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: "0.8125rem", fontFamily: "monospace", resize: "vertical" }}
+        />
+        <span style={{ color: "var(--text-3)", fontSize: "0.7rem" }}>{f.parsedText.length} chars</span>
+      </label>
+      <ErrorLine msg={err} />
+      {info && <div style={{ color: "var(--text-3)", fontSize: "0.75rem" }}>{info}</div>}
+      <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+        <button type="button" className="btn btn-sm btn-ghost" onClick={() => { setOpen(false); setInfo(null); }} disabled={busy}>Close</button>
+        <button type="submit" className="btn btn-sm btn-primary" disabled={busy || f.parsedText.trim().length === 0}>{busy ? "Uploading…" : "Upload version"}</button>
+      </div>
+    </form>
+  );
+}
 
 function Th({ children }: { children: React.ReactNode }) {
   return <th style={{ padding: "0.5rem 0.75rem", fontWeight: 600, fontSize: "0.75rem", color: "var(--text-3)" }}>{children}</th>;

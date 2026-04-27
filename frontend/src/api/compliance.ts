@@ -33,6 +33,60 @@ export async function getSource(codeOrId: string) {
   return data as { source: any; documents: any[] };
 }
 
+// ─── Admin: source / document / version upload ────────────────────────
+
+export type CreateSourcePayload = {
+  code: string;
+  name: string;
+  regulator: string;
+  jurisdiction: string;
+  localeScope: string[];
+  sourceType: string;
+  canonicality: string;
+  parserKey?: string;
+  pollCadence?: string;
+  active?: boolean;
+  baseUrl?: string | null;
+  notes?: string | null;
+};
+
+export async function createSource(payload: CreateSourcePayload) {
+  const { data } = await api.post("/api/compliance/admin/sources", payload);
+  return data.source as any;
+}
+
+export type CreateDocumentPayload = {
+  externalRef: string;
+  title: string;
+  url?: string | null;
+  language?: string | null;
+  active?: boolean;
+  notes?: string | null;
+};
+
+export async function createDocument(sourceCodeOrId: string, payload: CreateDocumentPayload) {
+  const { data } = await api.post(
+    `/api/compliance/admin/sources/${encodeURIComponent(sourceCodeOrId)}/documents`,
+    payload
+  );
+  return data.document as any;
+}
+
+export type UploadVersionPayload = {
+  versionLabel: string;
+  parsedText: string;
+  effectiveFrom?: string | null;
+  effectiveUntil?: string | null;
+};
+
+export async function uploadDocumentVersion(documentId: number, payload: UploadVersionPayload) {
+  const { data } = await api.post(
+    `/api/compliance/admin/documents/${documentId}/versions`,
+    payload
+  );
+  return data as { version: any; dedup: boolean };
+}
+
 // ─── Documents & versions ───────────────────────────────────────────
 
 export async function listDocuments(sourceId?: number) {
