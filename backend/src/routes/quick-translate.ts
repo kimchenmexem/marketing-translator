@@ -11,6 +11,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { translateToLocale } from "../services/ai";
 import { requireAuth } from "../middleware/auth";
+import { mapTranslateError } from "../services/translateErrors";
 
 const router = Router();
 
@@ -59,7 +60,8 @@ router.post("/", requireAuth, async (req, res) => {
   } catch (err: any) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
     console.error("POST /api/translate/quick failed:", err);
-    res.status(500).json({ error: "Translation failed." });
+    const mapped = mapTranslateError(err, "Translation failed.");
+    res.status(mapped.status).json(mapped.body);
   }
 });
 

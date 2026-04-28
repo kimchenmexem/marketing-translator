@@ -9,6 +9,7 @@ import { asyncHandler } from "../middleware/asyncHandler";
 import { requireAuth } from "../middleware/auth";
 import { canReadAllJobs, ownerScope } from "../services/access";
 import { writeAudit } from "../services/audit";
+import { mapTranslateError } from "../services/translateErrors";
 
 const router = Router();
 
@@ -172,8 +173,9 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
-    console.error(error);
-    res.status(500).json({ error: "Unable to process translation request." });
+    console.error("POST /api/translate failed:", error);
+    const mapped = mapTranslateError(error, "Unable to process translation request.");
+    res.status(mapped.status).json(mapped.body);
   }
 }));
 

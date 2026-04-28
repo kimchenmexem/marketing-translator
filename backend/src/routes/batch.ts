@@ -7,6 +7,7 @@ import { buildGlossaryPrompt } from "../services/glossary";
 import { extractTranslation, EmptyTranslationError, lazyOpenAI } from "../services/openaiHelpers";
 import { asyncHandler } from "../middleware/asyncHandler";
 import { requireAuth } from "../middleware/auth";
+import { mapTranslateError } from "../services/translateErrors";
 
 const router = Router();
 const openai = lazyOpenAI(60_000);
@@ -162,7 +163,8 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
       return res.status(400).json({ error: error.errors });
     }
     console.error("POST /api/batch failed:", error);
-    res.status(500).json({ error: "Batch translation failed." });
+    const mapped = mapTranslateError(error, "Batch translation failed.");
+    res.status(mapped.status).json(mapped.body);
   }
 }));
 
@@ -286,7 +288,8 @@ router.post("/alternatives", requireAuth, asyncHandler(async (req, res) => {
       return res.status(400).json({ error: error.errors });
     }
     console.error("POST /api/batch/alternatives failed:", error);
-    res.status(500).json({ error: "Failed to generate alternatives." });
+    const mapped = mapTranslateError(error, "Failed to generate alternatives.");
+    res.status(mapped.status).json(mapped.body);
   }
 }));
 
