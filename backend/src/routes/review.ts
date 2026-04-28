@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db";
-import { requireAuth, requireRole } from "../middleware/auth";
+import { requireAuth } from "../middleware/auth";
 import { canReadAllReviews, canReadAllJobs, ownerScope } from "../services/access";
 import { writeAudit } from "../services/audit";
 import { upsertActiveForbiddenPhrase } from "../compliance/forbidden/service";
@@ -36,8 +36,19 @@ const reviewSchema = z.object({
   forbiddenPhrases: z.array(z.string().min(1).max(500)).max(50).optional().default([]),
 });
 
-// Create a review for an output — REVIEWER+ only.
-router.post("/:outputId", requireRole("REVIEWER", "MANAGER", "ADMIN"), async (req, res) => {
+// Create a review for an output. Open to any authenticated user, with
+// these rules:
+//   • USER role: can only review their OWN translations (must own the parent
+//     job). 404 indistinguishably if not — same no-info-leak policy as the
+//     existing GET routes.
+//   • REVIEWER / MANAGER / ADMIN: can review any output.
+//   • The `forbiddenPhrases` field — which seeds the global ForbiddenPhrase
+//     compliance list and therefore affects EVERYONE's future translations —
+//     is only honoured for REVIEWER+. A USER who includes it gets their
+//     decision / note / issueCodes / correctedTranslation stored as normal,
+//     but no global write happens. This stops a regular user from poisoning
+//     the prompt for the whole organisation.
+router.post("/:outputId", requireAuth, async (req, res) => {
   const outputId = Number(req.params.outputId);
   if (Number.isNaN(outputId)) {
     return res.status(400).json({ error: "Invalid output id." });
@@ -45,17 +56,28 @@ router.post("/:outputId", requireRole("REVIEWER", "MANAGER", "ADMIN"), async (re
 
   try {
     const payload = reviewSchema.parse(req.body);
+    const authUser = req.authUser!;
 
     const output = await prisma.translationOutput.findUnique({
       where: { id: outputId },
-      include: { job: { select: { targetLocale: true } } },
+      include: { job: { select: { createdByUserId: true, targetLocale: true } } },
     });
     if (!output) {
       return res.status(404).json({ error: "Output not found." });
     }
+
+    // Ownership gate for plain USER. canReadAllJobs() returns false for USER
+    // and true for REVIEWER+ — same predicate the GET ownership scope uses.
+    if (!canReadAllJobs(authUser.role) && output.job.createdByUserId !== authUser.id) {
+      return res.status(404).json({ error: "Output not found." });
+    }
+
+    // forbiddenPhrases stays REVIEWER+ only. We silently drop it for plain
+    // USERs (they can still submit decision/note/correctedTranslation).
+    const allowedToSeedGlobalBans = canReadAllReviews(authUser.role);
+    const honouredForbiddenPhrases = allowedToSeedGlobalBans ? payload.forbiddenPhrases : [];
     const targetLocale = output.job.targetLocale;
 
-    const authUser = req.authUser!;
     const review = await prisma.$transaction(async (tx) => {
       // Create the review record — reviewerUserId is the authoritative actor
       // identity; the legacy free-form `reviewerId` is kept for backward compat.
@@ -110,11 +132,11 @@ router.post("/:outputId", requireRole("REVIEWER", "MANAGER", "ADMIN"), async (re
         },
       });
 
-      // Reviewer-flagged compliance phrases. Each becomes a ForbiddenPhrase
-      // row scoped to the output's targetLocale, idempotent — duplicate
-      // submissions reactivate. The runtime translation prompt builders
-      // pick these up automatically on the next translate call.
-      for (const raw of payload.forbiddenPhrases) {
+      // Reviewer-flagged compliance phrases — REVIEWER+ only. Plain USERs
+      // can still submit a decision/note/correctedTranslation, but we don't
+      // let them seed the global ForbiddenPhrase table from their review,
+      // because that affects every other user's future translations.
+      for (const raw of honouredForbiddenPhrases) {
         const phrase = raw.trim();
         if (!phrase) continue;
         await upsertActiveForbiddenPhrase({
@@ -144,7 +166,11 @@ router.post("/:outputId", requireRole("REVIEWER", "MANAGER", "ADMIN"), async (re
         note: payload.note ?? null,
         correctedTranslationLength: payload.correctedTranslation?.length ?? 0,
         reviewerUserId: authUser.id,
-        forbiddenPhrasesAdded: payload.forbiddenPhrases.length,
+        // Distinguish between "reviewer requested" and "actually applied" so
+        // the audit row shows when a USER's forbiddenPhrases got dropped.
+        forbiddenPhrasesRequested: payload.forbiddenPhrases.length,
+        forbiddenPhrasesApplied: honouredForbiddenPhrases.length,
+        actorRole: authUser.role,
       },
     });
 
