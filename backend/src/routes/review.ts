@@ -4,6 +4,7 @@ import { prisma } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { canReadAllReviews, canReadAllJobs, ownerScope } from "../services/access";
 import { writeAudit } from "../services/audit";
+import { upsertActiveForbiddenPhrase } from "../compliance/forbidden/service";
 
 const router = Router();
 
@@ -26,6 +27,13 @@ const reviewSchema = z.object({
     .default([]),
   correctedTranslation: z.string().optional(),
   reviewerId: z.string().optional(),
+  /**
+   * Phrases the reviewer wants the AI to never produce again for the
+   * output's target locale. Each becomes a ForbiddenPhrase row, scoped to
+   * the locale, with `triggeringReviewId` pointing at this review for
+   * provenance. Idempotent — duplicate submissions reactivate (not error).
+   */
+  forbiddenPhrases: z.array(z.string().min(1).max(500)).max(50).optional().default([]),
 });
 
 // Create a review for an output — REVIEWER+ only.
@@ -38,10 +46,14 @@ router.post("/:outputId", requireRole("REVIEWER", "MANAGER", "ADMIN"), async (re
   try {
     const payload = reviewSchema.parse(req.body);
 
-    const output = await prisma.translationOutput.findUnique({ where: { id: outputId } });
+    const output = await prisma.translationOutput.findUnique({
+      where: { id: outputId },
+      include: { job: { select: { targetLocale: true } } },
+    });
     if (!output) {
       return res.status(404).json({ error: "Output not found." });
     }
+    const targetLocale = output.job.targetLocale;
 
     const authUser = req.authUser!;
     const review = await prisma.$transaction(async (tx) => {
@@ -98,6 +110,22 @@ router.post("/:outputId", requireRole("REVIEWER", "MANAGER", "ADMIN"), async (re
         },
       });
 
+      // Reviewer-flagged compliance phrases. Each becomes a ForbiddenPhrase
+      // row scoped to the output's targetLocale, idempotent — duplicate
+      // submissions reactivate. The runtime translation prompt builders
+      // pick these up automatically on the next translate call.
+      for (const raw of payload.forbiddenPhrases) {
+        const phrase = raw.trim();
+        if (!phrase) continue;
+        await upsertActiveForbiddenPhrase({
+          phrase,
+          localeCode: targetLocale,
+          reason: payload.note ?? "reviewer-flagged via review submission",
+          addedByUserId: authUser.id,
+          triggeringReviewId: created.id,
+        }, tx);
+      }
+
       return created;
     });
 
@@ -116,6 +144,7 @@ router.post("/:outputId", requireRole("REVIEWER", "MANAGER", "ADMIN"), async (re
         note: payload.note ?? null,
         correctedTranslationLength: payload.correctedTranslation?.length ?? 0,
         reviewerUserId: authUser.id,
+        forbiddenPhrasesAdded: payload.forbiddenPhrases.length,
       },
     });
 

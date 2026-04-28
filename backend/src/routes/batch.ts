@@ -8,6 +8,10 @@ import { extractTranslation, EmptyTranslationError, lazyOpenAI } from "../servic
 import { asyncHandler } from "../middleware/asyncHandler";
 import { requireAuth } from "../middleware/auth";
 import { mapTranslateError } from "../services/translateErrors";
+import {
+  listActiveForbiddenPhrasesForLocale,
+  formatForbiddenPhrasesBlock,
+} from "../compliance/forbidden/service";
 
 const router = Router();
 const openai = lazyOpenAI(60_000);
@@ -34,7 +38,7 @@ const LOCALE_LANGUAGE: Record<string, string> = {
   "nl-BE": "Dutch (Belgium)", "fr-BE": "French (Belgium)", "es-ES": "Spanish", "en-GB": "English (UK)",
 };
 
-function buildSystemPrompt(locale: string, maxChars?: number, formatContext?: string, bundle?: LoadedBundle | null, glossaryBlock?: string): string {
+function buildSystemPrompt(locale: string, maxChars?: number, formatContext?: string, bundle?: LoadedBundle | null, glossaryBlock?: string, forbiddenBlock?: string): string {
   const language = LOCALE_LANGUAGE[locale] || locale;
   const limitInstruction = maxChars
     ? `\nCHARACTER LIMIT: The result MUST be ${maxChars} characters or fewer. Condense as needed while preserving the core meaning and marketing impact.`
@@ -58,7 +62,7 @@ TRANSLATION PRINCIPLES:
 - Preserve brand names (MEXEM, WisdomTree, etc.) and asterisks (*) exactly as written.
 - Do not add, remove, or invent information.
 - Use factual, professional language. Never imply guaranteed returns, capital safety, or urgency.
-- Output only the translated text, nothing else.${formatInstruction}${limitInstruction}${bannedInstruction}${glossaryBlock ?? ""}`;
+- Output only the translated text, nothing else.${formatInstruction}${limitInstruction}${bannedInstruction}${forbiddenBlock ?? ""}${glossaryBlock ?? ""}`;
 }
 
 const batchRequestSchema = z.object({
@@ -97,7 +101,9 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
               try {
                 const bundle = bundlesByLocale.get(locale) ?? null;
                 const glossaryBlock = await buildGlossaryPrompt(text, locale);
-                const systemPrompt = buildSystemPrompt(locale, payload.maxChars, payload.formatContext, bundle, glossaryBlock);
+                const forbiddenPhrases = await listActiveForbiddenPhrasesForLocale(locale);
+                const forbiddenBlock = formatForbiddenPhrasesBlock(forbiddenPhrases);
+                const systemPrompt = buildSystemPrompt(locale, payload.maxChars, payload.formatContext, bundle, glossaryBlock, forbiddenBlock);
                 let translated = await translate(text, systemPrompt);
 
                 // If still over limit after translation, shorten it

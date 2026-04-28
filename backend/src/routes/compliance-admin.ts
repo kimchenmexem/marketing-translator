@@ -48,6 +48,11 @@ import {
   findSourceByCodeOrId,
   serialiseSource,
 } from "../compliance/sources/service";
+import {
+  addForbiddenPhrase,
+  deactivateForbiddenPhrase,
+  listForbiddenPhrases,
+} from "../compliance/forbidden/service";
 import { writeAuditTx } from "../services/audit";
 
 const router = Router();
@@ -164,6 +169,87 @@ router.post("/obligations/:id/transition", async (req, res) => {
   } catch (err: any) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
     if (err.message?.includes("Invalid transition")) return res.status(409).json({ error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// FORBIDDEN PHRASES — compliance-driven banned phrases the AI must avoid
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Used by the runtime translation prompt builders (services/ai.ts and
+// routes/batch.ts). Reviewers can also seed this table via the review
+// endpoint when rejecting a translation; see routes/review.ts.
+
+router.get("/forbidden-phrases", async (req, res) => {
+  try {
+    const localeCode = typeof req.query.locale === "string" ? req.query.locale : undefined;
+    const activeOnly = req.query.activeOnly === "true";
+    const rows = await listForbiddenPhrases({ localeCode, activeOnly });
+    res.json({ phrases: rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const addForbiddenSchema = z.object({
+  phrase: z.string().min(1).max(500),
+  localeCode: z.string().max(10).default(""),
+  reason: z.string().max(500).nullable().optional(),
+});
+
+router.post("/forbidden-phrases", async (req, res) => {
+  try {
+    const payload = addForbiddenSchema.parse(req.body);
+    const row = await prisma.$transaction(async (tx) => {
+      const created = await addForbiddenPhrase({
+        phrase: payload.phrase,
+        localeCode: payload.localeCode,
+        reason: payload.reason ?? null,
+        addedByUserId: req.authUser!.id,
+      }, tx);
+      await writeAuditTx(tx, req, {
+        action: "compliance.forbidden_phrase.add",
+        entityType: "ForbiddenPhrase",
+        entityId: created.id,
+        after: {
+          id: created.id,
+          phrase: created.phrase,
+          localeCode: created.localeCode,
+          reason: created.reason,
+          active: created.active,
+        },
+      });
+      return created;
+    });
+    res.status(201).json({ phrase: row });
+  } catch (err: any) {
+    if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
+    if (err?.code === "P2002") return res.status(409).json({ error: "This phrase is already on the list for that locale." });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete("/forbidden-phrases/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid id." });
+    const row = await prisma.$transaction(async (tx) => {
+      const before = await tx.forbiddenPhrase.findUnique({ where: { id } });
+      if (!before) throw new Error("__NOT_FOUND__");
+      const updated = await deactivateForbiddenPhrase(id, tx);
+      await writeAuditTx(tx, req, {
+        action: "compliance.forbidden_phrase.deactivate",
+        entityType: "ForbiddenPhrase",
+        entityId: id,
+        before: { active: before.active, phrase: before.phrase, localeCode: before.localeCode },
+        after: { active: updated.active },
+      });
+      return updated;
+    });
+    res.json({ phrase: row });
+  } catch (err: any) {
+    if (err?.message === "__NOT_FOUND__") return res.status(404).json({ error: "Not found." });
     res.status(500).json({ error: err.message });
   }
 });

@@ -10,6 +10,10 @@ import { retrieveTranslationMemory, formatMemoryPrompt } from "./translationMemo
 import { runQualityGate, QualityGateResult } from "./qualityGate";
 import { buildGlossaryPrompt } from "./glossary";
 import { extractTranslation, lazyOpenAI } from "./openaiHelpers";
+import {
+  listActiveForbiddenPhrasesForLocale,
+  formatForbiddenPhrasesBlock,
+} from "../compliance/forbidden/service";
 
 const openai = lazyOpenAI(60_000);
 
@@ -182,6 +186,8 @@ export async function translateToLocale(text: string, locale: string): Promise<s
   const language = getLocaleLanguage(locale);
   const styleGuide = getLocaleStyleGuide(locale);
   const glossaryBlock = await buildGlossaryPrompt(text, locale);
+  const forbiddenPhrases = await listActiveForbiddenPhrasesForLocale(locale);
+  const forbiddenBlock = formatForbiddenPhrasesBlock(forbiddenPhrases);
   const response = await openai.chat.completions.create({
     model: TRANSLATION_MODEL,
     messages: [
@@ -198,7 +204,7 @@ TRANSLATION PRINCIPLES:
 - Preserve all brand names (MEXEM, WisdomTree, etc.) exactly as written.
 - Preserve all risk warnings and disclaimers — translate them accurately.
 - Do not add, remove, or invent information. The meaning must remain faithful.
-${styleGuide ? `\n${styleGuide}\n` : ""}${glossaryBlock}
+${styleGuide ? `\n${styleGuide}\n` : ""}${glossaryBlock}${forbiddenBlock}
 Output only the translated text, nothing else.`
       },
       { role: "user", content: text }
@@ -252,6 +258,10 @@ export async function runTranslationJob(request: TranslationRequest): Promise<Tr
   const memoryPrompt = formatMemoryPrompt(memoryExamples);
   const marketContextPrompt = buildMarketContextPrompt(marketContext);
 
+  // Reviewer-flagged compliance phrases (DB-driven, accumulates over time).
+  const reviewerFlaggedPhrases = await listActiveForbiddenPhrasesForLocale(request.targetLocale);
+  const reviewerFlaggedBlock = formatForbiddenPhrasesBlock(reviewerFlaggedPhrases);
+
   // Prefer bundle banned phrases over hardcoded list when a bundle is published
   const complianceForbidden = bundle?.content.bannedPhrases.length
     ? bundle.content.bannedPhrases
@@ -284,7 +294,7 @@ LOCALE RULES: ${localeRules}
 CONTENT TYPE: ${request.textType}
 ${requiredTermsInstruction}
 ${forbiddenTerms}
-${complianceForbiddenInstruction}
+${complianceForbiddenInstruction}${reviewerFlaggedBlock}
 ${campaignCtx}
 ${complianceNotes}
 ${glossaryPrompt}

@@ -33,6 +33,7 @@ model User {
   memoryEntries     TranslationMemoryEntry[]
   auditLogs         AuditLog[]
   outputVersions    TranslationOutputVersion[]
+  forbiddenPhrases  ForbiddenPhrase[]
 
   @@index([role])
   @@index([isActive])
@@ -154,9 +155,44 @@ model TranslationReview {
   reviewerUserId        Int?
   reviewer              User?    @relation(fields: [reviewerUserId], references: [id], onDelete: SetNull)
   triggeredVersions     TranslationOutputVersion[]
+  triggeredForbiddenPhrases ForbiddenPhrase[]
   createdAt             DateTime @default(now())
 
   @@index([reviewerUserId])
+}
+
+/// Compliance-driven banned phrases that the translation pipeline must
+/// never emit. Populated by:
+///   1. Admin/manager directly via the Compliance Admin → Forbidden Phrases UI.
+///   2. Reviewers via POST /api/review/:outputId when rejecting a translation
+///      with a `forbiddenPhrases: string[]` array — those rows get
+///      `triggeringReviewId` set so we can show provenance ("added because
+///      review #42 rejected output #123 with this phrase").
+///
+/// Soft-deactivated rather than hard-deleted: the row stays so audit history
+/// keeps making sense, but `active=false` means the prompt builders skip it.
+model ForbiddenPhrase {
+  id                Int      @id @default(autoincrement())
+  /// The literal phrase that must never appear in translated text.
+  /// Matched case-insensitively at runtime in the prompt builder; we store
+  /// it as the operator typed it for human readability.
+  phrase            String
+  /// Target locale this applies to. Empty string = "all locales".
+  /// Stored as TEXT (not the Locale enum) so we can use "" as a wildcard
+  /// without polluting the Locale model.
+  localeCode        String
+  reason            String?
+  active            Boolean  @default(true)
+  addedByUserId     Int?
+  addedBy           User?    @relation(fields: [addedByUserId], references: [id], onDelete: SetNull)
+  triggeringReviewId Int?
+  triggeringReview  TranslationReview? @relation(fields: [triggeringReviewId], references: [id], onDelete: SetNull)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([localeCode, phrase])
+  @@index([localeCode, active])
+  @@index([addedByUserId])
 }
 
 /// Durable per-state snapshot of a TranslationOutput over its lifetime.

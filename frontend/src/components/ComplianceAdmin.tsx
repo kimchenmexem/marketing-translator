@@ -12,13 +12,14 @@
 import { useState, useEffect, useCallback } from "react";
 import * as api from "../api/compliance";
 
-type SubTab = "sources" | "obligations" | "review" | "bundles";
+type SubTab = "sources" | "obligations" | "review" | "bundles" | "forbidden";
 
 const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: "sources", label: "Sources" },
   { id: "obligations", label: "Obligations" },
   { id: "review", label: "Review Queue" },
   { id: "bundles", label: "Bundles" },
+  { id: "forbidden", label: "Forbidden Phrases" },
 ];
 
 export default function ComplianceAdmin() {
@@ -43,6 +44,139 @@ export default function ComplianceAdmin() {
       {tab === "obligations" && <ObligationsPanel />}
       {tab === "review" && <ReviewPanel />}
       {tab === "bundles" && <BundlesPanel />}
+      {tab === "forbidden" && <ForbiddenPhrasesPanel />}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// FORBIDDEN PHRASES — compliance-driven banned words/phrases
+// ═══════════════════════════════════════════════════════════════════════
+
+function ForbiddenPhrasesPanel() {
+  const [rows, setRows] = useState<api.ForbiddenPhraseRow[]>([]);
+  const [activeOnly, setActiveOnly] = useState(true);
+  const [localeFilter, setLocaleFilter] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  // Add form state
+  const [addPhrase, setAddPhrase] = useState("");
+  const [addLocale, setAddLocale] = useState("");
+  const [addReason, setAddReason] = useState("");
+
+  const refresh = useCallback(async () => {
+    try {
+      setRows(await api.listForbiddenPhrases({
+        locale: localeFilter.trim() || undefined,
+        activeOnly,
+      }));
+    } catch (e: any) {
+      setErr(readError(e));
+    }
+  }, [activeOnly, localeFilter]);
+
+  useEffect(() => { void refresh(); }, [refresh]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true); setErr(null);
+    try {
+      await api.addForbiddenPhrase({
+        phrase: addPhrase,
+        localeCode: addLocale.trim(),  // empty = all locales
+        reason: addReason.trim() || null,
+      });
+      setAddPhrase(""); setAddReason("");
+      await refresh();
+    } catch (e: any) { setErr(readError(e)); } finally { setBusy(false); }
+  }
+
+  async function deactivate(id: number) {
+    setErr(null);
+    try {
+      await api.deactivateForbiddenPhrase(id);
+      await refresh();
+    } catch (e: any) { setErr(readError(e)); }
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {/* Add form */}
+      <form className="card" onSubmit={submit}>
+        <div className="card-header"><span className="card-title">Add forbidden phrase</span></div>
+        <div className="card-body" style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: "2fr 1fr 2fr auto" }}>
+          <MiniField label="Phrase (the AI must NEVER produce this)" required v={addPhrase} on={setAddPhrase} placeholder='e.g. "guaranteed returns"' />
+          <MiniField label="Locale (empty = all locales)" v={addLocale} on={setAddLocale} placeholder="it-IT, en-GB, …" />
+          <MiniField label="Reason (optional)" v={addReason} on={setAddReason} placeholder="why this is forbidden" />
+          <div style={{ display: "flex", alignItems: "flex-end" }}>
+            <button type="submit" className="btn btn-sm btn-primary" disabled={busy || addPhrase.trim().length === 0}>
+              {busy ? "Adding…" : "Add"}
+            </button>
+          </div>
+          <ErrorLine msg={err} />
+        </div>
+      </form>
+
+      {/* Filter bar */}
+      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8125rem" }}>
+          <input type="checkbox" checked={activeOnly} onChange={(e) => setActiveOnly(e.target.checked)} />
+          Active only
+        </label>
+        <input
+          placeholder="filter by locale (e.g. it-IT)"
+          value={localeFilter}
+          onChange={(e) => setLocaleFilter(e.target.value)}
+          style={{ padding: "0.3rem 0.4rem", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: "0.8125rem", width: "180px" }}
+        />
+        <span style={{ marginLeft: "auto", color: "var(--text-3)", fontSize: "0.8rem" }}>
+          {rows.length} {rows.length === 1 ? "phrase" : "phrases"}
+        </span>
+      </div>
+
+      {/* Table */}
+      <div className="card">
+        <div className="card-body" style={{ padding: 0 }}>
+          {rows.length === 0
+            ? <p style={{ padding: "1rem", color: "var(--text-3)", fontSize: "0.8125rem" }}>No phrases match. Add one above.</p>
+            : (
+              <table style={{ width: "100%", fontSize: "0.8125rem", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid var(--border)", textAlign: "left", color: "var(--text-3)" }}>
+                    <Th>ID</Th><Th>Phrase</Th><Th>Locale</Th><Th>Reason</Th><Th>Active</Th><Th>Added</Th><Th>{" "}</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => (
+                    <tr key={r.id} style={{ borderBottom: "1px solid var(--border)" }}>
+                      <Td><span style={{ color: "var(--text-3)" }}>{r.id}</span></Td>
+                      <Td><strong>{r.phrase}</strong></Td>
+                      <Td>{r.localeCode || <em style={{ color: "var(--text-3)" }}>all</em>}</Td>
+                      <Td><span style={{ color: "var(--text-3)" }}>{r.reason ?? "—"}</span></Td>
+                      <Td>{r.active ? "Yes" : <span style={{ color: "var(--text-3)" }}>No</span>}</Td>
+                      <Td><span style={{ color: "var(--text-3)", fontSize: "0.7rem" }}>{new Date(r.createdAt).toLocaleDateString()}</span></Td>
+                      <Td>
+                        {r.active && (
+                          <button className="btn btn-sm btn-ghost" onClick={() => deactivate(r.id)} style={{ fontSize: "0.7rem" }}>
+                            Deactivate
+                          </button>
+                        )}
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+        </div>
+      </div>
+
+      <div style={{ color: "var(--text-3)", fontSize: "0.75rem", lineHeight: 1.5 }}>
+        Active phrases are injected into every translation prompt for the matching locale (or every locale when locale is empty)
+        as a hard "NEVER use" instruction. Reviewers also seed this table when they reject a translation with
+        <code style={{ marginLeft: "0.25rem" }}>forbiddenPhrases</code> attached. Deactivating keeps the row for audit but stops
+        the prompt from including it.
+      </div>
     </div>
   );
 }

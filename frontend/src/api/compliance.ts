@@ -87,6 +87,38 @@ export async function uploadDocumentVersion(documentId: number, payload: UploadV
   return data as { version: any; dedup: boolean };
 }
 
+// ─── Admin: forbidden phrases (compliance-driven banned words) ────────
+
+export type ForbiddenPhraseRow = {
+  id: number;
+  phrase: string;
+  localeCode: string;
+  reason: string | null;
+  active: boolean;
+  addedByUserId: number | null;
+  triggeringReviewId: number | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function listForbiddenPhrases(filters: { locale?: string; activeOnly?: boolean } = {}) {
+  const params: Record<string, string> = {};
+  if (filters.locale !== undefined) params.locale = filters.locale;
+  if (filters.activeOnly) params.activeOnly = "true";
+  const { data } = await api.get("/api/compliance/admin/forbidden-phrases", { params });
+  return data.phrases as ForbiddenPhraseRow[];
+}
+
+export async function addForbiddenPhrase(payload: { phrase: string; localeCode: string; reason?: string | null }) {
+  const { data } = await api.post("/api/compliance/admin/forbidden-phrases", payload);
+  return data.phrase as ForbiddenPhraseRow;
+}
+
+export async function deactivateForbiddenPhrase(id: number) {
+  const { data } = await api.delete(`/api/compliance/admin/forbidden-phrases/${id}`);
+  return data.phrase as ForbiddenPhraseRow;
+}
+
 // ─── Documents & versions ───────────────────────────────────────────
 
 export async function listDocuments(sourceId?: number) {
