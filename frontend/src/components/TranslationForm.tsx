@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { createTranslation, submitReview } from "../api/client";
-import { LocaleOption, TextTypeOption, PersonaOption, ToneOption, TranslationRequest, ReviewIssueCode } from "@mexem/shared";
+import { createTranslation } from "../api/client";
+import { LocaleOption, TextTypeOption, PersonaOption, ToneOption, TranslationRequest } from "@mexem/shared";
+import ReviewPanel from "./ReviewPanel";
 
 interface Props {
   locales: LocaleOption[];
@@ -63,20 +64,6 @@ const CONTENT_TYPE_LENGTHS: Record<string, { mode: "near" | "max" | "exact"; val
   cta_button:                   { mode: "max",  value: 25 },
 };
 
-const ISSUE_CODE_LABELS: Record<ReviewIssueCode, string> = {
-  tone: "Tone",
-  terminology: "Terminology",
-  grammar: "Grammar",
-  fluency: "Fluency",
-  literal_translation: "Literal Translation",
-  brand_voice: "Brand Voice",
-  register: "Register",
-};
-
-const ALL_ISSUE_CODES: ReviewIssueCode[] = [
-  "tone", "terminology", "grammar", "fluency", "literal_translation", "brand_voice", "register",
-];
-
 function QualityBadge({ qg }: { qg: QualityGateInfo }) {
   const pct = Math.round(qg.score * 100);
   const color = qg.approved ? (pct >= 90 ? "badge-green" : "badge-blue") : "badge-amber";
@@ -85,111 +72,6 @@ function QualityBadge({ qg }: { qg: QualityGateInfo }) {
     <span className={`badge ${color}`} title={`Quality gate: ${pct}%${stageLabel}`}>
       QG {pct}%{stageLabel}
     </span>
-  );
-}
-
-function ReviewPanel({ output, onReviewSubmitted }: { output: OutputCard; onReviewSubmitted: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [decision, setDecision] = useState<"approved" | "rejected" | null>(null);
-  const [selectedCodes, setSelectedCodes] = useState<ReviewIssueCode[]>([]);
-  const [note, setNote] = useState("");
-  const [correctedTranslation, setCorrectedTranslation] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  if (!output.id) return null;
-
-  if (submitted) {
-    return (
-      <div style={{ padding: "0.5rem 1rem", borderTop: "1px solid var(--border)", fontSize: "0.8125rem", color: "var(--green)" }}>
-        Review submitted
-      </div>
-    );
-  }
-
-  if (!open) {
-    return (
-      <div style={{ padding: "0.5rem 1rem", borderTop: "1px solid var(--border)" }}>
-        <button className="btn btn-ghost btn-sm" onClick={() => setOpen(true)}>Review this translation</button>
-      </div>
-    );
-  }
-
-  const handleSubmit = async () => {
-    if (!decision || !output.id) return;
-    setSubmitting(true);
-    try {
-      await submitReview(output.id, {
-        decision,
-        note: note || undefined,
-        issueCodes: selectedCodes.length > 0 ? selectedCodes : undefined,
-        correctedTranslation: correctedTranslation || undefined,
-      });
-      setSubmitted(true);
-      onReviewSubmitted();
-    } catch {
-      // silently fail — review is non-critical
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div style={{ padding: "0.75rem 1rem", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-      <div style={{ display: "flex", gap: "0.5rem" }}>
-        <button
-          className={`btn btn-sm ${decision === "approved" ? "btn-primary" : "btn-secondary"}`}
-          style={decision === "approved" ? { background: "var(--green)" } : {}}
-          onClick={() => setDecision("approved")}>
-          Approve
-        </button>
-        <button
-          className={`btn btn-sm ${decision === "rejected" ? "btn-primary" : "btn-secondary"}`}
-          style={decision === "rejected" ? { background: "var(--red)" } : {}}
-          onClick={() => setDecision("rejected")}>
-          Reject
-        </button>
-      </div>
-
-      {decision === "rejected" && (
-        <>
-          <div>
-            <label className="field-label" style={{ fontSize: "0.75rem", marginBottom: "0.25rem" }}>Issue categories</label>
-            <div className="toggle-group">
-              {ALL_ISSUE_CODES.map(code => (
-                <button key={code} type="button"
-                  className={`toggle-pill${selectedCodes.includes(code) ? " active" : ""}`}
-                  style={{ fontSize: "0.75rem", padding: "0.1875rem 0.5rem" }}
-                  onClick={() => setSelectedCodes(prev =>
-                    prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
-                  )}>
-                  {ISSUE_CODE_LABELS[code]}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="field">
-            <label className="field-label" style={{ fontSize: "0.75rem" }}>Corrected translation (optional)</label>
-            <textarea className="textarea" style={{ height: "3.5rem", fontSize: "0.8125rem" }}
-              value={correctedTranslation} onChange={e => setCorrectedTranslation(e.target.value)}
-              placeholder="Provide the preferred translation if possible..." />
-          </div>
-        </>
-      )}
-
-      <div className="field">
-        <label className="field-label" style={{ fontSize: "0.75rem" }}>Note (optional)</label>
-        <input className="input" style={{ fontSize: "0.8125rem" }}
-          value={note} onChange={e => setNote(e.target.value)}
-          placeholder={decision === "approved" ? "What made this good?" : "What was wrong?"} />
-      </div>
-
-      <div>
-        <button className="btn btn-sm btn-primary" disabled={!decision || submitting} onClick={handleSubmit}>
-          {submitting ? "Submitting..." : "Submit Review"}
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -482,7 +364,7 @@ export default function TranslationForm({ locales, textTypes, personas, tones }:
                 )}
 
                 {/* Review panel */}
-                <ReviewPanel output={output} onReviewSubmitted={() => {}} />
+                {output.id && <ReviewPanel outputId={output.id} />}
               </div>
             );
           })}

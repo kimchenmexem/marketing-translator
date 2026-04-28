@@ -12,6 +12,7 @@ import {
   listActiveForbiddenPhrasesForLocale,
   formatForbiddenPhrasesBlock,
 } from "../compliance/forbidden/service";
+import { prisma } from "../db";
 
 const router = Router();
 const openai = lazyOpenAI(60_000);
@@ -94,6 +95,8 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
           bundleVersion?: string | null;
           sourceRefs?: unknown[];
           bundleRuleMatches?: BundleRuleMatch[];
+          outputId?: number;
+          jobId?: number;
         }> = {};
         await Promise.all(
           payload.locales.map((locale) =>
@@ -141,6 +144,7 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
                   bundleVersion: bundleExec?.bundleVersion ?? null,
                   sourceRefs: bundleExec?.sourceRefs ?? [],
                   bundleRuleMatches: bundleExec?.matches ?? [],
+                  // outputId/jobId filled in after the persist pass below.
                 };
               } catch (cellError: any) {
                 // Narrow: only provider/model empty-content failures are per-cell.
@@ -162,6 +166,72 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
         return { source: text, translations };
       })
     );
+
+    // Persist each successful (source, locale) cell so the UI can review it.
+    // One TranslationJob + TranslationOutput + v1 history row + TM entry per
+    // cell, all in one $transaction. Failed cells are skipped — those don't
+    // get an outputId. If persistence as a whole fails, we DON'T fail the
+    // request — translations succeeded, the operator just can't review them.
+    const authUser = req.authUser!;
+    try {
+      await prisma.$transaction(async (tx) => {
+        for (const row of results) {
+          for (const locale of payload.locales) {
+            const cell = row.translations[locale];
+            if (!cell || cell.status !== "ok") continue;
+            const job = await tx.translationJob.create({
+              data: {
+                sourceText: row.source,
+                sourceLanguage: "auto",
+                targetLocale: locale,
+                textType: "batch_translate",
+                persona: "batch",
+                tone: "batch",
+                outputCount: 1,
+                status: "completed",
+                createdByUserId: authUser.id,
+              },
+            });
+            const output = await tx.translationOutput.create({
+              data: {
+                jobId: job.id,
+                outputText: cell.text,
+                version: 1,
+                score: cell.qualityGate?.score,
+                approved: false,
+              },
+            });
+            await tx.translationOutputVersion.create({
+              data: {
+                translationOutputId: output.id,
+                versionNumber: 1,
+                eventType: "initial_generation",
+                outputText: cell.text,
+                approved: false,
+                score: cell.qualityGate?.score,
+                createdByUserId: authUser.id,
+              },
+            });
+            await tx.translationMemoryEntry.create({
+              data: {
+                sourceText: row.source,
+                targetText: cell.text,
+                sourceLanguage: "auto",
+                targetLocale: locale,
+                textType: "batch_translate",
+                createdByUserId: authUser.id,
+              },
+            });
+            cell.outputId = output.id;
+            cell.jobId = job.id;
+          }
+        }
+      });
+    } catch (persistErr) {
+      // Log loudly but don't fail the request; the translations themselves
+      // succeeded and are still in the response.
+      console.error("[batch] persist pass failed (results returned without outputIds):", persistErr);
+    }
 
     res.json({ results });
   } catch (error: any) {

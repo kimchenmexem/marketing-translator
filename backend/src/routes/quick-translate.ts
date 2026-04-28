@@ -12,6 +12,7 @@ import { z } from "zod";
 import { translateToLocale } from "../services/ai";
 import { requireAuth } from "../middleware/auth";
 import { mapTranslateError } from "../services/translateErrors";
+import { prisma } from "../db";
 
 const router = Router();
 
@@ -37,20 +38,84 @@ const quickTranslateSchema = z.object({
 router.post("/", requireAuth, async (req, res) => {
   try {
     const { text, locales } = quickTranslateSchema.parse(req.body);
+    const authUser = req.authUser!;
 
-    const results = await Promise.all(
-      locales.map(async (locale) => {
-        const translated = await translateToLocale(text, locale);
-        const meta = LOCALE_LABELS[locale] ?? { language: locale, country: locale };
-        return {
-          locale,
-          language: meta.language,
-          country: meta.country,
-          translatedText: translated,
-          charCount: translated.length,
-        };
-      })
+    // Run all OpenAI calls in parallel (no DB inside the limited concurrency
+    // bracket — keeps the OpenAI fan-out independent from the persist step).
+    const translatedByLocale = await Promise.all(
+      locales.map(async (locale) => ({
+        locale,
+        translatedText: await translateToLocale(text, locale),
+      }))
     );
+
+    // Persist one (TranslationJob, TranslationOutput, v1 history row, TM
+    // entry) per locale so each result has an outputId the UI can review
+    // against. Single $transaction across all locales for atomicity — if
+    // any one persist fails, none of the cells are saved (translation
+    // results are still computed and would have to be re-issued; in
+    // practice this only fails if Postgres is unreachable).
+    const persisted = await prisma.$transaction(async (tx) => {
+      return Promise.all(
+        translatedByLocale.map(async ({ locale, translatedText }) => {
+          const job = await tx.translationJob.create({
+            data: {
+              sourceText: text,
+              sourceLanguage: "auto",
+              targetLocale: locale,
+              textType: "quick_translate",
+              persona: "quick",
+              tone: "quick",
+              outputCount: 1,
+              status: "completed",
+              createdByUserId: authUser.id,
+            },
+          });
+          const output = await tx.translationOutput.create({
+            data: {
+              jobId: job.id,
+              outputText: translatedText,
+              version: 1,
+              approved: false,
+            },
+          });
+          await tx.translationOutputVersion.create({
+            data: {
+              translationOutputId: output.id,
+              versionNumber: 1,
+              eventType: "initial_generation",
+              outputText: translatedText,
+              approved: false,
+              createdByUserId: authUser.id,
+            },
+          });
+          await tx.translationMemoryEntry.create({
+            data: {
+              sourceText: text,
+              targetText: translatedText,
+              sourceLanguage: "auto",
+              targetLocale: locale,
+              textType: "quick_translate",
+              createdByUserId: authUser.id,
+            },
+          });
+          return { locale, translatedText, outputId: output.id, jobId: job.id };
+        })
+      );
+    });
+
+    const results = persisted.map((p) => {
+      const meta = LOCALE_LABELS[p.locale] ?? { language: p.locale, country: p.locale };
+      return {
+        locale: p.locale,
+        language: meta.language,
+        country: meta.country,
+        translatedText: p.translatedText,
+        charCount: p.translatedText.length,
+        outputId: p.outputId,
+        jobId: p.jobId,
+      };
+    });
 
     res.json({
       sourceText: text,

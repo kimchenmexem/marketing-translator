@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { runBatchTranslation, getTranslationAlternatives } from "../api/client";
+import ReviewPanel from "./ReviewPanel";
 
 const LOCALE_LABELS: Record<string, string> = {
   "it-IT": "🇮🇹 IT",
@@ -42,13 +43,23 @@ const AD_FORMATS: AdFormat[] = [
   { id: "custom",               label: "Custom",                        maxChars: 0   },
 ];
 
-interface TranslationCell { text: string; qualityGate?: { score: number; approved: boolean; stage: string } }
+interface TranslationCell {
+  text: string;
+  qualityGate?: { score: number; approved: boolean; stage: string };
+  outputId?: number;
+  jobId?: number;
+}
 interface TranslationRow { source: string; translations: Record<string, string | TranslationCell> }
 
 function getCellText(cell: string | TranslationCell | undefined): string {
   if (!cell) return "";
   if (typeof cell === "string") return cell;
   return cell.text;
+}
+
+function getCellOutputId(cell: string | TranslationCell | undefined): number | undefined {
+  if (typeof cell !== "object" || cell === null) return undefined;
+  return cell.outputId;
 }
 
 function getCellQG(cell: string | TranslationCell | undefined): TranslationCell["qualityGate"] | undefined {
@@ -315,6 +326,7 @@ export default function BatchTranslator() {
                     {selectedLocales.map(locale => {
                       const translated = getCellText(row.translations[locale]);
                       const qg = getCellQG(row.translations[locale]);
+                      const outputId = getCellOutputId(row.translations[locale]);
                       const cellKey    = `${rowIdx}-${locale}`;
                       const alt        = alternatives[cellKey];
                       const isEditing  = cellKey in editing;
@@ -360,6 +372,9 @@ export default function BatchTranslator() {
                                 </span>
                               )}
                               {copiedCell === cellKey && <span className="copied-flash">Copied</span>}
+                              {outputId !== undefined && translated.length > 0 && (
+                                <ReviewPanel outputId={outputId} compact />
+                              )}
 
                               {/* Alternatives panel */}
                               {alt && (
