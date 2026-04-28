@@ -551,3 +551,126 @@ html, body, #root {
   animation: shimmer 1.4s infinite linear;
   border-radius: var(--radius-sm);
 }
+
+/* ───────────────────────────────────────────────────────────────────────── */
+/* Responsive layer                                                          */
+/*                                                                           */
+/* The base layout is desktop-first (220px sidebar + 1fr content). Below     */
+/* these breakpoints we collapse to a single column with the sidebar         */
+/* horizontalised into a scroll strip under the topbar. No JS state, no      */
+/* hamburger — keeps the existing App.tsx structure untouched.               */
+/*                                                                           */
+/* Wide-table fix: any table inside a .card-body gets horizontal overflow    */
+/* on small screens so the Batch grid, audit logs, user list, and forbidden- */
+/* phrase table don't clip.                                                  */
+/* ───────────────────────────────────────────────────────────────────────── */
+
+/* Tablets and below: collapse two-column layout into a single column. */
+@media (max-width: 768px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 52px auto 1fr;
+  }
+
+  .topbar {
+    padding: 0 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .topbar-subtitle {
+    font-size: 0.75rem;
+  }
+
+  /* Sidebar → horizontal scroll strip below the topbar. */
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0.75rem;
+    gap: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Section labels ("TOOLS", "ADMIN") collapse on horizontal layout. */
+  .sidebar-section {
+    display: none;
+  }
+
+  .nav-item {
+    flex-shrink: 0;
+    width: auto;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8125rem;
+  }
+
+  .main-content {
+    padding: 1rem 0.75rem 2rem;
+    max-width: 100%;
+  }
+
+  .page-title {
+    font-size: 1.1rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.8rem;
+  }
+
+  /* Cards-with-tables: allow horizontal scroll so wide grids don't overflow
+     the viewport. Applies to Batch result grid, audit logs, user list,
+     forbidden-phrase table, etc. */
+  .card-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .card-header {
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+}
+
+/* Phones: tighter chrome, larger tap targets. */
+@media (max-width: 480px) {
+  .topbar {
+    padding: 0 0.5rem;
+    gap: 0.35rem;
+    height: 48px;
+  }
+
+  .topbar-sep,
+  .topbar-subtitle {
+    display: none;
+  }
+
+  .topbar-name {
+    font-size: 0.85rem;
+  }
+
+  .nav-item {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.55rem;
+  }
+
+  .main-content {
+    padding: 0.75rem 0.5rem 1.5rem;
+  }
+
+  .page-title {
+    font-size: 1rem;
+  }
+
+  /* Keep buttons big enough to tap on a phone. */
+  .btn {
+    min-height: 36px;
+  }
+}
+
+/* Any size — tables shouldn't be wider than their card. */
+table {
+  max-width: 100%;
+}
