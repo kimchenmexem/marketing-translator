@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import axios from "axios";
+import { api } from "../api/client";
 
 const LOCALES: Array<{ code: string; label: string }> = [
   { code: "it-IT", label: "Italian — Italy" },
@@ -18,7 +18,12 @@ const LOCALES: Array<{ code: string; label: string }> = [
   { code: "en-GB", label: "English — United Kingdom" },
 ];
 
-const api = axios.create({ baseURL: window.location.origin, timeout: 120000 });
+// Use the shared axios client from ../api/client. It already:
+//   - respects VITE_API_BASE_URL (Vercel → Render in production)
+//   - attaches the Clerk session token via the AuthTokenBridge
+// Previously this component instantiated its own axios with baseURL =
+// window.location.origin and no Clerk interceptor, which 404'd on Vercel
+// in production and would have 401'd even with the right URL.
 
 interface TranslationResult {
   locale: string;
@@ -49,7 +54,9 @@ export default function QuickTranslate() {
     setError(null);
     setResults(null);
     try {
-      const { data } = await api.post("/api/translate/quick", { text, locales: selected });
+      // 120s timeout — quick translate can fan out to up to 7 parallel OpenAI
+      // calls (one per locale); the shared client's 30s default isn't enough.
+      const { data } = await api.post("/api/translate/quick", { text, locales: selected }, { timeout: 120000 });
       setResults(data.translations);
     } catch (err: any) {
       const raw = err?.response?.data?.error;
