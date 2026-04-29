@@ -58,9 +58,30 @@ export default function ReviewPanel({ outputId, onReviewSubmitted, compact = fal
 
   if (!open) {
     return (
-      <div style={{ padding: compact ? "0.25rem 0.5rem" : "0.5rem 1rem", borderTop: "1px solid var(--border)" }}>
-        <button className="btn btn-ghost btn-sm" onClick={() => setOpen(true)} style={compact ? { fontSize: "0.7rem", padding: "0.15rem 0.5rem" } : undefined}>
-          Review this translation
+      <div style={{
+        padding: compact ? "0.4rem 0.5rem" : "0.625rem 1rem",
+        borderTop: "1px solid var(--border)",
+        background: "var(--bg, #f7f8fa)",
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
+      }}>
+        <span style={{ fontSize: compact ? "0.7rem" : "0.8125rem", color: "var(--text-3)" }}>
+          How was this translation?
+        </span>
+        <button
+          className="btn btn-sm btn-secondary"
+          onClick={() => { setDecision("approved"); setOpen(true); }}
+          style={{ fontSize: compact ? "0.7rem" : "0.8125rem", padding: compact ? "0.15rem 0.6rem" : "0.25rem 0.75rem" }}
+          aria-label="Approve translation">
+          👍 Approve
+        </button>
+        <button
+          className="btn btn-sm btn-secondary"
+          onClick={() => { setDecision("rejected"); setOpen(true); }}
+          style={{ fontSize: compact ? "0.7rem" : "0.8125rem", padding: compact ? "0.15rem 0.6rem" : "0.25rem 0.75rem" }}
+          aria-label="Reject translation">
+          👎 Reject
         </button>
       </div>
     );
