@@ -14,6 +14,7 @@ import complianceRouter from "./routes/compliance";
 import complianceAdminRouter from "./routes/compliance-admin";
 import publishersRouter from "./routes/publishers";
 import quickTranslateRouter from "./routes/quick-translate";
+import campaignCopyRouter from "./routes/campaign-copy";
 import authRouter from "./routes/auth";
 import adminRouter from "./routes/admin";
 import { requireAuth, requireRole } from "./middleware/auth";
@@ -76,6 +77,10 @@ app.use(
 // rankings and channel plans are internal media-planning intelligence.
 app.use("/api/publishers", requireAuth, publishersRouter);
 app.use("/api/translate/quick", quickTranslateRouter);
+// /api/campaign-copy — service-to-service endpoint used by ai-campaign-banner.
+// Auth: CAMPAIGN_COPY_API_KEY (static Bearer) when set, else Clerk. No DB
+// persistence in v1.
+app.use("/api/campaign-copy", campaignCopyRouter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });

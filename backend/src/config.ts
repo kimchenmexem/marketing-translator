@@ -80,6 +80,14 @@ export interface AppConfig {
    */
   initialAdminEmails: string[];
 
+  // ── Service-to-service auth (campaign-copy only) ─────────────────────
+  /**
+   * Static shared secret accepted by /api/campaign-copy as
+   * `Authorization: Bearer <key>`. Empty = endpoint falls back to Clerk.
+   * Scoped to this one route — no other endpoint consults it.
+   */
+  campaignCopyApiKey: string;
+
   // ── CORS ──────────────────────────────────────────────────────────────
   /** Explicit list of allowed origins. Defaults to dev localhost origins. */
   allowedOrigins: string[];
@@ -269,6 +277,8 @@ function buildConfig(): AppConfig {
       .split(",")
       .map((e) => e.trim().toLowerCase())
       .filter((e) => e.length > 0),
+
+    campaignCopyApiKey: (env.CAMPAIGN_COPY_API_KEY ?? "").trim(),
 
     allowedOrigins,
 
