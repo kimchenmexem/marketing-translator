@@ -196,7 +196,7 @@ function SourcesPanel() {
             {/* Scoring block */}
             <div>
               <strong>Scoring:</strong>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.5rem", marginTop: "0.25rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "0.5rem", marginTop: "0.25rem" }}>
                 <ScoreBadge label="Authority" value={selected.scoring?.authorityScore} />
                 <ScoreBadge label="Intent" value={selected.scoring?.audienceIntentScore} />
                 <ScoreBadge label="Safety" value={selected.scoring?.brandSafetyScore} />

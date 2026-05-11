@@ -105,7 +105,7 @@ function ForbiddenPhrasesPanel() {
       {/* Add form */}
       <form className="card" onSubmit={submit}>
         <div className="card-header"><span className="card-title">Add forbidden phrase</span></div>
-        <div className="card-body" style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: "2fr 1fr 2fr auto" }}>
+        <div className="card-body" style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
           <MiniField label="Phrase (the AI must NEVER produce this)" required v={addPhrase} on={setAddPhrase} placeholder='e.g. "guaranteed returns"' />
           <MiniField label="Locale (empty = all locales)" v={addLocale} on={setAddLocale} placeholder="it-IT, en-GB, …" />
           <MiniField label="Reason (optional)" v={addReason} on={setAddReason} placeholder="why this is forbidden" />
@@ -742,7 +742,7 @@ function AddSourceForm({ onCreated }: { onCreated: () => void }) {
         <span className="card-title">New regulatory source</span>
         <button type="button" className="btn btn-sm btn-ghost" onClick={() => setOpen(false)}>×</button>
       </div>
-      <div className="card-body" style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: "1fr 1fr" }}>
+      <div className="card-body" style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
         <MiniField label="Code (uppercase, unique)" required v={f.code} on={(v) => setF({ ...f, code: v.toUpperCase() })} placeholder="e.g. FCA" />
         <MiniField label="Display name" required v={f.name} on={(v) => setF({ ...f, name: v })} placeholder="Financial Conduct Authority" />
         <MiniField label="Regulator" required v={f.regulator} on={(v) => setF({ ...f, regulator: v })} />
@@ -796,7 +796,7 @@ function AddDocumentForm({ sourceCode, onCreated }: { sourceCode: string; onCrea
     );
   }
   return (
-    <form onSubmit={submit} style={{ padding: "0.75rem 1rem", borderTop: "1px solid var(--border)", display: "grid", gap: "0.5rem", gridTemplateColumns: "1fr 1fr" }}>
+    <form onSubmit={submit} style={{ padding: "0.75rem 1rem", borderTop: "1px solid var(--border)", display: "grid", gap: "0.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
       <MiniField label="External ref (unique within source)" required v={f.externalRef} on={(v) => setF({ ...f, externalRef: v })} placeholder='e.g. "COBS 4.2"' />
       <MiniField label="Title" required v={f.title} on={(v) => setF({ ...f, title: v })} />
       <MiniField label="URL" v={f.url} on={(v) => setF({ ...f, url: v })} placeholder="https://…" />

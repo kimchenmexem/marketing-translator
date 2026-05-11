@@ -135,7 +135,7 @@ function ResultCard({ result }: { result: any }) {
         </div>
 
         {/* Meta row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "0.75rem" }}>
           <Meta label="Locale" value={`${result.locale}${result.country ? ` — ${result.country}` : ""}`} />
           <Meta label="Bundle" value={result.bundleVersion ?? "(legacy fallback)"} />
           <Meta label="Regulators" value={(result.regulatorsApplied ?? []).join(", ") || "—"} />
