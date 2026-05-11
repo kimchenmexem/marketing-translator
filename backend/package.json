@@ -13,6 +13,7 @@
     "prisma:generate": "prisma generate --schema ../prisma/schema.prisma",
     "migrate:deploy": "prisma migrate deploy --schema ../prisma/schema.prisma",
     "migrate:status": "prisma migrate status --schema ../prisma/schema.prisma",
+    "promote:admin": "ts-node --transpile-only src/scripts/promote-admin.ts",
     "db:seed:sources": "ts-node --transpile-only src/scripts/seed-compliance-sources.ts",
     "compliance:sync": "ts-node --transpile-only src/scripts/compliance-sync.ts",
     "db:seed:publishers": "ts-node --transpile-only src/scripts/seed-publisher-sources.ts",
