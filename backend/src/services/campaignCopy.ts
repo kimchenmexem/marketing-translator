@@ -168,11 +168,13 @@ async function aggregateComplianceNotes(
     }),
   );
 
+  // validateCompliance returns `suggestions` as `issues.map(i => "Address: " + i)`
+  // — strictly redundant with `issues`. Report only issues so callers don't
+  // see every violation twice.
   const notes: string[] = [];
   for (const r of results) {
     if (!r) continue;
     for (const issue of r.issues ?? []) notes.push(`[${r.label}] ${issue}`);
-    for (const sug of r.suggestions ?? []) notes.push(`[${r.label}] ${sug}`);
   }
   return notes;
 }
@@ -347,11 +349,12 @@ async function aggregateBatchComplianceNotes(
     }),
   );
 
+  // See aggregateComplianceNotes: `suggestions` is just `issues` with an
+  // "Address: " prefix — emitting both doubles the noise. Issues only.
   const notes: string[] = [];
   for (const r of results) {
     if (!r) continue;
     for (const issue of r.issues ?? []) notes.push(`[${r.label}] ${issue}`);
-    for (const sug of r.suggestions ?? []) notes.push(`[${r.label}] ${sug}`);
   }
   return notes;
 }
