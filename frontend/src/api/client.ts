@@ -110,6 +110,26 @@ export async function listAuditLogs(filters: AuditLogFilters = {}) {
   return data as { total: number; limit: number; offset: number; rows: AuditLogRow[] };
 }
 
+export type OutputVersion = {
+  id: number;
+  versionNumber: number;
+  eventType: "initial_generation" | "review_update" | "admin_override" | "system_regeneration";
+  outputText: string;
+  correctedTranslation: string | null;
+  approved: boolean;
+  reviewNote: string | null;
+  score: number | null;
+  issueCodesJson: string | null;
+  triggeringReviewId: number | null;
+  createdByUserId: number | null;
+  createdAt: string;
+};
+
+export async function getOutputHistory(outputId: number) {
+  const { data } = await api.get(`/api/review/${outputId}/history`);
+  return data.versions as OutputVersion[];
+}
+
 export async function getMe() {
   const response = await api.get("/api/auth/me");
   return response.data as {

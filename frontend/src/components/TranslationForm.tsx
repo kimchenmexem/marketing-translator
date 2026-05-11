@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createTranslation } from "../api/client";
 import { LocaleOption, TextTypeOption, PersonaOption, ToneOption, TranslationRequest } from "@mexem/shared";
 import ReviewPanel from "./ReviewPanel";
+import HistoryPanel from "./HistoryPanel";
 
 interface Props {
   locales: LocaleOption[];
@@ -365,6 +366,9 @@ export default function TranslationForm({ locales, textTypes, personas, tones }:
 
                 {/* Review panel */}
                 {output.id && <ReviewPanel outputId={output.id} />}
+
+                {/* Version history */}
+                {output.id && <HistoryPanel outputId={output.id} />}
               </div>
             );
           })}
