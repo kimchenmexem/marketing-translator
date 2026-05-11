@@ -32,3 +32,49 @@ export interface CampaignCopyResponse {
   disclaimer: string;
   complianceNotes: string[];
 }
+
+// Enriched concept context — extends the single-call hint with the visual
+// / emotional / mood signals the LLM strategy pass produces. All fields are
+// optional so legacy callers keep working.
+export interface CampaignCopyBatchConcept {
+  conceptId: string;
+  name?: string;
+  strategicIdea?: string;
+  targetEmotion?: string;
+  tone?: string | string[];
+  composition?: string;
+  moodKeywords?: string[];
+}
+
+// Batch request: a single brief + locale + tone, with N concepts. The
+// backend prompts the model with all N at once so each concept can be
+// distinct from its siblings (no repeated CTAs / headlines across concepts).
+export interface CampaignCopyBatchRequest {
+  brief: {
+    marketingMessage: string;
+    campaignGoal: "awareness" | "consideration" | "conversion" | "retention";
+    targetAudience?: string;
+    notes?: string;
+  };
+  targetLocale: LocaleCode;
+  tone: string | string[];
+  complianceNotes?: string;
+  riskWarningRequired?: boolean;
+  concepts: CampaignCopyBatchConcept[];
+}
+
+export interface CampaignCopyBatchConceptResult {
+  conceptId: string;
+  headline: string;
+  subheadline: string;
+  body?: string;
+  cta: string;
+  disclaimer: string;
+  complianceNotes: string[];
+}
+
+export interface CampaignCopyBatchResponse {
+  locale: LocaleCode;
+  direction: LocaleDirection;
+  concepts: CampaignCopyBatchConceptResult[];
+}
