@@ -233,6 +233,93 @@ const auditListSchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
+// ─── Review queue ───────────────────────────────────────────────────
+//
+// Recent TranslationOutput rows visible to REVIEWER+ so they can find
+// translations needing feedback. Returns latest-first with a snippet of
+// the parent job's source, the locale, the output text, the current
+// approved flag, and the latest review (if any) summarised.
+//
+// `status` query filter:
+//   "pending"   — outputs with no reviews yet
+//   "approved"  — output.approved === true
+//   "rejected"  — has at least one review and output.approved === false
+//   "all"       — default
+const reviewQueueSchema = z.object({
+  status: z.enum(["pending", "approved", "rejected", "all"]).default("all"),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+router.get(
+  "/review-queue",
+  requireRole("REVIEWER", "MANAGER", "ADMIN"),
+  asyncHandler(async (req, res) => {
+    const parsed = reviewQueueSchema.safeParse(req.query);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.errors });
+    const q = parsed.data;
+
+    const where: Record<string, unknown> = {};
+    if (q.status === "approved") where.approved = true;
+    if (q.status === "rejected") {
+      where.approved = false;
+      where.reviews = { some: {} };
+    }
+    if (q.status === "pending") where.reviews = { none: {} };
+
+    const [total, rows] = await Promise.all([
+      prisma.translationOutput.count({ where }),
+      prisma.translationOutput.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: q.offset,
+        take: q.limit,
+        include: {
+          job: {
+            select: {
+              id: true,
+              sourceText: true,
+              targetLocale: true,
+              textType: true,
+              createdByUserId: true,
+              createdBy: { select: { email: true } },
+            },
+          },
+          reviews: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: {
+              id: true,
+              decision: true,
+              note: true,
+              reviewerUserId: true,
+              createdAt: true,
+              reviewer: { select: { email: true } },
+            },
+          },
+          _count: { select: { reviews: true } },
+        },
+      }),
+    ]);
+
+    res.json({
+      total,
+      limit: q.limit,
+      offset: q.offset,
+      outputs: rows.map((r) => ({
+        outputId: r.id,
+        outputText: r.outputText,
+        approved: r.approved,
+        score: r.score,
+        createdAt: r.createdAt,
+        reviewCount: r._count.reviews,
+        job: r.job,
+        latestReview: r.reviews[0] ?? null,
+      })),
+    });
+  })
+);
+
 router.get(
   "/audit-logs",
   requireRole("MANAGER", "ADMIN"),

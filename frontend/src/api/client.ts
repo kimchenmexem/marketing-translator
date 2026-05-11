@@ -110,6 +110,42 @@ export async function listAuditLogs(filters: AuditLogFilters = {}) {
   return data as { total: number; limit: number; offset: number; rows: AuditLogRow[] };
 }
 
+export type ReviewQueueRow = {
+  outputId: number;
+  outputText: string;
+  approved: boolean;
+  score: number | null;
+  createdAt: string;
+  reviewCount: number;
+  job: {
+    id: number;
+    sourceText: string;
+    targetLocale: string;
+    textType: string;
+    createdByUserId: number | null;
+    createdBy: { email: string } | null;
+  };
+  latestReview: {
+    id: number;
+    decision: string;
+    note: string | null;
+    reviewerUserId: number | null;
+    createdAt: string;
+    reviewer: { email: string } | null;
+  } | null;
+};
+
+export type ReviewQueueFilters = {
+  status?: "pending" | "approved" | "rejected" | "all";
+  limit?: number;
+  offset?: number;
+};
+
+export async function listReviewQueue(filters: ReviewQueueFilters = {}) {
+  const { data } = await api.get("/api/admin/review-queue", { params: filters });
+  return data as { total: number; limit: number; offset: number; outputs: ReviewQueueRow[] };
+}
+
 export type OutputVersion = {
   id: number;
   versionNumber: number;
