@@ -30,7 +30,7 @@ const NAV: NavItem[] = [
   { id: "translate",  icon: "✦",  label: "Single Translate",   desc: "One text with full options" },
   { id: "quick",      icon: "→",  label: "Quick Translate",    desc: "Simple translate — text in, translation out" },
   { id: "check",      icon: "✓",  label: "Compliance Check",   desc: "Check text against a locale's compliance bundle (no translation)" },
-  { id: "queue",      icon: "☷",  label: "Reviewer Queue",     desc: "Recent translations awaiting review", requiresRole: ["REVIEWER", "MANAGER", "ADMIN"] },
+  { id: "queue",      icon: "☷",  label: "Reviewer Queue",     desc: "Recent translations awaiting review", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
   { id: "compliance", icon: "⊘",  label: "Compliance Admin",   desc: "Sources, obligations, bundles", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
   { id: "publishers", icon: "◎",  label: "Publisher Admin",    desc: "Market intelligence & media planning (advisory, non-compliance)", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
   { id: "users",      icon: "⎔",  label: "User Management",    desc: "List users, change role, activate/deactivate", section: "Admin", requiresRole: ["ADMIN"] },

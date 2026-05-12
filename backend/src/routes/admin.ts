@@ -253,7 +253,7 @@ const reviewQueueSchema = z.object({
 
 router.get(
   "/review-queue",
-  requireRole("REVIEWER", "MANAGER", "ADMIN"),
+  requireRole("MANAGER", "ADMIN"),
   asyncHandler(async (req, res) => {
     const parsed = reviewQueueSchema.safeParse(req.query);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.errors });
