@@ -71,6 +71,15 @@ export interface CampaignCopyBatchConceptResult {
   cta: string;
   disclaimer: string;
   complianceNotes: string[];
+  // Optional typographic accents that the renderer drops into the manifest
+  // when present. Generating them server-side guarantees they pass the
+  // same compliance pipeline as the main copy fields.
+  //   eyebrow — short ALL-CAPS category label above the headline.
+  //   kicker  — short supporting pull-quote line below the subheadline.
+  // `stat` is intentionally NOT produced by the LLM (specific numbers are
+  // regulatory claims and must come from a verified source, not an AI).
+  eyebrow?: string;
+  kicker?: string;
 }
 
 export interface CampaignCopyBatchResponse {

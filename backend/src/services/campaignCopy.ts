@@ -213,11 +213,16 @@ function buildBatchSystemPrompt(
     `- Every subheadline must reflect that concept's own strategic_idea / target_emotion / mood; subheadlines must not be interchangeable across concepts.`,
     `- Disclaimers may follow a shared regulator pattern but should vary in wording where natural.`,
     ``,
-    `Per-field length: headline ≤ 60 chars · subheadline ≤ 120 chars · body ≤ 280 chars (optional) · cta ≤ 24 chars · disclaimer = regulator-appropriate.`,
+    `OPTIONAL TYPOGRAPHIC ACCENTS — produce when they strengthen a concept (omit when not natural; never include for every concept):`,
+    `- "eyebrow": a SHORT, ALL-CAPS category label that sits above the headline (1-3 words, ≤ 40 chars). Use for clear category framing (e.g. "ETF TRADING", "PROFESSIONAL PLATFORM"). NEVER include numeric claims, percentages, or money amounts in the eyebrow.`,
+    `- "kicker": a short supporting pull-quote-style line below the subheadline (≤ 120 chars). Use sparingly — only when it adds a memorable framing that the subhead alone doesn't carry. Like every other field it must be regulator-compliant.`,
+    `DO NOT produce "stat" (specific numbers / percentages / dollar amounts) — those are regulatory claims that must come from a verified human-approved source, never from this model.`,
+    ``,
+    `Per-field length: headline ≤ 60 chars · subheadline ≤ 120 chars · body ≤ 280 chars (optional) · cta ≤ 24 chars · disclaimer = regulator-appropriate · eyebrow ≤ 40 chars (optional) · kicker ≤ 120 chars (optional).`,
     ``,
     `Return STRICT JSON only, no prose. Top-level shape:`,
-    `{ "concepts": [ { "conceptId": "...", "headline": "...", "subheadline": "...", "body": "...", "cta": "...", "disclaimer": "..." }, ... ] }`,
-    `The "conceptId" in each output MUST exactly equal the conceptId you were given.`,
+    `{ "concepts": [ { "conceptId": "...", "headline": "...", "subheadline": "...", "body": "...", "cta": "...", "disclaimer": "...", "eyebrow": "...", "kicker": "..." }, ... ] }`,
+    `The "conceptId" in each output MUST exactly equal the conceptId you were given. Omit "eyebrow" and "kicker" entirely (or use null) for concepts where they don't fit.`,
   ].join("\n");
 }
 
@@ -259,6 +264,9 @@ interface RawBatchConceptFromModel {
   body?: string;
   cta: string;
   disclaimer: string;
+  // Optional accents — see buildBatchSystemPrompt for the contract.
+  eyebrow?: string;
+  kicker?: string;
 }
 
 function parseBatchModelJson(
@@ -313,6 +321,18 @@ function parseBatchModelJson(
     if (typeof obj.body === "string" && obj.body.trim() !== "") {
       item.body = obj.body.trim();
     }
+    // Optional accent fields — accept when the model produced them and
+    // they meet basic length / non-empty checks. Out-of-spec values
+    // (too long, etc.) are silently dropped rather than rejecting the
+    // whole concept.
+    if (typeof obj.eyebrow === "string") {
+      const e = obj.eyebrow.trim();
+      if (e.length > 0 && e.length <= 60) item.eyebrow = e;
+    }
+    if (typeof obj.kicker === "string") {
+      const k = obj.kicker.trim();
+      if (k.length > 0 && k.length <= 160) item.kicker = k;
+    }
     out.push(item);
   }
   // Verify every expected id is present (order-independent).
@@ -337,6 +357,10 @@ async function aggregateBatchComplianceNotes(
     { label: "disclaimer", text: concept.disclaimer },
   ];
   if (concept.body) fields.push({ label: "body", text: concept.body });
+  // Optional accents — when present, they are rendered text on the banner
+  // so they must pass through the same compliance check as the rest.
+  if (concept.eyebrow) fields.push({ label: "eyebrow", text: concept.eyebrow });
+  if (concept.kicker) fields.push({ label: "kicker", text: concept.kicker });
 
   const results = await Promise.all(
     fields.map(async (f) => {
@@ -402,6 +426,8 @@ export async function generateCampaignCopyBatch(
         body: c.body,
         cta: c.cta,
         disclaimer: c.disclaimer,
+        eyebrow: c.eyebrow,
+        kicker: c.kicker,
         complianceNotes: notes,
       };
     }),
