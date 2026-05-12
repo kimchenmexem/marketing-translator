@@ -7,6 +7,7 @@ import { diffLatestVersions } from "../compliance/ingestion/diff";
 import { runComplianceCheck } from "../services/complianceCheck";
 import type { SourceFamilyCode } from "@mexem/shared";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { prisma } from "../db";
 
 const router = Router();
 
@@ -25,7 +26,59 @@ router.post("/check", requireAuth, async (req, res) => {
   try {
     const payload = complianceCheckSchema.parse(req.body);
     const result = await runComplianceCheck(payload);
-    res.json(result);
+    const authUser = req.authUser!;
+
+    // Persist the check so the user can submit a feedback review on the
+    // assessment ("you flagged this incorrectly" / "you missed X").
+    // Modelled as a TranslationOutput with textType="compliance_check"
+    // and outputText = the input (compliance check doesn't translate; the
+    // "output" being reviewed is the assessment, captured in `validation`).
+    // Persist failure is non-fatal — the user still gets the assessment.
+    let outputId: number | undefined;
+    let jobId: number | undefined;
+    try {
+      const persisted = await prisma.$transaction(async (tx) => {
+        const job = await tx.translationJob.create({
+          data: {
+            sourceText: payload.text,
+            sourceLanguage: "auto",
+            targetLocale: payload.locale,
+            textType: "compliance_check",
+            persona: "compliance",
+            tone: "compliance",
+            outputCount: 1,
+            status: "completed",
+            createdByUserId: authUser.id,
+          },
+        });
+        const output = await tx.translationOutput.create({
+          data: {
+            jobId: job.id,
+            outputText: payload.text,
+            version: 1,
+            approved: false,
+            validation: JSON.stringify({ complianceCheck: result }),
+          },
+        });
+        await tx.translationOutputVersion.create({
+          data: {
+            translationOutputId: output.id,
+            versionNumber: 1,
+            eventType: "initial_generation",
+            outputText: payload.text,
+            approved: false,
+            createdByUserId: authUser.id,
+          },
+        });
+        return { jobId: job.id, outputId: output.id };
+      });
+      outputId = persisted.outputId;
+      jobId = persisted.jobId;
+    } catch (persistErr) {
+      console.error("[compliance-check] persist failed (review unavailable for this call):", persistErr);
+    }
+
+    res.json({ ...result, outputId, jobId });
   } catch (err: any) {
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
     console.error("POST /api/compliance/check failed:", err);

@@ -8,6 +8,7 @@
  */
 
 import { useState } from "react";
+import ReviewPanel from "./ReviewPanel";
 import * as compliance from "../api/compliance";
 
 const LOCALES: Array<{ code: string; label: string }> = [
@@ -190,6 +191,9 @@ function ResultCard({ result }: { result: any }) {
             ? ` decision from published bundle ${result.bundleVersion}.`
             : " decision from legacy fallback rules (no published bundle for this locale)."}
         </div>
+
+        {/* Feedback — was the compliance assessment correct? */}
+        {result.outputId && <ReviewPanel outputId={result.outputId} />}
       </div>
     </div>
   );
