@@ -110,6 +110,45 @@ export async function listAuditLogs(filters: AuditLogFilters = {}) {
   return data as { total: number; limit: number; offset: number; rows: AuditLogRow[] };
 }
 
+// ─── Campaign Generator ──────────────────────────────────────────────
+
+export type CampaignAsset = {
+  format: string;
+  label: string;
+  maxChars: number;
+  variants: string[];
+};
+
+export type CampaignPlatform = {
+  id: string;
+  name: string;
+  assets: CampaignAsset[];
+};
+
+export type CampaignResult = {
+  brief: string;
+  locale: string;
+  language: string;
+  platforms: CampaignPlatform[];
+  generatedAt: string;
+};
+
+export async function getCampaignCatalogue() {
+  const { data } = await api.get("/api/campaign/catalogue");
+  return data.platforms as CampaignPlatform[];
+}
+
+export async function generateCampaign(payload: {
+  brief: string;
+  locale: string;
+  persona?: string;
+  tone?: string;
+  platforms?: string[];
+}) {
+  const { data } = await api.post("/api/campaign/generate", payload, { timeout: 180000 });
+  return data as CampaignResult;
+}
+
 export type ReviewQueueRow = {
   outputId: number;
   outputText: string;

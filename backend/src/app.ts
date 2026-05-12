@@ -16,6 +16,7 @@ import publishersRouter from "./routes/publishers";
 import quickTranslateRouter from "./routes/quick-translate";
 import authRouter from "./routes/auth";
 import adminRouter from "./routes/admin";
+import campaignRouter from "./routes/campaign";
 import { requireAuth, requireRole } from "./middleware/auth";
 import { translateLimiter, mutationLimiter } from "./middleware/rateLimit";
 
@@ -81,6 +82,8 @@ app.use(
 // rankings and channel plans are internal media-planning intelligence.
 app.use("/api/publishers", requireAuth, publishersRouter);
 app.use("/api/translate/quick", translateLimiter, quickTranslateRouter);
+// Campaign brief → multi-platform copy. One OpenAI call per request.
+app.use("/api/campaign", translateLimiter, campaignRouter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
