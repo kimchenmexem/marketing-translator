@@ -7,7 +7,6 @@ import { diffLatestVersions } from "../compliance/ingestion/diff";
 import { runComplianceCheck } from "../services/complianceCheck";
 import type { SourceFamilyCode } from "@mexem/shared";
 import { requireAuth, requireRole } from "../middleware/auth";
-import { prisma } from "../db";
 
 const router = Router();
 
