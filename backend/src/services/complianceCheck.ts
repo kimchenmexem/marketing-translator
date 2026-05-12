@@ -85,11 +85,17 @@ function mapRiskLevel(
   hasCriticalBundleMatch: boolean,
   hasAnyHardRuleMatch: boolean
 ): ComplianceCheckRiskLevel {
-  // Hard-rule-backed rejection = critical
+  // Hard-rule-backed rejection = critical (deterministic ground truth).
   if (hasCriticalBundleMatch || hasAnyHardRuleMatch) return "critical";
-  // LLM-only "blocked" without hard rules = medium (not critical)
-  if ((internalStatus === "NON_COMPLIANT" || internalAction === "blocked") && !hasAnyHardRuleMatch) return "medium";
+  // LLM flagged the text as HIGH_RISK — surface as "high" regardless of
+  // whether the status is NON_COMPLIANT. The previous logic short-circuited
+  // every LLM-only NON_COMPLIANT to "medium" even when the decision layer
+  // also flagged HIGH_RISK, so "high" was effectively unreachable without
+  // a banned-phrase hit.
   if (internalRisk === "HIGH_RISK") return "high";
+  // LLM blocked the text but didn't escalate the risk dial — moderate
+  // concern. Reserve "high" for cases the decision layer explicitly raised.
+  if (internalStatus === "NON_COMPLIANT" || internalAction === "blocked") return "medium";
   if (internalRisk === "MEDIUM_RISK") return "medium";
   return "low";
 }
