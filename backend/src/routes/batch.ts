@@ -72,16 +72,57 @@ TRANSLATION PRINCIPLES:
 - Output only the translated text, nothing else.${styleBlock}${formatInstruction}${limitInstruction}${bannedInstruction}${forbiddenBlock ?? ""}${glossaryBlock ?? ""}`;
 }
 
+// Mirror of /api/options textTypes — when `textType` is supplied without an
+// explicit `maxChars`, the batch endpoint applies the platform-conventional
+// limit for that type (Google Search 30, Meta primary 125, email_subject 60,
+// email_body 600, etc.). Keep in sync with TEXT_TYPE_DEFAULT_MAX_CHARS in
+// services/ai.ts.
+const TEXT_TYPE_DEFAULT_MAX_CHARS: Record<string, number> = {
+  google_search_headline: 30,
+  google_search_description: 90,
+  google_display_headline: 30,
+  google_display_long_headline: 90,
+  google_display_description: 90,
+  google_pmax_headline: 30,
+  google_pmax_long_headline: 90,
+  google_pmax_description: 90,
+  google_youtube_headline: 30,
+  google_youtube_description: 90,
+  meta_primary_text: 125,
+  meta_headline: 40,
+  meta_description: 30,
+  meta_long_headline: 100,
+  push_notification: 120,
+  sms: 160,
+  landing_headline: 80,
+  banner: 60,
+  cta_button: 24,
+  email_subject: 60,
+  email_body: 600,
+};
+
 const batchRequestSchema = z.object({
   texts: z.array(z.string().min(1)).min(1).max(50),
   locales: z.array(z.enum(LOCALES)).min(1),
   maxChars: z.number().optional(),
+  // Optional textType — when set without explicit maxChars, the endpoint
+  // applies the per-textType platform default so emails / Google Ads / etc.
+  // get sensible length guidance even when the operator forgets to set it.
+  textType: z.string().optional(),
   formatContext: z.string().optional(),
 });
 
 router.post("/", requireAuth, asyncHandler(async (req, res) => {
   try {
     const payload = batchRequestSchema.parse(req.body);
+    // Resolve the effective max-chars: explicit payload value wins; falls
+    // back to the per-textType default when textType is set; otherwise
+    // undefined (model writes free-form).
+    const effectiveMaxChars =
+      payload.maxChars ??
+      (payload.textType
+        ? TEXT_TYPE_DEFAULT_MAX_CHARS[payload.textType]
+        : undefined);
 
     // Pre-load bundles for all requested locales (one DB query each, cached)
     const bundlesByLocale = new Map<string, LoadedBundle | null>();
@@ -112,12 +153,12 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
                 const glossaryBlock = await buildGlossaryPrompt(text, locale);
                 const forbiddenPhrases = await listActiveForbiddenPhrasesForLocale(locale);
                 const forbiddenBlock = formatForbiddenPhrasesBlock(forbiddenPhrases);
-                const systemPrompt = buildSystemPrompt(locale, payload.maxChars, payload.formatContext, bundle, glossaryBlock, forbiddenBlock);
+                const systemPrompt = buildSystemPrompt(locale, effectiveMaxChars, payload.formatContext, bundle, glossaryBlock, forbiddenBlock);
                 let translated = await translate(text, systemPrompt);
 
                 // If still over limit after translation, shorten it
-                if (payload.maxChars && translated.length > payload.maxChars) {
-                  translated = await shorten(translated, locale, payload.maxChars);
+                if (effectiveMaxChars && translated.length > effectiveMaxChars) {
+                  translated = await shorten(translated, locale, effectiveMaxChars);
                 }
 
                 // Run through the shared quality gate
@@ -132,8 +173,8 @@ router.post("/", requireAuth, asyncHandler(async (req, res) => {
 
                 // If the quality gate changed the text, re-check length
                 let finalText = qgResult.outputText;
-                if (payload.maxChars && finalText.length > payload.maxChars) {
-                  finalText = await shorten(finalText, locale, payload.maxChars);
+                if (effectiveMaxChars && finalText.length > effectiveMaxChars) {
+                  finalText = await shorten(finalText, locale, effectiveMaxChars);
                 }
 
                 // Run bundle deterministic rules on the final text
