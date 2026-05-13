@@ -19,6 +19,7 @@ import {
   formatForbiddenPhrasesBlock,
 } from "../compliance/forbidden/service";
 import { loadBundle } from "../compliance/bundles/loader";
+import { getLocaleStyleGuide } from "./ai";
 
 const openai = lazyOpenAI(120_000);
 
@@ -176,6 +177,10 @@ export async function generateCampaign(input: CampaignGenerationInput): Promise<
   const platforms = selectPlatforms(input.platforms);
   const personaLine = input.persona ? `\nAUDIENCE: ${input.persona}` : "";
   const toneLine = input.tone ? `\nTONE: ${input.tone}` : "";
+  // Locale-specific register / style (e.g. it-IT must use "tu", not "Lei";
+  // fr-FR uses "vous"; etc.). Same source as Single / Quick / Batch.
+  const styleGuide = getLocaleStyleGuide(input.locale);
+  const styleBlock = styleGuide ? `\n\n${styleGuide}` : "";
 
   // Same compliance signal as the translator: published-bundle banned
   // phrases + reviewer-flagged ForbiddenPhrase rows, joined.
@@ -200,7 +205,7 @@ export async function generateCampaign(input: CampaignGenerationInput): Promise<
     })),
   }));
 
-  const systemPrompt = `You are a senior marketing copywriter for MEXEM, a regulated European trading platform. Given a campaign brief, produce ready-to-publish copy for every platform / asset slot listed below, in ${language} (${input.locale}).${personaLine}${toneLine}
+  const systemPrompt = `You are a senior marketing copywriter for MEXEM, a regulated European trading platform. Given a campaign brief, produce ready-to-publish copy for every platform / asset slot listed below, in ${language} (${input.locale}).${personaLine}${toneLine}${styleBlock}
 
 WRITING PRINCIPLES:
 - Stay faithful to the campaign brief's meaning. Do not invent facts, products, or claims.

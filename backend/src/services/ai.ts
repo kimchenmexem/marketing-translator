@@ -38,7 +38,7 @@ function getLocaleLanguage(locale: string): string {
  * These are injected into every translation prompt to produce natural,
  * locally-appropriate copy — not word-for-word translation.
  */
-function getLocaleStyleGuide(locale: string): string {
+export function getLocaleStyleGuide(locale: string): string {
   const guides: Record<string, string> = {
     "it-IT": `ITALIAN STYLE:
 - Address the reader directly with the informal "tu" form (second-person singular). Use "tu" verb conjugations: "stai", "puoi", "sei", "investi", etc. — NOT "Lei" / "Sta" / "può" / "investe" (third-person formal). Modern Italian retail-finance brands (Fineco, ScalableCapital, Webank, etc.) universally use "tu" for digital marketing.
