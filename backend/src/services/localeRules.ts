@@ -17,7 +17,7 @@ export function getComplianceForbiddenWords(locale: LocaleCode): string[] {
 
 export function getLocaleRules(locale: LocaleCode): string {
   const rules: Record<LocaleCode, string> = {
-    "it-IT": "Use formal Italian for financial marketing when addressing adults in Italy. Prefer concise, factual phrasing and keep brand terms like MEXEM unchanged.",
+    "it-IT": "Use informal Italian (the 'tu' form, second-person singular) when addressing retail readers in Italy — this matches the modern Italian fintech / retail-broker convention. Prefer concise, direct phrasing. Keep brand terms like MEXEM unchanged.",
     "fr-FR": "Use standard French for France with a professional marketing tone. Avoid overly casual slang and keep financial terms accurate and compliant.",
     "nl-NL": "Use Dutch for the Netherlands with direct, clear phrasing. Keep marketing focused on trading empowerment, avoid colloquialisms specific to Belgium.",
     "nl-BE": "Use Dutch for Belgium with a more neutral, locally aware tone. Avoid Netherlands-specific expressions and use Belgian Dutch conventions.",

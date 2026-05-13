@@ -41,10 +41,10 @@ function getLocaleLanguage(locale: string): string {
 function getLocaleStyleGuide(locale: string): string {
   const guides: Record<string, string> = {
     "it-IT": `ITALIAN STYLE:
-- Italian financial marketing favours an elegant, authoritative register. Sentences can be longer and more structured than English.
-- Use the formal "Lei" form, never informal "tu" — this is a professional financial platform.
+- Address the reader directly with the informal "tu" form (second-person singular). Use "tu" verb conjugations: "stai", "puoi", "sei", "investi", etc. — NOT "Lei" / "Sta" / "può" / "investe" (third-person formal). Modern Italian retail-finance brands (Fineco, ScalableCapital, Webank, etc.) universally use "tu" for digital marketing.
+- Match the source's directness. If the English is a direct question ("Investing in ETFs?"), the Italian should be equally direct ("Stai pensando di investire in ETF?"), not a polished formal version.
 - Prefer established Italian financial terminology: "strumenti finanziari", "negoziazione", "piattaforma di investimento".
-- Italian readers expect a warm but professional tone — not cold/clinical, not overly casual.
+- Tone is warm and approachable but still factual and professional — not cold, not over-casual.
 - Numbers: use comma as decimal separator, period as thousands separator (1.234,56).
 - Adapt idioms — do not translate English expressions literally. Find the Italian equivalent or rephrase.`,
 
