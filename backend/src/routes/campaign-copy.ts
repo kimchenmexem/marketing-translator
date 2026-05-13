@@ -14,6 +14,7 @@ import { z } from "zod";
 import {
   generateCampaignCopy,
   generateCampaignCopyBatch,
+  generateCampaignCopyByMessage,
   UnsupportedLocaleError,
 } from "../services/campaignCopy";
 import { requireAuthOrApiKey } from "../middleware/serviceAuth";
@@ -86,6 +87,40 @@ router.post("/", requireAuthOrApiKey, async (req, res) => {
     }
     console.error("POST /api/campaign-copy failed:", err);
     return res.status(500).json({ error: "Campaign copy generation failed." });
+  }
+});
+
+// POST /api/campaign-copy/by-message
+//
+// "textType-driven" alternative to /batch. Same response shape, but every
+// banner field (headline / sub / body / cta / disclaimer / eyebrow / kicker)
+// is generated in its own OpenAI call with a platform-conventional textType
+// prompt + length budget. Use when per-field length awareness matters more
+// than cross-field coherence. 5-7x the LLM cost of /batch.
+const byMessageRequestSchema = z.object({
+  brief: briefSchema,
+  targetLocale: z.enum(SUPPORTED_LOCALES),
+  persona: z.string().min(1).max(80),
+  tone: toneSchema,
+  complianceNotes: z.string().max(2000).optional(),
+  riskWarningRequired: z.boolean().optional(),
+  conceptCount: z.number().int().min(1).max(5).optional(),
+});
+
+router.post("/by-message", requireAuthOrApiKey, async (req, res) => {
+  const parsed = byMessageRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.errors });
+  }
+  try {
+    const result = await generateCampaignCopyByMessage(parsed.data);
+    return res.json(result);
+  } catch (err) {
+    if (err instanceof UnsupportedLocaleError) {
+      return res.status(400).json({ error: err.message });
+    }
+    console.error("POST /api/campaign-copy/by-message failed:", err);
+    return res.status(500).json({ error: "Campaign copy by-message generation failed." });
   }
 });
 

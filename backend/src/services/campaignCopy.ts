@@ -17,6 +17,8 @@ import type {
   CampaignCopyBatchRequest,
   CampaignCopyBatchResponse,
   CampaignCopyBatchConceptResult,
+  CampaignCopyByMessageRequest,
+  CampaignCopyByMessageResponse,
   LocaleDirection,
 } from "@mexem/shared";
 import { lazyOpenAI, extractTranslation } from "./openaiHelpers";
@@ -470,5 +472,272 @@ export async function generateCampaignCopy(
     cta: copy.cta,
     disclaimer: copy.disclaimer,
     complianceNotes,
+  };
+}
+
+// ── By-message generator ────────────────────────────────────────────────────
+//
+// One marketing message → N concept variants. Each banner field is generated
+// in its own focused OpenAI call with a textType-appropriate prompt + length
+// budget. The batch generator (generateCampaignCopyBatch above) sends ONE
+// prompt for all fields × all concepts together — fast and coherent, but
+// each field shares attention. This generator does the opposite: cost ↑,
+// per-field quality ↑, length awareness per textType convention ↑↑.
+//
+// Compliance and disclaimer rules apply identically.
+
+type BannerFieldKey =
+  | "headline"
+  | "subheadline"
+  | "body"
+  | "cta"
+  | "disclaimer"
+  | "eyebrow"
+  | "kicker";
+
+// Each banner field maps to a platform-conventional textType. The label is
+// used in the prompt; the length comes from TEXT_TYPE_DEFAULT_MAX_CHARS in
+// services/ai.ts (kept in sync there). When a field is "skippable" the
+// model may legitimately return empty for some concepts (eyebrow/kicker).
+interface FieldSpec {
+  key: BannerFieldKey;
+  textTypeLabel: string;
+  maxChars: number;
+  required: boolean;
+  prompt: string;
+}
+
+function fieldSpecs(): FieldSpec[] {
+  return [
+    {
+      key: "headline",
+      textTypeLabel: "landing_headline",
+      maxChars: 60,
+      required: true,
+      prompt:
+        "Write a punchy ad headline — ≤ 60 chars, brand-first, one short clause. No periods unless declarative.",
+    },
+    {
+      key: "subheadline",
+      textTypeLabel: "meta_primary_text",
+      maxChars: 120,
+      required: true,
+      prompt:
+        "Write a supporting line that hooks attention — ≤ 120 chars, conversational, one specific value proposition.",
+    },
+    {
+      key: "body",
+      textTypeLabel: "email_body",
+      maxChars: 280,
+      required: false,
+      prompt:
+        "OPTIONAL — when included, a short supporting paragraph ≤ 280 chars that expands the value prop. Omit if natural.",
+    },
+    {
+      key: "cta",
+      textTypeLabel: "cta_button",
+      maxChars: 24,
+      required: true,
+      prompt:
+        "A single action-verb phrase, ≤ 24 chars (e.g. 'Open Account', 'Start Trading', 'Explore Platform'). Tense: imperative.",
+    },
+    {
+      key: "disclaimer",
+      textTypeLabel: "banner (regulator footer)",
+      maxChars: 200,
+      required: true,
+      prompt:
+        "Regulator-appropriate risk warning, factual and neutral. No urgency, no superlatives, no guarantees.",
+    },
+    {
+      key: "eyebrow",
+      textTypeLabel: "ALL-CAPS category label",
+      maxChars: 40,
+      required: false,
+      prompt:
+        "OPTIONAL — a short ALL-CAPS category label ≤ 40 chars (e.g. 'ETF TRADING', 'PROFESSIONAL PLATFORM'). NEVER include numeric / dollar / percent claims. Omit when not a natural fit.",
+    },
+    {
+      key: "kicker",
+      textTypeLabel: "pull-quote line",
+      maxChars: 120,
+      required: false,
+      prompt:
+        "OPTIONAL — a short pull-quote style line ≤ 120 chars. Omit when not a natural fit.",
+    },
+  ];
+}
+
+function buildFieldSystemPrompt(
+  spec: FieldSpec,
+  locale: LocaleCode,
+  conceptCount: number,
+  riskWarningRequired: boolean,
+): string {
+  const language = localeLanguageLabel(locale);
+  const riskClause = riskWarningRequired
+    ? "If this is the disclaimer field, include a regulator-appropriate risk warning."
+    : "";
+  const distinctnessClause =
+    conceptCount > 1
+      ? `Produce ${conceptCount} DISTINCT variants. Each must use noticeably different vocabulary, syntax, and angle — they will become 3 separate ad concepts side-by-side.`
+      : `Produce 1 variant.`;
+  return [
+    `You write localized financial-marketing ad copy in ${language}.`,
+    `You are producing variants of ONE banner field: "${spec.key}" (textType = ${spec.textTypeLabel}, max ${spec.maxChars} chars).`,
+    `${spec.prompt}`,
+    `Tone must be professional, factual, EU regulator-compliant. Avoid guarantees, urgency, superlatives, oversimplification.`,
+    riskClause,
+    distinctnessClause,
+    ``,
+    `Return STRICT JSON only, no prose: { "variants": ["…", "…", …] }`,
+    `Use ${language} for every variant. Output ${conceptCount} array entries.`,
+    spec.required
+      ? `Every entry must be a non-empty string.`
+      : `For entries where the accent doesn't naturally fit, use an empty string "" — never null.`,
+  ]
+    .filter((l) => l !== "")
+    .join("\n");
+}
+
+function buildFieldUserPrompt(
+  req: CampaignCopyByMessageRequest,
+  spec: FieldSpec,
+): string {
+  const tone = Array.isArray(req.tone) ? req.tone.join(", ") : req.tone;
+  const lines: string[] = [
+    `Marketing message: ${req.brief.marketingMessage}`,
+    `Campaign goal: ${req.brief.campaignGoal}`,
+    `Persona: ${req.persona}`,
+    `Tone: ${tone}`,
+  ];
+  if (req.brief.targetAudience) lines.push(`Target audience: ${req.brief.targetAudience}`);
+  if (req.brief.notes) lines.push(`Notes: ${req.brief.notes}`);
+  if (req.complianceNotes) lines.push(`Compliance guidance: ${req.complianceNotes}`);
+  lines.push(``);
+  lines.push(`Generate the "${spec.key}" variants now as JSON.`);
+  return lines.join("\n");
+}
+
+async function generateFieldVariants(
+  req: CampaignCopyByMessageRequest,
+  spec: FieldSpec,
+): Promise<string[]> {
+  const conceptCount = req.conceptCount ?? 3;
+  const riskWarningRequired = req.riskWarningRequired ?? true;
+  const completion = await openai.chat.completions.create({
+    model: MODEL,
+    temperature: 0.75,
+    response_format: { type: "json_object" },
+    messages: [
+      {
+        role: "system",
+        content: buildFieldSystemPrompt(spec, req.targetLocale, conceptCount, riskWarningRequired),
+      },
+      { role: "user", content: buildFieldUserPrompt(req, spec) },
+    ],
+  });
+  const content = extractTranslation(completion);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new Error(`by-message: non-JSON for field "${spec.key}"`);
+  }
+  const arr = (parsed as { variants?: unknown }).variants;
+  if (!Array.isArray(arr) || arr.length !== conceptCount) {
+    throw new Error(
+      `by-message: field "${spec.key}" returned ${Array.isArray(arr) ? arr.length : "non-array"}, expected ${conceptCount}`,
+    );
+  }
+  const out: string[] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const v = arr[i];
+    if (typeof v !== "string") {
+      if (spec.required) {
+        throw new Error(`by-message: field "${spec.key}" variant ${i} is not a string`);
+      }
+      out.push("");
+      continue;
+    }
+    out.push(v.trim());
+  }
+  // Validate required fields produced non-empty content
+  if (spec.required && out.some((s) => s.length === 0)) {
+    throw new Error(`by-message: required field "${spec.key}" returned an empty variant`);
+  }
+  return out;
+}
+
+export async function generateCampaignCopyByMessage(
+  req: CampaignCopyByMessageRequest,
+): Promise<CampaignCopyByMessageResponse> {
+  if (!SUPPORTED_LOCALES.includes(req.targetLocale)) {
+    throw new UnsupportedLocaleError(req.targetLocale);
+  }
+  const conceptCount = req.conceptCount ?? 3;
+  if (conceptCount < 1 || conceptCount > 5) {
+    throw new Error("by-message: conceptCount must be 1..5");
+  }
+
+  // Generate every banner field in parallel — one OpenAI call per field,
+  // each returning `conceptCount` variants. Total: 7 calls per campaign.
+  const specs = fieldSpecs();
+  const fieldResults = await Promise.all(
+    specs.map(async (spec) => {
+      try {
+        const variants = await generateFieldVariants(req, spec);
+        return { key: spec.key, variants };
+      } catch (err) {
+        if (spec.required) throw err;
+        // Optional field — log and skip rather than failing the whole call
+        return { key: spec.key, variants: new Array(conceptCount).fill("") };
+      }
+    }),
+  );
+
+  // Zip variants[i] from each field into the i-th concept.
+  const byKey = new Map(fieldResults.map((r) => [r.key, r.variants]));
+  const concepts: CampaignCopyBatchConceptResult[] = [];
+  for (let i = 0; i < conceptCount; i++) {
+    const conceptId = `concept_${i + 1}`;
+    const headline = byKey.get("headline")![i];
+    const subheadline = byKey.get("subheadline")![i];
+    const body = byKey.get("body")![i];
+    const cta = byKey.get("cta")![i];
+    const disclaimer = byKey.get("disclaimer")![i];
+    const eyebrow = byKey.get("eyebrow")![i];
+    const kicker = byKey.get("kicker")![i];
+
+    // Compliance per non-empty text field, parallel within a concept.
+    const raw: RawBatchConceptFromModel = {
+      conceptId,
+      headline,
+      subheadline,
+      cta,
+      disclaimer,
+    };
+    if (body) raw.body = body;
+    if (eyebrow) raw.eyebrow = eyebrow;
+    if (kicker) raw.kicker = kicker;
+    const complianceNotes = await aggregateBatchComplianceNotes(raw, req.targetLocale);
+
+    concepts.push({
+      conceptId,
+      headline,
+      subheadline,
+      body: body || undefined,
+      cta,
+      disclaimer,
+      complianceNotes,
+      eyebrow: eyebrow || undefined,
+      kicker: kicker || undefined,
+    });
+  }
+
+  return {
+    locale: req.targetLocale,
+    direction: localeDirection(req.targetLocale),
+    concepts,
   };
 }

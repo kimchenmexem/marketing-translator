@@ -87,3 +87,28 @@ export interface CampaignCopyBatchResponse {
   direction: LocaleDirection;
   concepts: CampaignCopyBatchConceptResult[];
 }
+
+// "By-message" request: one marketing message → N concept variants, each
+// banner field generated separately with its platform-appropriate textType
+// length / convention. The strategy LLM is bypassed entirely for copy;
+// it still runs upstream for visual direction (composition, palette, etc).
+export interface CampaignCopyByMessageRequest {
+  brief: {
+    marketingMessage: string;
+    campaignGoal: "awareness" | "consideration" | "conversion" | "retention";
+    targetAudience?: string;
+    notes?: string;
+  };
+  targetLocale: LocaleCode;
+  persona: string;
+  tone: string | string[];
+  complianceNotes?: string;
+  riskWarningRequired?: boolean;
+  // Number of concept variants to produce per field. Each i-th variant
+  // across fields zips into the i-th concept. Default 3.
+  conceptCount?: number;
+}
+
+// Response shape mirrors CampaignCopyBatchResponse so banner-side code can
+// consume either endpoint with the same parser.
+export type CampaignCopyByMessageResponse = CampaignCopyBatchResponse;
