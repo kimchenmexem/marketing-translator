@@ -12,6 +12,7 @@ import {
   listActiveForbiddenPhrasesForLocale,
   formatForbiddenPhrasesBlock,
 } from "../compliance/forbidden/service";
+import { getLocaleStyleGuide } from "../services/ai";
 import { prisma } from "../db";
 
 const router = Router();
@@ -52,6 +53,11 @@ function buildSystemPrompt(locale: string, maxChars?: number, formatContext?: st
     ? `\nCOMPLIANCE — BANNED WORDS/PHRASES (NEVER use any of these): ${bannedPhrases.join(", ")}.`
     : "";
 
+  // Locale-specific register / style (e.g. it-IT must use the "tu" form,
+  // not "Lei"; fr-FR uses "vous"; etc.). Shared with Single + Quick.
+  const styleGuide = getLocaleStyleGuide(locale);
+  const styleBlock = styleGuide ? `\n\n${styleGuide}` : "";
+
   return `You are an expert marketing copywriter and translator for MEXEM, a regulated European trading platform.
 
 TASK: Translate the following marketing text into ${language} (${locale}).
@@ -63,7 +69,7 @@ TRANSLATION PRINCIPLES:
 - Preserve brand names (MEXEM, WisdomTree, etc.) and asterisks (*) exactly as written.
 - Do not add, remove, or invent information.
 - Use factual, professional language. Never imply guaranteed returns, capital safety, or urgency.
-- Output only the translated text, nothing else.${formatInstruction}${limitInstruction}${bannedInstruction}${forbiddenBlock ?? ""}${glossaryBlock ?? ""}`;
+- Output only the translated text, nothing else.${styleBlock}${formatInstruction}${limitInstruction}${bannedInstruction}${forbiddenBlock ?? ""}${glossaryBlock ?? ""}`;
 }
 
 // Mirror of /api/options textTypes — when `textType` is supplied without an

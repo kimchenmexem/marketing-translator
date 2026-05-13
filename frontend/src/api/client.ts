@@ -110,6 +110,101 @@ export async function listAuditLogs(filters: AuditLogFilters = {}) {
   return data as { total: number; limit: number; offset: number; rows: AuditLogRow[] };
 }
 
+// ─── Campaign Generator ──────────────────────────────────────────────
+
+export type CampaignAsset = {
+  format: string;
+  label: string;
+  maxChars: number;
+  variants: string[];
+};
+
+export type CampaignPlatform = {
+  id: string;
+  name: string;
+  assets: CampaignAsset[];
+};
+
+export type CampaignResult = {
+  brief: string;
+  locale: string;
+  language: string;
+  platforms: CampaignPlatform[];
+  generatedAt: string;
+};
+
+export async function getCampaignCatalogue() {
+  const { data } = await api.get("/api/campaign/catalogue");
+  return data.platforms as CampaignPlatform[];
+}
+
+export async function generateCampaign(payload: {
+  brief: string;
+  locale: string;
+  persona?: string;
+  tone?: string;
+  platforms?: string[];
+}) {
+  const { data } = await api.post("/api/campaign/generate", payload, { timeout: 180000 });
+  return data as CampaignResult;
+}
+
+export type ReviewQueueRow = {
+  outputId: number;
+  outputText: string;
+  approved: boolean;
+  score: number | null;
+  createdAt: string;
+  reviewCount: number;
+  job: {
+    id: number;
+    sourceText: string;
+    targetLocale: string;
+    textType: string;
+    createdByUserId: number | null;
+    createdBy: { email: string } | null;
+  };
+  latestReview: {
+    id: number;
+    decision: string;
+    note: string | null;
+    reviewerUserId: number | null;
+    createdAt: string;
+    reviewer: { email: string } | null;
+  } | null;
+};
+
+export type ReviewQueueFilters = {
+  status?: "pending" | "approved" | "rejected" | "all";
+  limit?: number;
+  offset?: number;
+};
+
+export async function listReviewQueue(filters: ReviewQueueFilters = {}) {
+  const { data } = await api.get("/api/admin/review-queue", { params: filters });
+  return data as { total: number; limit: number; offset: number; outputs: ReviewQueueRow[] };
+}
+
+export type OutputVersion = {
+  id: number;
+  versionNumber: number;
+  eventType: "initial_generation" | "review_update" | "admin_override" | "system_regeneration";
+  outputText: string;
+  correctedTranslation: string | null;
+  approved: boolean;
+  reviewNote: string | null;
+  score: number | null;
+  issueCodesJson: string | null;
+  triggeringReviewId: number | null;
+  createdByUserId: number | null;
+  createdAt: string;
+};
+
+export async function getOutputHistory(outputId: number) {
+  const { data } = await api.get(`/api/review/${outputId}/history`);
+  return data.versions as OutputVersion[];
+}
+
 export async function getMe() {
   const response = await api.get("/api/auth/me");
   return response.data as {

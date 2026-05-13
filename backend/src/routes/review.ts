@@ -60,7 +60,17 @@ router.post("/:outputId", requireAuth, async (req, res) => {
 
     const output = await prisma.translationOutput.findUnique({
       where: { id: outputId },
-      include: { job: { select: { createdByUserId: true, targetLocale: true } } },
+      include: {
+        job: {
+          select: {
+            createdByUserId: true,
+            targetLocale: true,
+            sourceText: true,
+            sourceLanguage: true,
+            textType: true,
+          },
+        },
+      },
     });
     if (!output) {
       return res.status(404).json({ error: "Output not found." });
@@ -77,6 +87,8 @@ router.post("/:outputId", requireAuth, async (req, res) => {
     const allowedToSeedGlobalBans = canReadAllReviews(authUser.role);
     const honouredForbiddenPhrases = allowedToSeedGlobalBans ? payload.forbiddenPhrases : [];
     const targetLocale = output.job.targetLocale;
+    const trimmedCorrection = payload.correctedTranslation?.trim() ?? "";
+    const hasCorrection = trimmedCorrection.length > 0;
 
     const review = await prisma.$transaction(async (tx) => {
       // Create the review record — reviewerUserId is the authoritative actor
@@ -132,6 +144,42 @@ router.post("/:outputId", requireAuth, async (req, res) => {
         },
       });
 
+      // Corrected translation → TranslationMemoryEntry. This is the
+      // \"learn from reviews\" loop: when a reviewer provides a corrected
+      // text, it becomes a TM entry. The retrieval service
+      // (services/translationMemoryRetrieval.ts) pulls TM entries scoped
+      // by targetLocale + textType and feeds them to the AI as few-shot
+      // examples on subsequent translations. So future translations of
+      // similar source text see the reviewer's preferred wording.
+      //
+      // Conditions: correctedTranslation is non-empty AND differs from the
+      // AI's output (no point storing an identical entry). De-dup over
+      // (sourceText, targetText, targetLocale, textType) is not enforced
+      // by the schema, so we check manually to avoid clutter.
+      if (hasCorrection && trimmedCorrection !== output.outputText.trim()) {
+        const dupe = await tx.translationMemoryEntry.findFirst({
+          where: {
+            sourceText: output.job.sourceText,
+            targetText: trimmedCorrection,
+            targetLocale: output.job.targetLocale,
+            textType: output.job.textType,
+          },
+          select: { id: true },
+        });
+        if (!dupe) {
+          await tx.translationMemoryEntry.create({
+            data: {
+              sourceText: output.job.sourceText,
+              targetText: trimmedCorrection,
+              sourceLanguage: output.job.sourceLanguage,
+              targetLocale: output.job.targetLocale,
+              textType: output.job.textType,
+              createdByUserId: authUser.id,
+            },
+          });
+        }
+      }
+
       // Reviewer-flagged compliance phrases — REVIEWER+ only. Plain USERs
       // can still submit a decision/note/correctedTranslation, but we don't
       // let them seed the global ForbiddenPhrase table from their review,
@@ -171,6 +219,9 @@ router.post("/:outputId", requireAuth, async (req, res) => {
         forbiddenPhrasesRequested: payload.forbiddenPhrases.length,
         forbiddenPhrasesApplied: honouredForbiddenPhrases.length,
         actorRole: authUser.role,
+        // True when this review's correctedTranslation seeded a TM entry
+        // that future translations will see as a few-shot example.
+        correctedTranslationFedTM: hasCorrection && trimmedCorrection !== output.outputText.trim(),
       },
     });
 

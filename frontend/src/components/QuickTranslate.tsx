@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { api } from "../api/client";
 import ReviewPanel from "./ReviewPanel";
+import HistoryPanel from "./HistoryPanel";
 
 const LOCALES: Array<{ code: string; label: string }> = [
   { code: "it-IT", label: "Italian — Italy" },
@@ -145,6 +146,7 @@ export default function QuickTranslate() {
               </div>
               <div className="output-card-body">{r.translatedText}</div>
               {r.outputId && <ReviewPanel outputId={r.outputId} />}
+              {r.outputId && <HistoryPanel outputId={r.outputId} />}
             </div>
           ))}
         </div>

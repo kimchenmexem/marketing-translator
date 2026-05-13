@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createTranslation } from "../api/client";
 import { LocaleOption, TextTypeOption, PersonaOption, ToneOption, TranslationRequest } from "@mexem/shared";
 import ReviewPanel from "./ReviewPanel";
+import HistoryPanel from "./HistoryPanel";
 
 interface Props {
   locales: LocaleOption[];
@@ -170,7 +171,7 @@ export default function TranslationForm({ locales, textTypes, personas, tones }:
         <div className="card">
           <div className="card-header"><span className="card-title">Source Text</span></div>
           <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
               <div className="field">
                 <label className="field-label">Source Language</label>
                 <input className="input" value={sourceLanguage} onChange={e => setSourceLanguage(e.target.value)} />
@@ -195,7 +196,7 @@ export default function TranslationForm({ locales, textTypes, personas, tones }:
         <div className="card">
           <div className="card-header"><span className="card-title">Localisation Options</span></div>
           <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
               <div className="field">
                 <label className="field-label">Content Type</label>
                 <select className="select" value={textType} onChange={e => {
@@ -230,7 +231,7 @@ export default function TranslationForm({ locales, textTypes, personas, tones }:
                 ))}
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem" }}>
               <div className="field">
                 <label className="field-label">Length Mode</label>
                 <select className="select" value={lengthMode} onChange={e => setLengthMode(e.target.value as any)}>
@@ -257,7 +258,7 @@ export default function TranslationForm({ locales, textTypes, personas, tones }:
         <div className="card">
           <div className="card-header"><span className="card-title">Advanced Options</span></div>
           <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
               <div className="field">
                 <label className="field-label">Required Terms</label>
                 <input className="input" value={requiredTerms} onChange={e => setRequiredTerms(e.target.value)}
@@ -270,7 +271,7 @@ export default function TranslationForm({ locales, textTypes, personas, tones }:
                   placeholder="e.g. guaranteed, risk-free (comma-separated)" />
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
               <div className="field">
                 <label className="field-label">Campaign Context</label>
                 <textarea className="textarea" style={{ height: "4rem" }}
@@ -365,6 +366,9 @@ export default function TranslationForm({ locales, textTypes, personas, tones }:
 
                 {/* Review panel */}
                 {output.id && <ReviewPanel outputId={output.id} />}
+
+                {/* Version history */}
+                {output.id && <HistoryPanel outputId={output.id} />}
               </div>
             );
           })}

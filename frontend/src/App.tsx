@@ -8,10 +8,12 @@ import ComplianceCheck from "./components/ComplianceCheck";
 import QuickTranslate from "./components/QuickTranslate";
 import UserAdmin from "./components/UserAdmin";
 import AuditLogAdmin from "./components/AuditLogAdmin";
+import ReviewerQueue from "./components/ReviewerQueue";
+import CampaignGenerator from "./components/CampaignGenerator";
 import AuthStatus from "./components/AuthStatus";
 import { LocaleOption, TextTypeOption, PersonaOption, ToneOption } from "@mexem/shared";
 
-type Tab = "batch" | "translate" | "quick" | "check" | "compliance" | "publishers" | "users" | "audit";
+type Tab = "campaign" | "batch" | "translate" | "quick" | "check" | "queue" | "compliance" | "publishers" | "users" | "audit";
 type Role = "USER" | "REVIEWER" | "MANAGER" | "ADMIN";
 
 type NavItem = {
@@ -25,10 +27,12 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
+  { id: "campaign",   icon: "✺", label: "Campaign Generator", desc: "Brief in → ready-to-publish copy across all platforms" },
   { id: "batch",      icon: "⚡", label: "Batch Translate",    desc: "Translate many lines at once" },
   { id: "translate",  icon: "✦",  label: "Single Translate",   desc: "One text with full options" },
   { id: "quick",      icon: "→",  label: "Quick Translate",    desc: "Simple translate — text in, translation out" },
   { id: "check",      icon: "✓",  label: "Compliance Check",   desc: "Check text against a locale's compliance bundle (no translation)" },
+  { id: "queue",      icon: "☷",  label: "Reviewer Queue",     desc: "Recent translations awaiting review", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
   { id: "compliance", icon: "⊘",  label: "Compliance Admin",   desc: "Sources, obligations, bundles", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
   { id: "publishers", icon: "◎",  label: "Publisher Admin",    desc: "Market intelligence & media planning (advisory, non-compliance)", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
   { id: "users",      icon: "⎔",  label: "User Management",    desc: "List users, change role, activate/deactivate", section: "Admin", requiresRole: ["ADMIN"] },
@@ -133,12 +137,13 @@ export default function App() {
       </nav>
 
       {/* Content */}
-      <main className="main-content" style={(tab === "compliance" || tab === "publishers" || tab === "users" || tab === "audit") ? { maxWidth: "1200px" } : undefined}>
+      <main className="main-content" style={(tab === "compliance" || tab === "publishers" || tab === "users" || tab === "audit" || tab === "queue" || tab === "campaign") ? { maxWidth: "1200px" } : undefined}>
         <div className="page-header">
           <h1 className="page-title">{active.label}</h1>
           <p className="page-subtitle">{active.desc}</p>
         </div>
 
+        {tab === "campaign" && <CampaignGenerator />}
         {tab === "batch" && <BatchTranslator />}
         {tab === "translate" && (
           optionsLoaded
@@ -147,6 +152,7 @@ export default function App() {
         )}
         {tab === "quick" && <QuickTranslate />}
         {tab === "check" && <ComplianceCheck />}
+        {tab === "queue" && <ReviewerQueue />}
         {tab === "compliance" && <ComplianceAdmin />}
         {tab === "publishers" && <PublisherAdmin />}
         {tab === "users" && <UserAdmin />}

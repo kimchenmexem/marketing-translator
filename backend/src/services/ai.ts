@@ -38,13 +38,13 @@ function getLocaleLanguage(locale: string): string {
  * These are injected into every translation prompt to produce natural,
  * locally-appropriate copy — not word-for-word translation.
  */
-function getLocaleStyleGuide(locale: string): string {
+export function getLocaleStyleGuide(locale: string): string {
   const guides: Record<string, string> = {
     "it-IT": `ITALIAN STYLE:
-- Italian financial marketing favours an elegant, authoritative register. Sentences can be longer and more structured than English.
-- Use the formal "Lei" form, never informal "tu" — this is a professional financial platform.
+- Address the reader directly with the informal "tu" form (second-person singular). Use "tu" verb conjugations: "stai", "puoi", "sei", "investi", etc. — NOT "Lei" / "Sta" / "può" / "investe" (third-person formal). Modern Italian retail-finance brands (Fineco, ScalableCapital, Webank, etc.) universally use "tu" for digital marketing.
+- Match the source's directness. If the English is a direct question ("Investing in ETFs?"), the Italian should be equally direct ("Stai pensando di investire in ETF?"), not a polished formal version.
 - Prefer established Italian financial terminology: "strumenti finanziari", "negoziazione", "piattaforma di investimento".
-- Italian readers expect a warm but professional tone — not cold/clinical, not overly casual.
+- Tone is warm and approachable but still factual and professional — not cold, not over-casual.
 - Numbers: use comma as decimal separator, period as thousands separator (1.234,56).
 - Adapt idioms — do not translate English expressions literally. Find the Italian equivalent or rephrase.`,
 
@@ -344,17 +344,19 @@ export async function runTranslationJob(request: TranslationRequest): Promise<Tr
   const reviewerFlaggedPhrases = await listActiveForbiddenPhrasesForLocale(request.targetLocale);
   const reviewerFlaggedBlock = formatForbiddenPhrasesBlock(reviewerFlaggedPhrases);
 
-  // Prefer bundle banned phrases over hardcoded list when a bundle is published
+  // Prefer bundle banned phrases over hardcoded list when a bundle is published.
+  //
+  // The instruction used to ship aggressive substitution examples ("instead of
+  // 'now' use 'today/discover/get started'") which were paraphrases, not
+  // synonyms — the model would shift the *meaning* of the source to dodge a
+  // banned word. The replacement instruction below tells the model to pick
+  // the closest faithful equivalent and explicitly preserve meaning.
   const complianceForbidden = bundle?.content.bannedPhrases.length
     ? bundle.content.bannedPhrases
     : getComplianceForbiddenWords(request.targetLocale as any);
   const complianceForbiddenInstruction = complianceForbidden.length
-    ? `\nCOMPLIANCE — BANNED WORDS in ${language} (NEVER use any of these words or close synonyms in your output): ${complianceForbidden.join(", ")}.
-Instead use varied, neutral, factual alternatives — pick a DIFFERENT alternative each time so the text reads naturally without repetition. Examples:
-- Instead of "easy/simple": use "accessible", "straightforward", "intuitive", "user-friendly", or "convenient" (vary your choice)
-- Instead of "best/top/leader": describe specific features, or use "competitive", "comprehensive", "well-equipped", "robust", or "versatile"
-- Instead of "now/immediately": use "today", "get started", "explore", "discover", or simply omit the urgency
-- Instead of "guaranteed/safe/risk-free": describe factual benefits, or use "designed to", "built for", "with transparency", or "regulated"`
+    ? `\nCOMPLIANCE — BANNED WORDS in ${language} (must not appear in the output): ${complianceForbidden.join(", ")}.
+If your translation would naturally use one of these, pick the closest faithful synonym that preserves the source meaning exactly. Do not paraphrase the message to avoid a word.`
     : "";
 
   const styleGuide = getLocaleStyleGuide(request.targetLocale);
@@ -368,11 +370,10 @@ Instead use varied, neutral, factual alternatives — pick a DIFFERENT alternati
 TASK: Translate and localise marketing copy from ${request.sourceLanguage} to ${language} (${request.targetLocale}).
 
 TRANSLATION PRINCIPLES:
-- This is marketing localisation, not literal translation. The output must read as if it were originally written in ${language} by a native-speaking copywriter.
-- Adapt sentence structure, rhythm, and phrasing to what sounds natural in ${language}. Do not mirror English syntax.
-- Preserve the marketing intent, persuasive tone, and call-to-action strength — but express them the way a ${language} copywriter would.
-- Do not add, remove, or invent information. The meaning must remain faithful.
-- Use varied vocabulary. Do NOT repeat the same word or phrase multiple times. If you need to express a similar idea more than once, use a different synonym or rephrase entirely.
+- Translate the source into ${language} faithfully. Preserve the exact meaning, every fact, every claim, every named entity. Do not add, remove, summarise, rephrase, or invent information.
+- Adapt only what grammar and idiom require to read naturally in ${language} — sentence structure and phrasing may differ from English, but the *message* must not.
+- Preserve the source's tone (factual, persuasive, urgent, etc.). Do not soften, intensify, or restyle it.
+- If the source repeats a word or phrase, repeat it in the translation. Do not introduce synonyms to "vary" vocabulary.
 
 AUDIENCE & TONE: ${personaGuidance}
 ${styleGuide ? `\n${styleGuide}\n` : ""}

@@ -17,6 +17,7 @@
     "prisma:generate": "npm --workspace backend run prisma:generate",
     "migrate:deploy": "npm --workspace backend run migrate:deploy",
     "migrate:status": "npm --workspace backend run migrate:status",
+    "promote:admin": "npm --workspace backend run promote:admin --",
     "start:backend": "npm --workspace backend run start"
   },
   "devDependencies": {

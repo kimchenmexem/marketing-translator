@@ -8,6 +8,7 @@
  */
 
 import { useState } from "react";
+import ReviewPanel from "./ReviewPanel";
 import * as compliance from "../api/compliance";
 
 const LOCALES: Array<{ code: string; label: string }> = [
@@ -135,7 +136,7 @@ function ResultCard({ result }: { result: any }) {
         </div>
 
         {/* Meta row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "0.75rem" }}>
           <Meta label="Locale" value={`${result.locale}${result.country ? ` — ${result.country}` : ""}`} />
           <Meta label="Bundle" value={result.bundleVersion ?? "(legacy fallback)"} />
           <Meta label="Regulators" value={(result.regulatorsApplied ?? []).join(", ") || "—"} />
@@ -190,6 +191,9 @@ function ResultCard({ result }: { result: any }) {
             ? ` decision from published bundle ${result.bundleVersion}.`
             : " decision from legacy fallback rules (no published bundle for this locale)."}
         </div>
+
+        {/* Feedback — was the compliance assessment correct? */}
+        {result.outputId && <ReviewPanel outputId={result.outputId} />}
       </div>
     </div>
   );
