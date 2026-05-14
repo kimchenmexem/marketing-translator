@@ -22,6 +22,7 @@
     "seed:eu-baseline": "ts-node --transpile-only src/scripts/seed-eu-baseline.ts",
     "seed:fca-baseline": "ts-node --transpile-only src/scripts/seed-fca-baseline.ts",
     "seed:national-obligations": "ts-node --transpile-only src/scripts/seed-national-obligations.ts",
+    "seed:source-placeholders": "ts-node --transpile-only src/scripts/seed-source-placeholders.ts",
     "seed:glossary": "ts-node --transpile-only src/scripts/seed-glossary.ts",
     "test:compliance": "ts-node --transpile-only src/test/compliance-sot-tests.ts",
     "test:admin-auth": "ts-node --transpile-only src/test/admin-auth-tests.ts",
