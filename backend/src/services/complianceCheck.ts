@@ -150,6 +150,100 @@ interface LlmFinding {
   severity: 'critical' | 'major' | 'minor';
 }
 
+/** Server-side fallback: which substrings in a piece of text tend to trigger
+ *  each compliance category. Used when the LLM omits a quote or hallucinates
+ *  one that doesn't appear in the input. Multi-language so an Italian LLM
+ *  response on Italian text still produces highlights.
+ *
+ *  This is NOT the compliance rule — it's purely a highlighter assistant. The
+ *  rule logic lives in obligations + bundles. Adding/removing entries here
+ *  changes what the UI marks, not what passes/fails. */
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  no_guarantees: [
+    "guaranteed returns", "guaranteed profit", "guaranteed income", "guaranteed gain",
+    "risk-free", "risk free", "no risk", "100% safe", "completely safe",
+    "capital protected", "capital guarantee", "capital protection",
+    "assured profits", "assured returns", "certain gains",
+    "rendimento garantito", "profitto assicurato", "garantito",
+    "rendement garanti", "profit assuré", "garanti",
+    "rentabilidad garantizada", "rentabilidad asegurada", "garantizado",
+    "gegarandeerd rendement", "gegarandeerd",
+  ],
+  risk_balance: [
+    "returns", "return", "profit", "profits", "gain", "gains",
+    "performance", "yield", "yields", "growth", "earnings",
+    "rendement", "rendimento", "rendimiento", "rentabilidad", "ganancia",
+  ],
+  urgency: [
+    "now", "today", "hurry", "limited time", "last chance", "act now", "don't miss",
+    "offerta limitata", "agisci ora", "non perdere",
+    "offre limitée", "agissez maintenant", "ne manquez pas",
+    "oferta limitada", "actúa ahora",
+    "beperkte tijd", "handel nu",
+  ],
+  authority: [
+    "the best", "number one", "top platform", "leading", "award-winning",
+    "il migliore", "leader", "numero uno",
+    "le meilleur", "numéro un",
+    "el mejor", "número uno",
+    "de beste", "nummer één",
+  ],
+  no_financial_advice: [
+    "you should invest", "you should buy", "we recommend buying", "we advise you",
+    "this is a buy", "you must invest", "right time to invest",
+    "dovresti investire", "ti consigliamo",
+    "vous devriez investir", "nous recommandons",
+    "deberías invertir", "le recomendamos",
+    "u zou moeten beleggen",
+  ],
+  past_performance: [
+    "past performance", "historical return", "historical returns", "last year",
+    "annual return", "annual returns", "track record", "year-to-date", "ytd",
+    "performance passée", "performances passées",
+    "performance passate", "rendimento passato",
+    "rendimiento pasado", "resultados pasados",
+    "resultaten in het verleden",
+  ],
+  promotional: [
+    "amazing", "incredible", "revolutionary", "extraordinary",
+    "straordinario", "rivoluzionario",
+    "extraordinaire", "révolutionnaire",
+    "extraordinario", "revolucionario",
+    "buitengewoon",
+  ],
+  marketing_identifiable: [],
+  fair_clear_not_misleading: [],
+  disclosure_consistency: [],
+  national_marketing_conduct: [],
+};
+
+function findKeywordInText(text: string, keyword: string): string | null {
+  if (!keyword || !text) return null;
+  const lower = text.toLowerCase();
+  const idx = lower.indexOf(keyword.toLowerCase());
+  if (idx === -1) return null;
+  return text.substring(idx, idx + keyword.length);
+}
+
+function fallbackQuoteForCategory(text: string, category: string): string {
+  const keywords = CATEGORY_KEYWORDS[category] ?? [];
+  for (const kw of keywords) {
+    const hit = findKeywordInText(text, kw);
+    if (hit) return hit;
+  }
+  return "";
+}
+
+/** Take the LLM's claimed quote; if it doesn't actually appear in the text
+ *  (LLM paraphrased or hallucinated), substitute a keyword fallback. */
+function resolveEvidence(text: string, finding: LlmFinding): string {
+  if (finding.quote) {
+    const hit = findKeywordInText(text, finding.quote);
+    if (hit) return hit;
+  }
+  return fallbackQuoteForCategory(text, finding.category);
+}
+
 /** Merge bundle rule matches + LLM findings into one dedup'd list.
  *
  *  Each LLM-flagged finding now carries the exact substring from the input
@@ -157,6 +251,7 @@ interface LlmFinding {
  *  in the source text. Categories without a verbatim quote are still
  *  surfaced — they just have an empty `evidence`. */
 function buildMatchedRules(
+  text: string,
   bundleMatches: Array<{ ruleType: string; severity: string; message: string; evidence?: string }> | undefined,
   semanticFindings: LlmFinding[] | undefined,
   semanticIssues: string[] | undefined,
@@ -191,37 +286,45 @@ function buildMatchedRules(
     });
   }
 
-  // LLM-sourced findings — prefer the structured shape with quotes; fall
-  // back to bare category strings from older deployments / fallbacks.
+  // LLM-sourced findings — prefer the structured shape with quotes. Each
+  // quote is validated against the original text (LLMs paraphrase); if it
+  // doesn't appear verbatim, fall back to category-keyword lookup so the
+  // highlighter still has something to mark up.
   if (semanticFindings && semanticFindings.length > 0) {
     for (const f of semanticFindings) {
+      const evidence = resolveEvidence(text, f);
       add({
         type: "llm_semantic",
         severity: f.severity ?? "minor",
         message: f.category,
-        evidence: f.quote || undefined,
+        evidence: evidence || undefined,
       });
     }
   } else {
     for (const issue of semanticIssues ?? []) {
       if (!issue || typeof issue !== "string") continue;
-      add({ type: "llm_semantic", severity: "minor", message: issue });
+      // Category-only fallback path (older LLM responses) — still try to
+      // surface a keyword from the text so highlighting works.
+      const evidence = fallbackQuoteForCategory(text, issue);
+      add({ type: "llm_semantic", severity: "minor", message: issue, evidence: evidence || undefined });
     }
   }
 
   if (independentFindings && independentFindings.length > 0) {
     for (const f of independentFindings) {
+      const evidence = resolveEvidence(text, f);
       add({
         type: "llm_independent",
         severity: f.severity ?? "minor",
         message: f.category,
-        evidence: f.quote || undefined,
+        evidence: evidence || undefined,
       });
     }
   } else {
     for (const v of independentViolations ?? []) {
       if (!v || typeof v !== "string") continue;
-      add({ type: "llm_independent", severity: "minor", message: v });
+      const evidence = fallbackQuoteForCategory(text, v);
+      add({ type: "llm_independent", severity: "minor", message: v, evidence: evidence || undefined });
     }
   }
 
@@ -281,6 +384,7 @@ export async function runComplianceCheck(
   const recommendedAction = mapRecommendedAction(decision.finalAction, hasAnyHardRule);
 
   const matchedRules = buildMatchedRules(
+    text,
     bundleMatches,
     decision.semanticResult?.findings as LlmFinding[] | undefined,
     decision.semanticResult?.issues,
