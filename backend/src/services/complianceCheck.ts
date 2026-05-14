@@ -143,10 +143,24 @@ function deriveRegulators(
   return out;
 }
 
-/** Merge bundle rule matches + LLM issues into one dedup'd list. */
+/** Shape both validators converge on for quote-carrying findings. */
+interface LlmFinding {
+  category: string;
+  quote: string;
+  severity: 'critical' | 'major' | 'minor';
+}
+
+/** Merge bundle rule matches + LLM findings into one dedup'd list.
+ *
+ *  Each LLM-flagged finding now carries the exact substring from the input
+ *  that triggered it (`evidence`), so the frontend can highlight it inline
+ *  in the source text. Categories without a verbatim quote are still
+ *  surfaced — they just have an empty `evidence`. */
 function buildMatchedRules(
   bundleMatches: Array<{ ruleType: string; severity: string; message: string; evidence?: string }> | undefined,
+  semanticFindings: LlmFinding[] | undefined,
   semanticIssues: string[] | undefined,
+  independentFindings: LlmFinding[] | undefined,
   independentViolations: string[] | undefined,
   sourceRefs: Array<{ sourceCode: string }>,
   externalStatus: ComplianceCheckStatus
@@ -159,7 +173,9 @@ function buildMatchedRules(
   const primarySource = sourceRefs[0]?.sourceCode;
 
   const add = (r: ComplianceCheckMatchedRule) => {
-    const key = `${r.type}:${r.message.toLowerCase()}`;
+    // Include the evidence in the dedup key so two distinct phrases under
+    // the same category render as two findings (matches the LLM contract).
+    const key = `${r.type}:${(r.evidence ?? "").toLowerCase()}:${r.message.toLowerCase()}`;
     if (seen.has(key)) return;
     seen.add(key);
     rules.push(r);
@@ -175,14 +191,38 @@ function buildMatchedRules(
     });
   }
 
-  // LLM-sourced issues: keep only when the external status is not approved
-  for (const issue of semanticIssues ?? []) {
-    if (!issue || typeof issue !== "string") continue;
-    add({ type: "llm_semantic", severity: "minor", message: issue });
+  // LLM-sourced findings — prefer the structured shape with quotes; fall
+  // back to bare category strings from older deployments / fallbacks.
+  if (semanticFindings && semanticFindings.length > 0) {
+    for (const f of semanticFindings) {
+      add({
+        type: "llm_semantic",
+        severity: f.severity ?? "minor",
+        message: f.category,
+        evidence: f.quote || undefined,
+      });
+    }
+  } else {
+    for (const issue of semanticIssues ?? []) {
+      if (!issue || typeof issue !== "string") continue;
+      add({ type: "llm_semantic", severity: "minor", message: issue });
+    }
   }
-  for (const v of independentViolations ?? []) {
-    if (!v || typeof v !== "string") continue;
-    add({ type: "llm_independent", severity: "minor", message: v });
+
+  if (independentFindings && independentFindings.length > 0) {
+    for (const f of independentFindings) {
+      add({
+        type: "llm_independent",
+        severity: f.severity ?? "minor",
+        message: f.category,
+        evidence: f.quote || undefined,
+      });
+    }
+  } else {
+    for (const v of independentViolations ?? []) {
+      if (!v || typeof v !== "string") continue;
+      add({ type: "llm_independent", severity: "minor", message: v });
+    }
   }
 
   return rules;
@@ -242,7 +282,9 @@ export async function runComplianceCheck(
 
   const matchedRules = buildMatchedRules(
     bundleMatches,
+    decision.semanticResult?.findings as LlmFinding[] | undefined,
     decision.semanticResult?.issues,
+    decision.independentResult?.findings as LlmFinding[] | undefined,
     decision.independentResult?.violations,
     sourceRefs,
     externalStatus
