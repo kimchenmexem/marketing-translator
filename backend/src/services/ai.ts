@@ -1,4 +1,4 @@
-import { TranslationRequest, TranslationOutput } from "@mexem/shared";
+import { TranslationRequest, TranslationOutput, LengthConstraint } from "@mexem/shared";
 import { validateLength } from "./validation";
 import { getLocaleRules, getComplianceForbiddenWords } from "./localeRules";
 import { loadBundle } from "../compliance/bundles/loader";
@@ -157,6 +157,88 @@ function personaToAudienceType(persona: string): string {
  * Advisory only — framing hints and editorial cues, never raw article text.
  * Returns empty string if no pack is available.
  */
+// Per-textType default length recommendation in characters. Used when the
+// operator-supplied lengthConstraint is permissive ("max" with no value),
+// or when the textType has a hard platform limit the prompt should honour
+// even if the operator didn't think to set one. Sourced from public
+// platform specs (Google Ads help, Meta business help, common email best
+// practice). Adjust here when a platform updates its limits.
+const TEXT_TYPE_DEFAULT_MAX_CHARS: Record<string, number> = {
+  google_search_headline: 30,
+  google_search_description: 90,
+  google_display_headline: 30,
+  google_display_long_headline: 90,
+  google_display_description: 90,
+  google_pmax_headline: 30,
+  google_pmax_long_headline: 90,
+  google_pmax_description: 90,
+  google_youtube_headline: 30,
+  google_youtube_description: 90,
+  meta_primary_text: 125,
+  meta_headline: 40,
+  meta_description: 30,
+  meta_long_headline: 100,
+  push_notification: 120,
+  sms: 160,
+  landing_headline: 80,
+  banner: 60,
+  cta_button: 24,
+  email_subject: 60,
+  email_body: 600,
+};
+
+function describeConstraint(c: LengthConstraint): string | null {
+  if (c.mode === "exact" && typeof c.exactChars === "number") {
+    return `EXACTLY ${c.exactChars} characters`;
+  }
+  if (c.mode === "near" && typeof c.exactChars === "number") {
+    return `approximately ${c.exactChars} characters (±10)`;
+  }
+  if (c.mode === "max" && typeof c.maxChars === "number") {
+    return `at most ${c.maxChars} characters`;
+  }
+  if (c.mode === "max" && typeof c.maxWords === "number") {
+    return `at most ${c.maxWords} words`;
+  }
+  if (
+    c.mode === "range" &&
+    typeof c.minChars === "number" &&
+    typeof c.maxCharsRange === "number"
+  ) {
+    return `between ${c.minChars} and ${c.maxCharsRange} characters`;
+  }
+  if (
+    c.mode === "range" &&
+    typeof c.minWords === "number" &&
+    typeof c.maxWordsRange === "number"
+  ) {
+    return `between ${c.minWords} and ${c.maxWordsRange} words`;
+  }
+  return null;
+}
+
+// Builds an explicit length instruction for the LLM prompt. The model
+// otherwise had no idea what target length to aim for — particularly bad
+// for emails where the operator may not pass an explicit constraint.
+// Resolution order:
+//   1. Explicit lengthConstraint provided by the caller
+//   2. Per-textType platform default (TEXT_TYPE_DEFAULT_MAX_CHARS)
+//   3. Nothing — model writes free-form
+function buildLengthInstruction(
+  constraint: LengthConstraint,
+  textType: string,
+): string {
+  const fromConstraint = describeConstraint(constraint);
+  if (fromConstraint) {
+    return `\nLENGTH: The output must be ${fromConstraint}. Count characters in the target language. Plan the sentence so it fits comfortably — do not pad to reach the limit nor truncate mid-thought.`;
+  }
+  const fallbackMax = TEXT_TYPE_DEFAULT_MAX_CHARS[textType];
+  if (fallbackMax) {
+    return `\nLENGTH: For "${textType}" the conventional limit is ${fallbackMax} characters. Aim for that as a soft upper bound; concise is better than padded.`;
+  }
+  return "";
+}
+
 function buildMarketContextPrompt(pack: MarketContextPack | null): string {
   if (!pack || pack.topSources.length === 0) return "";
 
@@ -298,6 +380,10 @@ If your translation would naturally use one of these, pick the closest faithful 
     : "";
 
   const styleGuide = getLocaleStyleGuide(request.targetLocale);
+  const lengthInstruction = buildLengthInstruction(
+    request.lengthConstraint,
+    request.textType,
+  );
 
   const systemPrompt = `You are an expert marketing copywriter and translator for MEXEM, a regulated European trading platform.
 
@@ -312,7 +398,7 @@ TRANSLATION PRINCIPLES:
 AUDIENCE & TONE: ${personaGuidance}
 ${styleGuide ? `\n${styleGuide}\n` : ""}
 LOCALE RULES: ${localeRules}
-CONTENT TYPE: ${request.textType}
+CONTENT TYPE: ${request.textType}${lengthInstruction}
 ${requiredTermsInstruction}
 ${forbiddenTerms}
 ${complianceForbiddenInstruction}${reviewerFlaggedBlock}

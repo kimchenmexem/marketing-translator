@@ -2,6 +2,7 @@ export type LocaleCode = "it-IT" | "fr-FR" | "nl-NL" | "nl-BE" | "fr-BE" | "es-E
 
 export * from "./compliance";
 export * from "./publisher";
+export * from "./campaign-copy";
 
 export interface LocaleOption {
   code: LocaleCode;
