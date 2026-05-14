@@ -130,6 +130,13 @@ export interface ReviewRequest {
   issueCodes?: ReviewIssueCode[];
   correctedTranslation?: string;
   reviewerId?: string;
+  /**
+   * Phrases the reviewer wants the AI to never produce again for the
+   * output's target locale. Each becomes a ForbiddenPhrase row. Backend
+   * honours this field only for REVIEWER+ roles; values from a plain USER
+   * are silently dropped to prevent prompt poisoning.
+   */
+  forbiddenPhrases?: string[];
 }
 
 export interface TranslationReview {
