@@ -15,6 +15,7 @@
 import { useState } from "react";
 import type { ReviewIssueCode } from "@mexem/shared";
 import { submitReview } from "../api/client";
+import { useUserRole, isReviewerOrAbove } from "../hooks/useUserRole";
 
 const ISSUE_CODE_LABELS: Record<ReviewIssueCode, string> = {
   tone: "Tone",
@@ -39,14 +40,30 @@ export interface ReviewPanelProps {
 }
 
 export default function ReviewPanel({ outputId, onReviewSubmitted, compact = false }: ReviewPanelProps) {
+  const role = useUserRole();
+  const canFlagForbidden = isReviewerOrAbove(role);
+
   const [open, setOpen] = useState(false);
   const [decision, setDecision] = useState<"approved" | "rejected" | null>(null);
   const [selectedCodes, setSelectedCodes] = useState<ReviewIssueCode[]>([]);
   const [note, setNote] = useState("");
   const [correctedTranslation, setCorrectedTranslation] = useState("");
+  const [forbiddenPhrases, setForbiddenPhrases] = useState<string[]>([]);
+  const [forbiddenDraft, setForbiddenDraft] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  const addForbiddenFromDraft = () => {
+    const trimmed = forbiddenDraft.trim();
+    if (!trimmed) return;
+    if (forbiddenPhrases.includes(trimmed)) {
+      setForbiddenDraft("");
+      return;
+    }
+    setForbiddenPhrases((prev) => [...prev, trimmed]);
+    setForbiddenDraft("");
+  };
 
   if (submitted) {
     return (
@@ -97,6 +114,8 @@ export default function ReviewPanel({ outputId, onReviewSubmitted, compact = fal
         note: note || undefined,
         issueCodes: selectedCodes.length > 0 ? selectedCodes : undefined,
         correctedTranslation: correctedTranslation || undefined,
+        forbiddenPhrases:
+          canFlagForbidden && forbiddenPhrases.length > 0 ? forbiddenPhrases : undefined,
       });
       setSubmitted(true);
       onReviewSubmitted?.();
@@ -151,6 +170,55 @@ export default function ReviewPanel({ outputId, onReviewSubmitted, compact = fal
               value={correctedTranslation} onChange={e => setCorrectedTranslation(e.target.value)}
               placeholder="Provide the preferred translation if possible..." />
           </div>
+
+          {canFlagForbidden && (
+            <div className="field">
+              <label className="field-label" style={{ fontSize: "0.7rem" }}>
+                Flag phrases as forbidden (REVIEWER+) — applied to this locale globally
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginBottom: "0.3rem" }}>
+                {forbiddenPhrases.map((p) => (
+                  <span key={p} style={{
+                    display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                    padding: "0.15rem 0.5rem", borderRadius: "var(--radius-sm)",
+                    background: "var(--danger-bg, #fde2e2)", color: "var(--danger, #c00)",
+                    fontSize: "0.7rem", fontWeight: 500,
+                  }}>
+                    {p}
+                    <button type="button" onClick={() =>
+                      setForbiddenPhrases((prev) => prev.filter((x) => x !== p))
+                    } style={{
+                      background: "transparent", border: "none", cursor: "pointer",
+                      color: "var(--danger, #c00)", padding: 0, fontSize: "0.8rem", lineHeight: 1,
+                    }} aria-label={`Remove ${p}`}>×</button>
+                  </span>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: "0.4rem" }}>
+                <input
+                  className="input"
+                  style={{ fontSize, flex: 1 }}
+                  value={forbiddenDraft}
+                  onChange={(e) => setForbiddenDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === ",") {
+                      e.preventDefault();
+                      addForbiddenFromDraft();
+                    }
+                  }}
+                  placeholder='e.g. "Sta pensando" — press Enter to add'
+                />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-secondary"
+                  onClick={addForbiddenFromDraft}
+                  disabled={!forbiddenDraft.trim()}
+                  style={{ fontSize }}>
+                  Add
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 

@@ -9,10 +9,25 @@ import { lazyOpenAI } from "./openaiHelpers";
 
 const openai = lazyOpenAI();
 
+/** A single LLM-flagged concern with the exact substring from the input
+ *  that triggered it, so the UI can highlight where it occurs. */
+export interface SemanticFinding {
+  /** Compliance category, e.g. "no_guarantees", "risk_balance". */
+  category: string;
+  /** Verbatim substring from the input that the LLM flagged. May be empty
+   *  if the concern is "something missing" rather than "something present". */
+  quote: string;
+  /** LLM-assessed severity for this single finding. */
+  severity: 'critical' | 'major' | 'minor';
+}
+
 export interface SemanticValidationResult {
   classification: 'COMPLIANT' | 'NON-COMPLIANT' | 'AMBIGUOUS';
   confidence: number; // 0-100
   issues: string[];
+  /** Structured findings with verbatim quotes. Present when the LLM
+   *  returned the richer shape; older deployments may have only `issues`. */
+  findings?: SemanticFinding[];
   explanation: string;
   severity: number; // 1-10
   requiresRewrite: boolean;
@@ -56,10 +71,26 @@ export async function validateSemanticCompliance(
     // Debug logging removed for production
     const result = JSON.parse(rawResponse || '{}');
 
+    const findings: SemanticFinding[] = Array.isArray(result.findings)
+      ? result.findings
+          .map((f: any) => ({
+            category: String(f?.category ?? '').trim(),
+            quote: typeof f?.quote === 'string' ? f.quote.trim() : '',
+            severity: normaliseSeverity(f?.severity),
+          }))
+          .filter((f: SemanticFinding) => f.category.length > 0)
+      : [];
+
+    // Backwards-compat: derive `issues` from category if findings present.
+    const issues = findings.length > 0
+      ? Array.from(new Set(findings.map((f) => f.category)))
+      : (result.issues || []);
+
     return {
       classification: result.classification || 'AMBIGUOUS',
       confidence: Math.min(100, Math.max(0, result.confidence || 50)),
-      issues: result.issues || [],
+      issues,
+      findings: findings.length > 0 ? findings : undefined,
       explanation: result.explanation || 'Unable to determine',
       severity: Math.min(10, Math.max(1, result.severity || 5)),
       requiresRewrite: result.classification === 'NON-COMPLIANT'
@@ -145,14 +176,31 @@ CLASSIFICATION RULES:
 - NON-COMPLIANT: Explicit or implied claims about investment returns, profits, guaranteed outcomes, or risk-free investing; or any hard prohibition above
 - AMBIGUOUS: Borderline cases where a claim could be read as either a product feature or a performance promise
 
+FINDINGS RULES (IMPORTANT):
+- For each concern you identify, include the VERBATIM substring from the input that triggered it in the "quote" field.
+- "quote" must be an exact character-by-character copy of a contiguous span from CONTENT TO EVALUATE — do NOT paraphrase, translate, or summarise.
+- If a concern is about something MISSING from the text (e.g. a required disclaimer is absent), leave "quote" empty.
+- Pick the shortest meaningful span that conveys the issue (usually 1–6 words).
+- One finding per offending phrase. If the same category triggers on two different phrases, return two findings.
+
 RESPONSE FORMAT (JSON only):
 {
   "classification": "COMPLIANT|NON-COMPLIANT|AMBIGUOUS",
   "confidence": 0-100,
-  "issues": ["specific_violation_1", "specific_violation_2"],
+  "findings": [
+    { "category": "no_guarantees", "quote": "exact substring from input", "severity": "critical|major|minor" }
+  ],
+  "issues": ["category_for_backward_compat_1", "category_for_backward_compat_2"],
   "explanation": "brief explanation of classification",
   "severity": 1-10
 }`;
+}
+
+function normaliseSeverity(v: any): 'critical' | 'major' | 'minor' {
+  const s = String(v ?? '').toLowerCase();
+  if (s === 'critical') return 'critical';
+  if (s === 'major') return 'major';
+  return 'minor';
 }
 
 /**

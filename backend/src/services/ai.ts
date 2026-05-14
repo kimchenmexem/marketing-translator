@@ -40,13 +40,33 @@ function getLocaleLanguage(locale: string): string {
  */
 export function getLocaleStyleGuide(locale: string): string {
   const guides: Record<string, string> = {
-    "it-IT": `ITALIAN STYLE:
-- Address the reader directly with the informal "tu" form (second-person singular). Use "tu" verb conjugations: "stai", "puoi", "sei", "investi", etc. — NOT "Lei" / "Sta" / "può" / "investe" (third-person formal). Modern Italian retail-finance brands (Fineco, ScalableCapital, Webank, etc.) universally use "tu" for digital marketing.
-- Match the source's directness. If the English is a direct question ("Investing in ETFs?"), the Italian should be equally direct ("Stai pensando di investire in ETF?"), not a polished formal version.
-- Prefer established Italian financial terminology: "strumenti finanziari", "negoziazione", "piattaforma di investimento".
-- Tone is warm and approachable but still factual and professional — not cold, not over-casual.
-- Numbers: use comma as decimal separator, period as thousands separator (1.234,56).
-- Adapt idioms — do not translate English expressions literally. Find the Italian equivalent or rephrase.`,
+    "it-IT": `ITALIAN STYLE — CRITICAL REGISTER RULES:
+- Address the reader with the informal "tu" form (second-person singular). NEVER use "Lei" / third-person formal. Modern Italian retail-finance brands (Fineco, ScalableCapital, Webank, Directa, etc.) universally use "tu" for digital marketing — using "Lei" sounds outdated and bank-stuffy.
+- NEVER capitalise possessives (no "Suo / Sua / Suoi / Sue"). Use lowercase "tuo / tua / tuoi / tue".
+- Imperatives must be tu-form (-i / -a ending for -are/-ere/-ire verbs in 2nd person singular), NOT Lei-form (-i / -a / -ica with subjunctive).
+
+VERB FORM PAIRS — use the LEFT (tu), never the RIGHT (Lei):
+  • "Stai pensando" ✓ / "Sta pensando" ✗
+  • "dovresti sapere" ✓ / "deve sapere" ✗
+  • "Scopri" ✓ / "Scopra" ✗
+  • "il tuo broker" ✓ / "il Suo broker" ✗
+  • "hai" ✓ / "ha" ✗
+  • "puoi" ✓ / "può" ✗
+  • "Costruisci" ✓ / "Costruisca" ✗
+  • "Modifica" ✓ / "Modifichi" ✗
+  • "Tieni" ✓ / "Mantenga" ✗
+  • "Investi" ✓ / "Operi" / "Investa" ✗
+  • "Passa" ✓ / "Passi" ✗
+  • "Apri" ✓ / "Apra" ✗
+  • "Inizia" ✓ / "Inizi" ✗
+
+OTHER GUIDANCE:
+- Match the source's directness. A direct English question ("Investing in ETFs?") becomes an equally direct Italian one ("Stai pensando di investire in ETF?"), not a polished formal version.
+- Prefer "trading" (loanword, standard in Italian fintech) over "negoziazione" for retail copy. Use "negoziazione" only in strictly regulatory contexts.
+- Keep brand names (MEXEM, WisdomTree) and product terms (ETF, ETP) unchanged.
+- Tone: warm, direct, approachable, but factual and professional. Not cold, not slangy.
+- Numbers: comma as decimal separator, period as thousands (1.234,56).
+- Adapt idioms — never translate English expressions literally.`,
 
     "fr-FR": `FRENCH (FRANCE) STYLE:
 - French financial copy uses a precise, formal register. Clarity and elegance matter.
