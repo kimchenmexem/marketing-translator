@@ -20,6 +20,7 @@
     "db:seed:publishers": "ts-node --transpile-only src/scripts/seed-publisher-sources.ts",
     "publisher:sync": "ts-node --transpile-only src/scripts/publisher-sync.ts",
     "seed:eu-baseline": "ts-node --transpile-only src/scripts/seed-eu-baseline.ts",
+    "seed:fca-baseline": "ts-node --transpile-only src/scripts/seed-fca-baseline.ts",
     "seed:glossary": "ts-node --transpile-only src/scripts/seed-glossary.ts",
     "test:compliance": "ts-node --transpile-only src/test/compliance-sot-tests.ts",
     "test:admin-auth": "ts-node --transpile-only src/test/admin-auth-tests.ts",
