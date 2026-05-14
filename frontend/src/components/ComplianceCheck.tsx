@@ -141,6 +141,13 @@ function ResultCard({ result, checkedText }: { result: any; checkedText: string 
           <div>{result.summary}</div>
         </div>
 
+        {/* Dedup'd list of every offending phrase, surfaced as the very first
+            thing under SUMMARY so "what's wrong here?" has a one-glance
+            answer that doesn't require scanning the full text. */}
+        <ProblematicPhrasesPanel
+          matchedRules={Array.isArray(result.matchedRules) ? result.matchedRules : []}
+        />
+
         {/* Source text with inline highlights of every matched fragment.
             Only rendered when there is at least one finding to highlight; an
             approved check shows the bare text without colored marks. */}
@@ -243,6 +250,93 @@ function expandMessage(type: string, message: string): string {
   };
   const lower = message.toLowerCase().trim();
   return EXPANSIONS[lower] ?? message;
+}
+
+// ─── Problematic-phrases summary panel ──────────────────────────────
+//
+// Renders a deduplicated list of every offending phrase the bundle +
+// LLM check matched against the user's text. Each phrase is shown as a
+// severity-coloured chip with the category beneath, so the answer to
+// "what's wrong in my text?" is a single glance, not a scroll-through.
+
+interface PhraseChip {
+  phrase: string;
+  severity: string;
+  categories: string[];
+}
+
+function summariseOffendingPhrases(matchedRules: any[]): PhraseChip[] {
+  const byPhrase = new Map<string, PhraseChip>();
+  for (const r of matchedRules) {
+    const ev: string = typeof r.evidence === "string" ? r.evidence.trim() : "";
+    if (!ev) continue;
+    const key = ev.toLowerCase();
+    const sev = (r.severity ?? "minor") as string;
+    const cat = r.message || r.type || "rule";
+    const existing = byPhrase.get(key);
+    if (existing) {
+      // Keep the higher-severity rendering when the same phrase fires
+      // multiple categories; record every category for the tooltip.
+      const a = SEVERITY_RANK[existing.severity] ?? 0;
+      const b = SEVERITY_RANK[sev] ?? 0;
+      if (b > a) existing.severity = sev;
+      if (!existing.categories.includes(cat)) existing.categories.push(cat);
+    } else {
+      byPhrase.set(key, { phrase: ev, severity: sev, categories: [cat] });
+    }
+  }
+  return Array.from(byPhrase.values());
+}
+
+function ProblematicPhrasesPanel({ matchedRules }: { matchedRules: any[] }) {
+  const phrases = summariseOffendingPhrases(matchedRules);
+  if (phrases.length === 0) return null;
+
+  return (
+    <div style={{
+      padding: "0.75rem 0.9rem",
+      background: "rgba(220, 38, 38, 0.05)",
+      border: "1px solid rgba(220, 38, 38, 0.25)",
+      borderRadius: "var(--radius-sm)",
+    }}>
+      <div style={{ fontWeight: 600, color: "var(--text-3)", fontSize: "0.75rem", marginBottom: "0.5rem" }}>
+        PROBLEMATIC PHRASES IN YOUR TEXT ({phrases.length})
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+        {phrases.map((p, i) => {
+          const style = SEVERITY_STYLE[p.severity] ?? SEVERITY_STYLE.minor;
+          return (
+            <span
+              key={`${p.phrase}-${i}`}
+              title={p.categories.join(" · ")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.35rem",
+                padding: "0.25rem 0.55rem",
+                background: style.bg,
+                color: style.text,
+                borderBottom: `2px solid ${style.border}`,
+                borderRadius: "var(--radius-sm)",
+                fontWeight: 600,
+                fontSize: "0.8125rem",
+              }}>
+              "{p.phrase}"
+              <span style={{
+                fontSize: "0.65rem",
+                fontWeight: 400,
+                opacity: 0.85,
+                textTransform: "uppercase",
+                letterSpacing: "0.02em",
+              }}>
+                {p.severity}
+              </span>
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 // ─── Inline highlight of evidence words in the submitted text ───────
