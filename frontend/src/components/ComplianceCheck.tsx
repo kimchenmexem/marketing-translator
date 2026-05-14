@@ -27,6 +27,10 @@ export default function ComplianceCheck() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any | null>(null);
+  // Snapshot of the text the user actually submitted, used to highlight the
+  // exact fragments the bundle executor matched. Kept separate from `text`
+  // so editing the textarea after a check doesn't mis-align the highlights.
+  const [checkedText, setCheckedText] = useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +39,10 @@ export default function ComplianceCheck() {
     setError(null);
     setResult(null);
     try {
-      const r = await compliance.runComplianceCheck({ text, locale });
+      const submitted = text;
+      const r = await compliance.runComplianceCheck({ text: submitted, locale });
       setResult(r);
+      setCheckedText(submitted);
     } catch (err: any) {
       const raw = err?.response?.data?.error;
       setError(
@@ -92,12 +98,12 @@ export default function ComplianceCheck() {
       </form>
 
       {/* Result */}
-      {result && <ResultCard result={result} />}
+      {result && <ResultCard result={result} checkedText={checkedText} />}
     </div>
   );
 }
 
-function ResultCard({ result }: { result: any }) {
+function ResultCard({ result, checkedText }: { result: any; checkedText: string }) {
   const status = result.status as "approved" | "review_required" | "rejected";
   const statusColor =
     status === "approved" ? "badge-green" :
@@ -134,6 +140,16 @@ function ResultCard({ result }: { result: any }) {
           <div style={{ fontWeight: 600, color: "var(--text-3)", fontSize: "0.75rem", marginBottom: "0.25rem" }}>SUMMARY</div>
           <div>{result.summary}</div>
         </div>
+
+        {/* Source text with inline highlights of every matched fragment.
+            Only rendered when there is at least one finding to highlight; an
+            approved check shows the bare text without colored marks. */}
+        {checkedText && (
+          <HighlightedSourceText
+            text={checkedText}
+            matchedRules={Array.isArray(result.matchedRules) ? result.matchedRules : []}
+          />
+        )}
 
         {/* Meta row */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "0.75rem" }}>
@@ -227,6 +243,190 @@ function expandMessage(type: string, message: string): string {
   };
   const lower = message.toLowerCase().trim();
   return EXPANSIONS[lower] ?? message;
+}
+
+// ─── Inline highlight of evidence words in the submitted text ───────
+//
+// Builds a non-overlapping, case-insensitive set of ranges covering every
+// fragment the bundle executor matched, picks the highest-severity color
+// per range, and renders the text with <mark>-style spans. Missing-
+// disclaimer findings have no `evidence`, so they surface as separate
+// banners under the highlighted block.
+
+const SEVERITY_RANK: Record<string, number> = { critical: 3, major: 2, minor: 1 };
+const SEVERITY_STYLE: Record<string, { bg: string; border: string; text: string }> = {
+  critical: { bg: "rgba(220, 38, 38, 0.18)",  border: "var(--red, #c00)",   text: "var(--red, #c00)" },
+  major:    { bg: "rgba(217, 119, 6, 0.18)",  border: "var(--amber, #d97706)", text: "var(--amber, #d97706)" },
+  minor:    { bg: "rgba(107, 114, 128, 0.18)", border: "var(--text-3, #6b7280)", text: "var(--text-3, #6b7280)" },
+};
+
+interface Range {
+  start: number;
+  end: number;
+  severity: string;
+  evidence: string;
+  message: string;
+}
+
+function findRanges(text: string, evidence: string, severity: string, message: string): Range[] {
+  if (!evidence || !text) return [];
+  const lowerText = text.toLowerCase();
+  const lowerEv = evidence.toLowerCase();
+  const out: Range[] = [];
+  let idx = 0;
+  while (idx < lowerText.length) {
+    const found = lowerText.indexOf(lowerEv, idx);
+    if (found === -1) break;
+    out.push({
+      start: found,
+      end: found + lowerEv.length,
+      severity,
+      evidence,
+      message,
+    });
+    idx = found + Math.max(1, lowerEv.length);
+  }
+  return out;
+}
+
+/** Merge overlapping ranges keeping the highest severity per merged span. */
+function mergeRanges(ranges: Range[]): Range[] {
+  if (ranges.length === 0) return [];
+  const sorted = [...ranges].sort((a, b) => a.start - b.start || b.end - a.end);
+  const merged: Range[] = [];
+  for (const r of sorted) {
+    const last = merged[merged.length - 1];
+    if (last && r.start < last.end) {
+      // Overlap: extend end and keep the higher-severity attributes.
+      const lastRank = SEVERITY_RANK[last.severity] ?? 0;
+      const curRank = SEVERITY_RANK[r.severity] ?? 0;
+      if (curRank > lastRank) {
+        last.severity = r.severity;
+        last.evidence = r.evidence;
+        last.message = r.message;
+      }
+      if (r.end > last.end) last.end = r.end;
+    } else {
+      merged.push({ ...r });
+    }
+  }
+  return merged;
+}
+
+function HighlightedSourceText({ text, matchedRules }: { text: string; matchedRules: any[] }) {
+  // Hard rules with text evidence → inline highlight.
+  // Disclaimer rules have no evidence; they're handled below as banners.
+  const evidenceRules = matchedRules.filter(
+    (r) => r.evidence && typeof r.evidence === "string" && r.evidence.trim().length > 0,
+  );
+  const missingDisclaimers = matchedRules.filter(
+    (r) => r.type === "required_disclaimer" && (!r.evidence || r.evidence === ""),
+  );
+
+  // Compute and merge ranges.
+  const allRanges: Range[] = [];
+  for (const r of evidenceRules) {
+    allRanges.push(...findRanges(text, r.evidence, r.severity ?? "minor", r.message ?? ""));
+  }
+  const ranges = mergeRanges(allRanges);
+
+  // Build output spans by walking the text.
+  const nodes: React.ReactNode[] = [];
+  let cursor = 0;
+  for (let i = 0; i < ranges.length; i++) {
+    const r = ranges[i];
+    if (r.start > cursor) {
+      nodes.push(<span key={`t-${i}`}>{text.slice(cursor, r.start)}</span>);
+    }
+    const style = SEVERITY_STYLE[r.severity] ?? SEVERITY_STYLE.minor;
+    nodes.push(
+      <mark
+        key={`m-${i}`}
+        title={r.message ? `${r.severity.toUpperCase()}: ${r.message}` : r.severity.toUpperCase()}
+        style={{
+          background: style.bg,
+          color: style.text,
+          borderBottom: `2px solid ${style.border}`,
+          padding: "0 2px",
+          borderRadius: "2px",
+        }}>
+        {text.slice(r.start, r.end)}
+      </mark>,
+    );
+    cursor = r.end;
+  }
+  if (cursor < text.length) {
+    nodes.push(<span key="tail">{text.slice(cursor)}</span>);
+  }
+
+  const noFindings = ranges.length === 0 && missingDisclaimers.length === 0;
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.3rem" }}>
+        <div style={{ fontWeight: 600, color: "var(--text-3)", fontSize: "0.75rem" }}>
+          SOURCE TEXT {ranges.length > 0 && `— ${ranges.length} match${ranges.length === 1 ? "" : "es"} highlighted`}
+        </div>
+        {ranges.length > 0 && (
+          <div style={{ display: "flex", gap: "0.4rem", fontSize: "0.6875rem", color: "var(--text-3)" }}>
+            <LegendDot severity="critical" />
+            <LegendDot severity="major" />
+            <LegendDot severity="minor" />
+          </div>
+        )}
+      </div>
+
+      <div style={{
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+        padding: "0.75rem 0.9rem",
+        background: "var(--bg, #f7f8fa)",
+        borderRadius: "var(--radius-sm)",
+        border: "1px solid var(--border)",
+        fontSize: "0.8125rem",
+        lineHeight: 1.5,
+        fontFamily: "var(--font-mono, ui-monospace), Menlo, monospace",
+      }}>
+        {noFindings ? text : nodes}
+      </div>
+
+      {/* Missing-disclaimer banners — these have no matched text fragment */}
+      {missingDisclaimers.length > 0 && (
+        <div style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+          {missingDisclaimers.map((d, i) => (
+            <div key={`md-${i}`} style={{
+              padding: "0.4rem 0.6rem",
+              background: "rgba(217, 119, 6, 0.08)",
+              border: "1px dashed var(--amber, #d97706)",
+              borderRadius: "var(--radius-sm)",
+              fontSize: "0.75rem",
+              color: "var(--text-2)",
+            }}>
+              <strong style={{ color: "var(--amber, #d97706)" }}>Missing disclosure: </strong>
+              {d.message}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LegendDot({ severity }: { severity: string }) {
+  const style = SEVERITY_STYLE[severity];
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+      <span style={{
+        display: "inline-block",
+        width: "0.55rem",
+        height: "0.55rem",
+        borderRadius: "2px",
+        background: style.bg,
+        borderBottom: `2px solid ${style.border}`,
+      }} />
+      <span style={{ textTransform: "uppercase", letterSpacing: "0.02em" }}>{severity}</span>
+    </span>
+  );
 }
 
 function FindingCard({ rule }: { rule: any }) {
