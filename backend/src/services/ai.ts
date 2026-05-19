@@ -66,13 +66,21 @@ OTHER GUIDANCE:
 - Keep brand names (MEXEM, WisdomTree) and product terms (ETF, ETP) unchanged.
 - Tone: warm, direct, approachable, but factual and professional. Not cold, not slangy.
 - Numbers: comma as decimal separator, period as thousands (1.234,56).
-- Adapt idioms — never translate English expressions literally.`,
+- Adapt idioms — never translate English expressions literally.
+
+HOMEPAGE / MARKETING NUANCES:
+- For marketing tropes, prefer reviewer-blessed wordings: "Commissioni di Trading contenute" (NOT "...Basse"), "Azioni frazionate" (NOT "Frazionali"), "trading frazionato" (NOT "frazionale"), "Scopri i Conti societari" (NOT "Esplora Conti Aziendali").
+- In the fractional-trading sentence write "azioni europee e statunitensi", not "azioni EU e US".
+- "Powerful Trading Platforms" → "Piattaforme di trading evolute" (NOT "Potenti").`,
 
     "fr-FR": `FRENCH (FRANCE) STYLE:
 - French financial copy uses a precise, formal register. Clarity and elegance matter.
 - Use "vous" (formal), never "tu".
 - Prefer established French financial terms: "plateforme de négociation", "instruments financiers", "courtier".
-- Avoid anglicisms when a good French term exists: "trading" → "négociation" or "investissement" depending on context, but keep "ETF" and "ETP" as-is (industry standard).
+- Capitalisation: French uses SENTENCE CASE in headlines, not English title case. Never capitalise every word ("Accédez Aux Marchés Financiers Mondiaux" is wrong — write "Accédez aux marchés financiers mondiaux").
+- Anglicism balance: on homepage / marketing copy, reviewer prefers "trading" over "négociation" in several MEXEM-blessed phrases ("Tradez des ETF...", "Trading à frais réduits", "trading fractionné", "trading mondial"). Use "négociation" only when the canonical reviewer-approved version uses it.
+- "ETF" is invariant in French — use the singular form even when listing several products.
+- For homepage stat cards, keep the "170+ marchés / 40+ pays / 29+ devises" form — do not expand to "Plus de 170...".
 - Numbers: use comma as decimal separator, space as thousands separator (1 234,56).
 - French readers value logical structure — lead with the value proposition, then explain.`,
 
@@ -81,7 +89,8 @@ OTHER GUIDANCE:
 - Use "u" (formal) for this professional context.
 - Dutch readers appreciate directness — get to the point quickly.
 - Prefer Dutch financial terms where they exist: "handelsplatform", "beleggen", "effecten".
-- Keep "ETF" and "ETP" as-is (standard in Dutch financial media).
+- Keep "ETF" and "ETP" as-is — pluralise as "ETF's" (apostrophe-s) in line with Dutch convention.
+- For the "Pioneering" headline write "Vooroplopen op de weg naar transparant beleggen tegen lage kosten" — NOT a literal "Wij banen de weg..." version.
 - Numbers: use comma as decimal separator, period as thousands separator (1.234,56).
 - Avoid long compound words when a shorter phrase is clearer.`,
 
@@ -104,6 +113,10 @@ OTHER GUIDANCE:
 - Use "usted" (formal) for this professional context.
 - Prefer European Spanish conventions, not Latin American: "ordenador" not "computadora", "negociación" not "operación".
 - Prefer established Spanish financial terms: "plataforma de inversión", "valores", "renta variable".
+- Marketing adjective order: Spanish puts the descriptive adjective AFTER the noun for product / pricing phrases. Write "Tarifas de Negociación Bajas" — NOT "Bajas Tarifas de Negociación". Same shape for similar tropes ("Comisiones Reducidas", not "Reducidas Comisiones").
+- Corporate verbs: prefer "Ponga a trabajar..." over "Haga trabajar..." (reviewer rejection).
+- Avoid the stiff phrase "la gestión de estos" in the corporate paragraph — rephrase as "gestionarlos de forma eficiente".
+- For fractional-shares copy use "invertir en acciones fraccionadas" — NOT "negociación fraccionada".
 - Numbers: use comma as decimal separator, period as thousands separator (1.234,56).
 - Spanish allows for slightly more expressive copy than English — use it to create engaging text, but stay professional.`,
 
@@ -411,7 +424,10 @@ HARD RULES:
 - Preserve brand names (MEXEM, WisdomTree) and asterisks (*) exactly as written.
 - Do not add disclaimers unless instructed.
 - This is for a regulated financial platform — use factual, professional language. Never imply guaranteed returns, capital safety, or urgency.
-- Output only the translated text, nothing else.`;
+- Output only the translated text, nothing else.
+- NEVER prefix output with "CTA " — "CTA" is a metadata label, not user-visible copy. For source like "CTA All Products" output only the translated button label (e.g. "Tous les produits"), not "CTA Tous les produits".
+- Preserve approved product names exactly (the GLOSSARY block above lists them). Do not "improve" or pluralise them differently than the glossary.
+- For legal / disclaimer fragments, stay close to the approved reviewer wording — these are regulated lines, not creative copy.${request.textType === "homepage" ? "\n- HOMEPAGE CONTEXT: the source may arrive split across UI lines. Translate phrase-by-phrase so each line remains grammatical in the target language. When a reviewer-approved split exists (see TRANSLATION MEMORY), match it." : ""}`;
 
   try {
     const versionHints = [

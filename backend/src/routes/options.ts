@@ -39,6 +39,7 @@ const textTypes: TextTypeOption[] = [
   { id: "meta_long_headline",         label: "Meta — Long Headline (100 chars)" },
 
   // ─── General / Other ──────────────────────────────────────────
+  { id: "homepage",                   label: "Homepage / Landing Copy" },
   { id: "paid_social",                label: "Paid Social Ad (generic)" },
   { id: "organic_social",             label: "Organic Social Post" },
   { id: "email_subject",              label: "Email Subject Line" },
