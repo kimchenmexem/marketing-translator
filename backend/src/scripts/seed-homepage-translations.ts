@@ -19,13 +19,12 @@
  * (sourceText + targetLocale + textType, or sourceTerm + localeCode) and
  * skipped when present. ForbiddenPhrase upserts via the existing service.
  *
- * IT headline note: "TRADERS WHO WANT IT ALL" has two reviewer-blessed
- * targets — column B "TRADER CHE VOGLIONO TUTTO" and column E
- * "PER TRADER CHE VOGLIONO DI PIÙ". The reviewer flagged E as the newer
- * positive signal but did not retire B. Both are seeded so the LLM sees
- * the preferred (E) version first (more recent createdAt) plus the
- * literal (B) as a fallback signal. See README in the unresolved-
- * ambiguity section of the run summary.
+ * IT headline note: "TRADERS WHO WANT IT ALL" maps deterministically to
+ * "PER TRADER CHE VOGLIONO DI PIÙ" (column E, accented form). The
+ * literal column-B target "TRADER CHE VOGLIONO TUTTO" was previously
+ * seeded as a secondary candidate but has been retired — the sweep step
+ * below removes any stale homepage TM rows whose target isn't in the
+ * approved list for the (source, locale) pair.
  *
  * Run: npm --workspace backend run seed:homepage-translations
  */
@@ -150,10 +149,10 @@ const NL: LocaleBundle = {
 // ─── Italian ─────────────────────────────────────────────────────────
 const IT: LocaleBundle = {
   tm: [
-    // Preferred E first; literal B retained as secondary so the model
-    // can see both reviewer-blessed options in context. The B form is
-    // intentionally added with the OLDER createdAt by inserting it first.
-    { source: "TRADERS WHO WANT IT ALL", targets: ["TRADER CHE VOGLIONO TUTTO", "PER TRADER CHE VOGLIONO DI PIÙ"] },
+    // Deterministic homepage target — only the accented column-E form.
+    // The literal column-B target "TRADER CHE VOGLIONO TUTTO" is retired
+    // and actively removed by the sweep step in seedTm().
+    { source: "TRADERS WHO WANT IT ALL", targets: ["PER TRADER CHE VOGLIONO DI PIÙ"] },
     { source: "Powerful Trading Platforms", targets: ["Piattaforme di trading evolute"] },
     {
       source: "Pioneering the path towards transparent, low-cost trading.",
@@ -433,10 +432,14 @@ const ALL: Record<Locale, LocaleBundle> = {
 
 // ─── Seeders ─────────────────────────────────────────────────────────
 
-async function seedTm(locale: Locale, entries: TmEntry[]): Promise<{ created: number; skipped: number }> {
+async function seedTm(locale: Locale, entries: TmEntry[]): Promise<{ created: number; skipped: number; pruned: number }> {
   let created = 0;
   let skipped = 0;
+  let pruned = 0;
   for (const e of entries) {
+    const approved = new Set(e.targets);
+
+    // Insert any missing approved target.
     for (const target of e.targets) {
       const existing = await prisma.translationMemoryEntry.findFirst({
         where: {
@@ -462,8 +465,28 @@ async function seedTm(locale: Locale, entries: TmEntry[]): Promise<{ created: nu
       });
       created++;
     }
+
+    // Sweep: hard-delete any TM rows for this exact (source, locale,
+    // textType) whose targetText isn't in the approved list. This is what
+    // makes the seed authoritative across reruns — retired targets like
+    // "TRADER CHE VOGLIONO TUTTO" disappear instead of lingering as
+    // few-shot candidates the LLM might pick up.
+    const stale = await prisma.translationMemoryEntry.findMany({
+      where: {
+        sourceText: e.source,
+        targetLocale: locale,
+        textType: TEXT_TYPE,
+      },
+      select: { id: true, targetText: true },
+    });
+    for (const row of stale) {
+      if (!approved.has(row.targetText)) {
+        await prisma.translationMemoryEntry.delete({ where: { id: row.id } });
+        pruned++;
+      }
+    }
   }
-  return { created, skipped };
+  return { created, skipped, pruned };
 }
 
 async function seedGlossary(locale: Locale, entries: GlossaryEntry[]): Promise<{ created: number; skipped: number }> {
@@ -555,7 +578,7 @@ async function main() {
     console.log("  (no ADMIN user found — ForbiddenPhrase rows will have addedByUserId=null)\n");
   }
 
-  const totals = { tmCreated: 0, tmSkipped: 0, glossaryCreated: 0, glossarySkipped: 0, fbCreated: 0, fbReactivated: 0, fbSkipped: 0 };
+  const totals = { tmCreated: 0, tmSkipped: 0, tmPruned: 0, glossaryCreated: 0, glossarySkipped: 0, fbCreated: 0, fbReactivated: 0, fbSkipped: 0 };
 
   for (const locale of Object.keys(ALL) as Locale[]) {
     const bundle = ALL[locale];
@@ -563,11 +586,12 @@ async function main() {
     const tm = await seedTm(locale, bundle.tm);
     const gl = await seedGlossary(locale, bundle.glossary);
     const fb = await seedForbidden(locale, bundle.forbidden, actorId);
-    console.log(`   TM:       ${tm.created} created, ${tm.skipped} skipped`);
+    console.log(`   TM:       ${tm.created} created, ${tm.skipped} skipped, ${tm.pruned} pruned`);
     console.log(`   Glossary: ${gl.created} created/updated, ${gl.skipped} unchanged`);
     console.log(`   Forbidden:${fb.created} created, ${fb.reactivated} reactivated, ${fb.skipped} unchanged`);
     totals.tmCreated += tm.created;
     totals.tmSkipped += tm.skipped;
+    totals.tmPruned += tm.pruned;
     totals.glossaryCreated += gl.created;
     totals.glossarySkipped += gl.skipped;
     totals.fbCreated += fb.created;
@@ -577,7 +601,7 @@ async function main() {
 
   console.log();
   console.log("═══ Summary ═══");
-  console.log(`TM entries (textType=${TEXT_TYPE}): ${totals.tmCreated} new, ${totals.tmSkipped} already present`);
+  console.log(`TM entries (textType=${TEXT_TYPE}): ${totals.tmCreated} new, ${totals.tmSkipped} already present, ${totals.tmPruned} pruned (retired targets)`);
   console.log(`Glossary terms:                     ${totals.glossaryCreated} new/updated, ${totals.glossarySkipped} unchanged`);
   console.log(`ForbiddenPhrases:                   ${totals.fbCreated} new, ${totals.fbReactivated} reactivated, ${totals.fbSkipped} unchanged`);
 }

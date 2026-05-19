@@ -20,6 +20,7 @@
 
 import { prisma } from "../db";
 import { getLocaleStyleGuide } from "../services/ai";
+import { retrieveTranslationMemory } from "../services/translationMemoryRetrieval";
 
 const TEXT_TYPE = "homepage";
 
@@ -137,8 +138,42 @@ async function main() {
   await assertForbidden("es-ES", "la gestión de estos");
 
   section("IT column-E preferred terms + corporate paragraph");
-  // Both B and E seeded for headline — verify E (preferred) is present
+  // Deterministic IT headline — exactly one approved homepage TM entry,
+  // accented form "DI PIÙ", literal column-B target retired.
   await assertTmTarget("it-IT", "TRADERS WHO WANT IT ALL", "PER TRADER CHE VOGLIONO DI PIÙ");
+  {
+    const rows = await prisma.translationMemoryEntry.findMany({
+      where: { targetLocale: "it-IT", textType: TEXT_TYPE, sourceText: "TRADERS WHO WANT IT ALL" },
+      select: { id: true, targetText: true },
+    });
+    assert(
+      rows.length === 1,
+      `[it-IT] exactly one homepage TM entry for "TRADERS WHO WANT IT ALL" (found ${rows.length})`,
+    );
+    assert(
+      rows.every((r) => r.targetText === "PER TRADER CHE VOGLIONO DI PIÙ"),
+      `[it-IT] sole TM target is the accented column-E form (found ${rows.map((r) => r.targetText).join(" | ")})`,
+    );
+    // No legacy literal candidate
+    const literal = rows.find((r) => r.targetText === "TRADER CHE VOGLIONO TUTTO");
+    assert(literal === undefined, `[it-IT] retired literal "TRADER CHE VOGLIONO TUTTO" is absent as a TM candidate`);
+    // No unaccented or apostrophe form
+    const unaccented = rows.find((r) => /DI PIU['’]?$/.test(r.targetText));
+    assert(unaccented === undefined, `[it-IT] no unaccented "DI PIU" or "DI PIU'" form leaks through`);
+  }
+  // Also verify retrieveTranslationMemory does not surface the literal —
+  // simulates the runtime path the LLM would see. The retrieval skips
+  // exact self-matches of the source, so we query with a slightly
+  // adjusted source to force the entry to be a non-self candidate.
+  {
+    const probeSource = "TRADERS WHO WANT IT ALL (probe)";
+    const examples = await retrieveTranslationMemory(probeSource, "it-IT", TEXT_TYPE, 10);
+    const literalCandidate = examples.find((ex) => ex.targetText === "TRADER CHE VOGLIONO TUTTO");
+    assert(
+      literalCandidate === undefined,
+      `[it-IT] retrieveTranslationMemory does not return literal "TRADER CHE VOGLIONO TUTTO" as a candidate`,
+    );
+  }
   // "Azioni frazionate" not "Frazionali"
   await assertTmTarget("it-IT", "Fractional Shares", "Azioni frazionate");
   await assertForbidden("it-IT", "Azioni Frazionali");
