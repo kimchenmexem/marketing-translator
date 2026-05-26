@@ -3,12 +3,13 @@ import { validateLength } from "./validation";
 import { getLocaleRules, getComplianceForbiddenWords } from "./localeRules";
 import { loadBundle } from "../compliance/bundles/loader";
 import { getMarketContextPack } from "../publishers/context-pack";
-import type { MarketContextPack } from "@mexem/shared";
+import type { MarketContextPack, MarketContextPackRequest } from "@mexem/shared";
 import { validateCompliance } from "./compliance";
 import { getFewShotExamples, formatFewShotPrompt } from "./fewShotExamples";
 import { retrieveTranslationMemory, formatMemoryPrompt } from "./translationMemoryRetrieval";
 import { runQualityGate, QualityGateResult } from "./qualityGate";
 import { buildGlossaryPrompt } from "./glossary";
+import { applyLocaleRewrites } from "./translationRewrites";
 import { extractTranslation, lazyOpenAI } from "./openaiHelpers";
 import {
   listActiveForbiddenPhrasesForLocale,
@@ -281,15 +282,58 @@ function enforceRequiredTerms(text: string, requiredTerms: string[]): string {
 }
 
 
-export async function translateToLocale(text: string, locale: string): Promise<string> {
+export interface TranslateToLocaleOptions {
+  /**
+   * Which textType to scope translation-memory + few-shot lookups against.
+   * Default "quick_translate" — matches what the /api/translate/quick route
+   * persists so the system learns from itself across calls.
+   */
+  textType?: string;
+  /** Audience profile for the market-context pack. Default "retail". */
+  audienceType?: "retail" | "active_trader" | "professional" | "mass_market";
+}
+
+export async function translateToLocale(
+  text: string,
+  locale: string,
+  opts: TranslateToLocaleOptions = {}
+): Promise<string> {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is required for translation.");
   }
+  const textType = opts.textType ?? "quick_translate";
+  const audienceType = opts.audienceType ?? "retail";
+
   const language = getLocaleLanguage(locale);
   const styleGuide = getLocaleStyleGuide(locale);
-  const glossaryBlock = await buildGlossaryPrompt(text, locale);
-  const forbiddenPhrases = await listActiveForbiddenPhrasesForLocale(locale);
+
+  // Fetch every external-source layer in parallel so the only sequential cost
+  // is the OpenAI call itself. Each layer degrades to a no-op when the DB
+  // has no data for it — the system bootstraps cleanly with an empty corpus
+  // and gets smarter as the brand reviews more output.
+  const [
+    glossaryBlock,
+    forbiddenPhrases,
+    fewShot,
+    memoryExamples,
+    marketContext,
+  ] = await Promise.all([
+    buildGlossaryPrompt(text, locale),
+    listActiveForbiddenPhrasesForLocale(locale),
+    getFewShotExamples(locale, textType).catch(() => ({ positive: [], negative: [] })),
+    retrieveTranslationMemory(text, locale, textType).catch(() => []),
+    getMarketContextPack({
+      locale: locale as MarketContextPackRequest["locale"],
+      audienceType,
+      textType,
+    }).catch(() => null),
+  ]);
+
   const forbiddenBlock = formatForbiddenPhrasesBlock(forbiddenPhrases);
+  const fewShotBlock = formatFewShotPrompt(fewShot);
+  const memoryBlock = formatMemoryPrompt(memoryExamples);
+  const marketContextPrompt = buildMarketContextPrompt(marketContext);
+
   const response = await openai.chat.completions.create({
     model: TRANSLATION_MODEL,
     messages: [
@@ -306,7 +350,7 @@ TRANSLATION PRINCIPLES:
 - Preserve all brand names (MEXEM, WisdomTree, etc.) exactly as written.
 - Preserve all risk warnings and disclaimers — translate them accurately.
 - Do not add, remove, or invent information. The meaning must remain faithful.
-${styleGuide ? `\n${styleGuide}\n` : ""}${glossaryBlock}${forbiddenBlock}
+${styleGuide ? `\n${styleGuide}\n` : ""}${glossaryBlock}${forbiddenBlock}${fewShotBlock}${memoryBlock}${marketContextPrompt}
 Output only the translated text, nothing else.`
       },
       { role: "user", content: text }
@@ -314,7 +358,18 @@ Output only the translated text, nothing else.`
     temperature: 0.3,
     max_tokens: 1000
   });
-  return extractTranslation(response);
+  const draft = extractTranslation(response);
+
+  // Deterministic post-process — re-uses the locale rewrite layer so quick
+  // translations get the same term-level overrides as the full pipeline
+  // (ETFs→ETF, EU-aandelen→Europese aandelen, négociation→trading, …).
+  const rewrite = applyLocaleRewrites(draft, locale);
+  if (rewrite.fired.length > 0) {
+    console.log(
+      `[rewrites] ${locale} quick-translate: ${rewrite.fired.map((r) => r.id).join(", ")}`
+    );
+  }
+  return rewrite.text;
 }
 
 /** Extended output that includes quality gate metadata */
@@ -478,9 +533,25 @@ HARD RULES:
         ]);
 
         // Use the quality-gate output (may be repaired/regenerated)
-        const finalText = qualityResult.outputText;
+        const postQualityText = qualityResult.outputText;
 
-        // If the quality gate changed the text, re-run compliance on the new text
+        // Deterministic post-process rewrites — locale-specific term-level
+        // fixes the brand wants enforced regardless of LLM output (ETFs→ETF,
+        // UE-as-adjective→europeo/i/e, tariffa→commissione, …). Runs after
+        // the quality gate so it overrides any LLM-side wording, and BEFORE
+        // the final compliance check so compliance sees the final shipped
+        // text. No-op when no rules match.
+        const rewrite = applyLocaleRewrites(postQualityText, request.targetLocale);
+        const finalText = rewrite.text;
+        if (rewrite.fired.length > 0) {
+          console.log(
+            `[rewrites] ${request.targetLocale} v${i + 1}: ` +
+              rewrite.fired.map((r) => r.id).join(", ")
+          );
+        }
+
+        // If the text changed at any point after the initial compliance run
+        // (quality gate or rewrites), re-run compliance on the final text.
         const finalCompliance = finalText !== outputText
           ? await validateCompliance(finalText, request.targetLocale)
           : compliance;

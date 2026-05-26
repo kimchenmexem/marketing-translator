@@ -23,6 +23,25 @@ import type {
 } from "@mexem/shared";
 import { lazyOpenAI, extractTranslation } from "./openaiHelpers";
 import { validateCompliance } from "./compliance";
+import { applyLocaleRewrites } from "./translationRewrites";
+
+// Deterministic post-process — re-uses the locale rewrite layer wired into
+// runTranslationJob. Without this, the campaign-copy generators (which
+// bypass the standard translate pipeline) would never benefit from the
+// brand's term-level overrides (ETFs→ETF, EU-aandelen→Europese aandelen,
+// négociation→trading, …). Runs after compliance has been computed on the
+// LLM's draft so compliance still sees what the model produced — only the
+// shipped text is rewritten. If a rule changes anything we log it.
+function rewriteString(text: string | undefined, locale: string, logTag: string): string | undefined {
+  if (!text) return text;
+  const out = applyLocaleRewrites(text, locale);
+  if (out.fired.length > 0) {
+    console.log(
+      `[rewrites] ${locale} ${logTag}: ${out.fired.map((r) => r.id).join(", ")}`
+    );
+  }
+  return out.text;
+}
 
 const openai = lazyOpenAI(60_000);
 
@@ -90,7 +109,10 @@ function buildSystemPrompt(locale: LocaleCode, riskWarningRequired: boolean): st
     `You write localized financial-marketing ad copy in ${language}.`,
     `Output every text field directly in ${language}. Do not output English unless the target language IS English.`,
     `Tone must be professional, factual, and compliant with EU financial-marketing regulation (ESMA / national regulator equivalents).`,
-    `Avoid: guarantees of return, urgency tactics, superlative claims ("best", "leader"), oversimplification ("easy", "effortless").`,
+    `Style: calm, concrete, platform-led. Prefer specific product/value language ("market access", "tools", "data", "platform") over campaign slogans.`,
+    `Avoid: guarantees of return, urgency tactics, superlative claims ("best", "leader"), oversimplification ("easy", "effortless"), and aggressive trading language ("command", "dominate", "win", "stay ahead", "beat the market", "unlock").`,
+    `Avoid vague CTA nouns such as "options", "strategy", and "insights" unless the brief explicitly asks for those products.`,
+    `If compliance guidance supplies an exact disclaimer, use that wording verbatim in the disclaimer field.`,
     riskClause,
     `Return STRICT JSON only, no prose, with the exact keys: headline, subheadline, body, cta, disclaimer.`,
     `headline: punchy, ≤ 60 chars. subheadline: one supporting line, ≤ 120 chars. body: optional supporting paragraph, ≤ 280 chars. cta: ≤ 24 chars action phrase. disclaimer: regulator-appropriate compliance line.`,
@@ -206,12 +228,15 @@ function buildBatchSystemPrompt(
     `You are designing copy for ${conceptCount} distinct concepts inside ONE campaign.`,
     `Output every text field directly in ${language}. Do not output English unless the target language IS English.`,
     `Tone must be professional, factual, and compliant with EU financial-marketing regulation (ESMA / national regulator equivalents).`,
-    `Avoid: guarantees of return, urgency tactics, superlative claims ("best", "leader"), oversimplification ("easy", "effortless").`,
+    `Style: calm, concrete, platform-led. Prefer specific product/value language ("market access", "tools", "data", "platform") over campaign slogans.`,
+    `Avoid: guarantees of return, urgency tactics, superlative claims ("best", "leader"), oversimplification ("easy", "effortless"), and aggressive trading language ("command", "dominate", "win", "stay ahead", "beat the market", "unlock").`,
+    `Avoid vague CTA nouns such as "options", "strategy", and "insights" unless the brief explicitly asks for those products.`,
+    `If compliance guidance supplies an exact disclaimer, use that wording verbatim in every disclaimer field.`,
     riskClause,
     ``,
     `CROSS-CONCEPT RULES (critical — the concepts share a campaign, the copy MUST NOT):`,
     `- Every concept gets a DISTINCT headline. No shared key phrases between concepts.`,
-    `- Every concept gets a DISTINCT CTA — use a different action verb in each (e.g. "Explore", "Start", "Discover", "Compare"). Do not repeat a CTA verbatim.`,
+    `- Every concept gets a DISTINCT CTA — use a different neutral action verb in each (e.g. "Explore platform", "Compare markets", "View tools", "See markets"). Do not repeat a CTA verbatim. Avoid "Start" unless the campaign goal is conversion.`,
     `- Every subheadline must reflect that concept's own strategic_idea / target_emotion / mood; subheadlines must not be interchangeable across concepts.`,
     `- Disclaimers may follow a shared regulator pattern but should vary in wording where natural.`,
     ``,
@@ -421,15 +446,16 @@ export async function generateCampaignCopyBatch(
   const results: CampaignCopyBatchConceptResult[] = await Promise.all(
     rawConcepts.map(async (c) => {
       const notes = await aggregateBatchComplianceNotes(c, req.targetLocale);
+      const tag = `batch ${c.conceptId}`;
       return {
         conceptId: c.conceptId,
-        headline: c.headline,
-        subheadline: c.subheadline,
-        body: c.body,
-        cta: c.cta,
-        disclaimer: c.disclaimer,
-        eyebrow: c.eyebrow,
-        kicker: c.kicker,
+        headline: rewriteString(c.headline, req.targetLocale, tag)!,
+        subheadline: rewriteString(c.subheadline, req.targetLocale, tag)!,
+        body: rewriteString(c.body, req.targetLocale, tag),
+        cta: rewriteString(c.cta, req.targetLocale, tag)!,
+        disclaimer: rewriteString(c.disclaimer, req.targetLocale, tag)!,
+        eyebrow: rewriteString(c.eyebrow, req.targetLocale, tag),
+        kicker: rewriteString(c.kicker, req.targetLocale, tag),
         complianceNotes: notes,
       };
     }),
@@ -463,14 +489,15 @@ export async function generateCampaignCopy(
   const copy = parseModelJson(content);
   const complianceNotes = await aggregateComplianceNotes(copy, req.targetLocale);
 
+  const tag = "single";
   return {
     locale: req.targetLocale,
     direction: localeDirection(req.targetLocale),
-    headline: copy.headline,
-    subheadline: copy.subheadline,
-    body: copy.body,
-    cta: copy.cta,
-    disclaimer: copy.disclaimer,
+    headline: rewriteString(copy.headline, req.targetLocale, tag)!,
+    subheadline: rewriteString(copy.subheadline, req.targetLocale, tag)!,
+    body: rewriteString(copy.body, req.targetLocale, tag),
+    cta: rewriteString(copy.cta, req.targetLocale, tag)!,
+    disclaimer: rewriteString(copy.disclaimer, req.targetLocale, tag)!,
     complianceNotes,
   };
 }
@@ -515,7 +542,7 @@ function fieldSpecs(): FieldSpec[] {
       maxChars: 60,
       required: true,
       prompt:
-        "Write a punchy ad headline — ≤ 60 chars, brand-first, one short clause. No periods unless declarative.",
+        "Write a calm, concrete ad headline — ≤ 60 chars, brand-first, one short clause. Prefer platform / market-access language. No periods unless declarative.",
     },
     {
       key: "subheadline",
@@ -523,7 +550,7 @@ function fieldSpecs(): FieldSpec[] {
       maxChars: 120,
       required: true,
       prompt:
-        "Write a supporting line that hooks attention — ≤ 120 chars, conversational, one specific value proposition.",
+        "Write a supporting line — ≤ 120 chars, one specific platform or market-access value proposition. No hype.",
     },
     {
       key: "body",
@@ -539,7 +566,7 @@ function fieldSpecs(): FieldSpec[] {
       maxChars: 24,
       required: true,
       prompt:
-        "A single action-verb phrase, ≤ 24 chars (e.g. 'Open Account', 'Start Trading', 'Explore Platform'). Tense: imperative.",
+        "A single neutral action-verb phrase, ≤ 24 chars (e.g. 'Explore Platform', 'Compare Markets', 'View Tools'). Tense: imperative. Avoid vague words like options/strategy/insights unless explicitly requested.",
     },
     {
       key: "disclaimer",
@@ -722,16 +749,17 @@ export async function generateCampaignCopyByMessage(
     if (kicker) raw.kicker = kicker;
     const complianceNotes = await aggregateBatchComplianceNotes(raw, req.targetLocale);
 
+    const tag = `by-message ${conceptId}`;
     concepts.push({
       conceptId,
-      headline,
-      subheadline,
-      body: body || undefined,
-      cta,
-      disclaimer,
+      headline: rewriteString(headline, req.targetLocale, tag)!,
+      subheadline: rewriteString(subheadline, req.targetLocale, tag)!,
+      body: rewriteString(body || undefined, req.targetLocale, tag),
+      cta: rewriteString(cta, req.targetLocale, tag)!,
+      disclaimer: rewriteString(disclaimer, req.targetLocale, tag)!,
       complianceNotes,
-      eyebrow: eyebrow || undefined,
-      kicker: kicker || undefined,
+      eyebrow: rewriteString(eyebrow || undefined, req.targetLocale, tag),
+      kicker: rewriteString(kicker || undefined, req.targetLocale, tag),
     });
   }
 
