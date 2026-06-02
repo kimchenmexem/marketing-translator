@@ -73,15 +73,49 @@ HOMEPAGE / MARKETING NUANCES:
 - In the fractional-trading sentence write "azioni europee e statunitensi", not "azioni EU e US".
 - "Powerful Trading Platforms" → "Piattaforme di trading evolute" (NOT "Potenti").`,
 
-    "fr-FR": `FRENCH (FRANCE) STYLE:
-- French financial copy uses a precise, formal register. Clarity and elegance matter.
-- Use "vous" (formal), never "tu".
-- Prefer established French financial terms: "plateforme de négociation", "instruments financiers", "courtier".
-- Capitalisation: French uses SENTENCE CASE in headlines, not English title case. Never capitalise every word ("Accédez Aux Marchés Financiers Mondiaux" is wrong — write "Accédez aux marchés financiers mondiaux").
-- Anglicism balance: on homepage / marketing copy, reviewer prefers "trading" over "négociation" in several MEXEM-blessed phrases ("Tradez des ETF...", "Trading à frais réduits", "trading fractionné", "trading mondial"). Use "négociation" only when the canonical reviewer-approved version uses it.
-- "ETF" is invariant in French — use the singular form even when listing several products.
+    "fr-FR": `FRENCH (FRANCE) STYLE — CRITICAL TERMINOLOGY RULES:
+- "trading" is the ONLY acceptable word for stock-market trading. NEVER use "négociation" / "négocier" — French native readers do not use these for the stock market and they sound wrong. This overrides any general "prefer French terms" instinct.
+- "le trading" is a MASCULINE noun: always "le trading" / "du trading" / "au trading", NEVER "la trading". The verb is "trader" (Tradez, trader), NEVER "négocier".
+
+TRADING TERM PAIRS — use the LEFT, never the RIGHT:
+  • "Trading en ligne" ✓ / "Négociation en ligne" ✗
+  • "Trading d'actions" ✓ / "Négociation d'actions" ✗
+  • "Plateforme de trading" ✓ / "Plateforme de négociation" ✗
+  • "Courtier de trading" / "Courtier en trading" ✓ / "Courtier en négociation" ✗
+  • "Tradez des actions" ✓ / "Négociez des actions" ✗
+  • "trader des ETF" ✓ / "négocier des ETF" ✗
+  • "le trading d'ETF" ✓ / "la trading d'ETF" ✗
+  • "le trading transparent" ✓ / "la négociation transparente" ✗
+
+STOCK-MARKET VOCABULARY:
+- "Stock Market" / the market in general → "la Bourse" (or "marché boursier"), NOT "marché des actions". "La Bourse" is the natural everyday term.
+- "stocks / shares" as a specific product → "actions" (lowercase).
+- "Invest in the Stock Market" → "Investir en Bourse"; use "Bourse" for the market, "actions" for the products.
+- "fractional shares" → "actions fractionnées" (NEVER just "fractions" — that is meaningless on its own).
+- "ETF" is invariant — use the singular form even when listing several products.
+
+REGISTER, VOCABULARY & TONE:
+- Use "vous" (formal), never "tu". Precise, clear register.
+- "épargner" (not "économiser") for saving/growing money long-term ("Commencez à épargner").
+- "frais fixes" (not "frais stables") — the precise financial term for fixed fees.
+- "faible coût" (not "économique") — sounds technical, not like a cheap/discount retail product.
+- "chez MEXEM" (not "sur MEXEM") when naming the broker as the provider.
+- Smooth, non-aggressive marketing tone: "Ne payez plus de commissions..." (not "Cessez de surpayer...").
+- Translate superlatives FAITHFULLY: "cheapest" → "le moins cher" / "la moins chère" (NOT softened to "le plus compétitif" or "le meilleur"). "best" → "le meilleur".
+- Prefer punchy, empowering phrasing: "Le pouvoir d'investir" over "La puissance de l'investissement"; "optimisez votre achat" over "faites en sorte que... ait un impact"; "tout-en-un" for "full package".
+
+CAPITALISATION (these are punctuation rules — getting them wrong is an error, not a style choice):
+- SENTENCE CASE in headlines and titles. NEVER capitalise every word ("Investissez dans Votre Avenir Dès Maintenant" ✗ → "Investissez dans votre avenir dès maintenant" ✓).
+- Region/nationality ADJECTIVES are lowercase: "courtier européen", "actions européennes". Only the noun for a person is capitalised ("un Européen").
+- Common nouns mid-sentence stay lowercase: "Achetez des actions" (not "Achetez des Actions").
+
+OTHER GUIDANCE:
+- For slogans/titles, dropping a leading article is often punchier: "Marchés mondiaux, une seule plateforme !" (not "Des marchés mondiaux...").
+- Keep the "&" ampersand when the source uses it in short marketing strings ("Actions & trading en ligne").
+- "dès 2025" rather than "à partir de 2025" for a start date in marketing copy.
 - For homepage stat cards, keep the "170+ marchés / 40+ pays / 29+ devises" form — do not expand to "Plus de 170...".
 - Numbers: use comma as decimal separator, space as thousands separator (1 234,56).
+- ALWAYS produce a real translation — never output a refusal or meta-commentary ("Je suis désolé, mais je ne peux pas..."). Every input is marketing copy to be translated.
 - French readers value logical structure — lead with the value proposition, then explain.`,
 
     "nl-NL": `DUTCH (NETHERLANDS) STYLE:
@@ -104,8 +138,15 @@ HOMEPAGE / MARKETING NUANCES:
     "fr-BE": `FRENCH (BELGIAN) STYLE:
 - Belgian French is very close to France French but slightly less formal in register.
 - Use "vous" (formal).
-- Financial terminology is the same as France French.
+- Financial terminology is the SAME as France French — in particular:
+  • Use "trading" / "trader" / "Tradez" for stock-market trading; NEVER "négociation" / "négocier". "négociation" is not used for the stock market in French.
+  • "le trading" is MASCULINE — never "la trading".
+  • "actions" (lowercase) for shares; "la Bourse" / "boursier" for the market in general (not "marché des actions").
+  • "faible coût" (not "économique"), "frais fixes" (not "frais stables"), "épargner" (not "économiser") for long-term saving, "actions fractionnées" (not "fractions").
+  • Translate superlatives faithfully: "cheapest" → "le moins cher" / "la moins chère".
+  • Sentence case in headlines; nationality adjectives lowercase ("courtier européen", not "Européen").
 - Numbers: same format as France French (1 234,56).
+- ALWAYS produce a real translation — never output a refusal or meta-commentary.
 - Belgian French readers appreciate clarity and directness over literary elegance.`,
 
     "es-ES": `SPANISH (SPAIN) STYLE:

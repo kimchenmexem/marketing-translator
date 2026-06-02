@@ -2,6 +2,8 @@ import { qualityGateConfig } from "./qualityGateConfig";
 import { runHardChecks, HardCheckResult, HardCheckIssue } from "./translationHardChecks";
 import { reviewTranslationQuality, QualityReviewResult, QualityIssue } from "./translationQualityReview";
 import { repairTranslation, regenerateTranslation } from "./translationRepair";
+import { applyFrenchTradingGate } from "./frenchTradingGate";
+import type { FrTradingFinding, FrTradingRepair } from "./frenchTradingLint";
 import { prisma } from "../db";
 
 export type ReviewStage = "initial" | "repair" | "regeneration";
@@ -21,6 +23,10 @@ export interface QualityGateResult {
   hardCheckIssues: HardCheckIssue[];
   /** Full review trail for persistence */
   reviewTrail: ReviewTrailEntry[];
+  /** Deterministic French trading-terminology repairs applied (fr-FR/fr-BE). */
+  frTradingRepairs?: FrTradingRepair[];
+  /** French trading-terminology findings left as warnings (not auto-mutated). */
+  frTradingWarnings?: FrTradingFinding[];
 }
 
 interface ReviewTrailEntry {
@@ -34,13 +40,61 @@ interface ReviewTrailEntry {
 }
 
 /**
- * Runs the full quality gate pipeline on a single translation:
- *   1. Hard checks + LLM review
- *   2. If fails → repair (if enabled)
- *   3. If repair fails → regenerate once (if enabled)
- *   4. Return best passing result, or best available if nothing passes
+ * Runs the full quality gate pipeline on a single translation.
+ *
+ * The deterministic French trading-terminology gate brackets the LLM pipeline:
+ * it cleans the input before the LLM reviews it (so the LLM doesn't waste a
+ * repair cycle on terminology we handle deterministically), and re-checks the
+ * final text (so a regenerated version can't reintroduce a banned collocation).
+ * Both passes are scoped to fr-FR / fr-BE and respect FR_TRADING_GATE.
  */
 export async function runQualityGate(
+  sourceText: string,
+  translation: string,
+  targetLocale: string,
+  textType: string,
+  sourceLanguage: string,
+  systemPrompt: string,
+  existingVersions: string[] = []
+): Promise<QualityGateResult> {
+  // Pre-pass: deterministically clean the input (logs any action taken).
+  const pre = applyFrenchTradingGate(sourceText, translation, targetLocale);
+
+  const inner = await runQualityGateInner(
+    sourceText, pre.text, targetLocale, textType, sourceLanguage, systemPrompt, existingVersions
+  );
+
+  // Post-pass: guarantee the FINAL text is clean even if the LLM regenerated it.
+  // Silent when the inner pipeline didn't change our pre-cleaned text (nothing new).
+  const post = applyFrenchTradingGate(sourceText, inner.outputText, targetLocale, {
+    silent: inner.outputText === pre.text,
+  });
+
+  // Repairs from the pre-pass are the canonical record; add any post-pass
+  // repairs only when the LLM actually changed the text.
+  const repairs = inner.outputText === pre.text
+    ? pre.repairs
+    : dedupeRepairs([...pre.repairs, ...post.repairs]);
+
+  return {
+    ...inner,
+    outputText: post.text,
+    frTradingRepairs: repairs,
+    frTradingWarnings: post.warnings,
+  };
+}
+
+function dedupeRepairs(repairs: FrTradingRepair[]): FrTradingRepair[] {
+  const seen = new Set<string>();
+  return repairs.filter((r) => {
+    const key = `${r.rule}|${r.before}|${r.after}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+async function runQualityGateInner(
   sourceText: string,
   translation: string,
   targetLocale: string,

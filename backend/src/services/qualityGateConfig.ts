@@ -12,6 +12,18 @@ export const qualityGateConfig = {
   regenerationEnabled: process.env.QG_REGENERATION_ENABLED !== "false",
   /** Enable the entire quality gate (kill-switch) */
   enabled: process.env.QG_ENABLED !== "false",
+  /**
+   * French (fr-FR / fr-BE) trading-terminology gate:
+   *   "repair" (default) — deterministically fix the clearly-unsafe collocations
+   *                        (négociation→trading, la trading→le trading, …) and
+   *                        warn on ambiguous cases.
+   *   "warn"             — never mutate; only log findings (safe-first deploy).
+   *   "off"              — disable entirely.
+   */
+  frTradingGateMode: ((): "repair" | "warn" | "off" => {
+    const v = (process.env.FR_TRADING_GATE ?? "repair").toLowerCase();
+    return v === "warn" || v === "off" ? v : "repair";
+  })(),
   /** Max tokens for the review call */
   reviewMaxTokens: 800,
   /** Max tokens for the repair call */

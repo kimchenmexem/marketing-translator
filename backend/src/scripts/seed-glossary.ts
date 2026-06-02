@@ -46,8 +46,8 @@ const GLOSSARY: GlossaryEntry[] = [
     sourceTerm: "trading platform",
     translations: {
       "it-IT": "piattaforma di negoziazione",
-      "fr-FR": "plateforme de négociation",
-      "fr-BE": "plateforme de négociation",
+      "fr-FR": "plateforme de trading",
+      "fr-BE": "plateforme de trading",
       "nl-NL": "handelsplatform",
       "nl-BE": "handelsplatform",
       "es-ES": "plataforma de negociación",
