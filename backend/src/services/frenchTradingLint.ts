@@ -126,13 +126,13 @@ export function lintFrenchTrading(
     );
   }
 
-  // 6. Refusal / meta-commentary instead of a translation.
+  // 6. Refusal / meta-commentary (chatbot reply) instead of a translation.
   flagFirst(
     findings,
     output,
-    /(je suis d[ée]sol[ée]|je ne peux pas vous aider|je ne peux pas r[ée]pondre|en tant qu(?:'|e )ia|as an ai\b|i'?m sorry|i cannot\b)/i,
+    /(je suis d[ée]sol[ée]|je ne peux pas (?:vous aider|r[ée]pondre|traduire|fournir)|je suis (?:l[àa]|ici) pour vous aider|comment puis-je vous (?:aider|assister)|puis-je vous aider|je suis (?:votre|un) assistant|n['’]h[ée]sitez pas à me (?:poser|demander|contacter)|en tant qu(?:'|e )(?:ia|assistant)|as an ai\b|i'?m sorry|i cannot\b|how (?:can|may) i (?:help|assist) you)/i,
     "refusal",
-    "Output is a refusal / meta-commentary — every input must be translated.",
+    "Output is a refusal / chatbot meta-reply — every input must be translated.",
   );
 
   // ── Source-dependent faithfulness rules ───────────────────────────────────

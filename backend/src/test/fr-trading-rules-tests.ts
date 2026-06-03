@@ -177,6 +177,8 @@ async function main() {
 
   section("K. never return a refusal / meta-commentary");
   expectFlagged("refusal", "Then you should know this.", "Je suis désolé, mais je ne peux pas vous aider avec ça.");
+  // Chatbot meta-reply variant observed in live verification (June 2026).
+  expectFlagged("refusal", "Then you should know this.", "Je suis là pour vous aider. Comment puis-je vous assister aujourd'hui ?");
   expectClean("Then you should know this.", "Dans ce cas, vous devriez savoir ceci :");
 
   // ── A2. Auto-repair (conservative, deterministic) ─────────────────────────
