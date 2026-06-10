@@ -24,6 +24,11 @@ export const qualityGateConfig = {
     const v = (process.env.FR_TRADING_GATE ?? "repair").toLowerCase();
     return v === "warn" || v === "off" ? v : "repair";
   })(),
+  /** Spanish (es-ES) trading-terminology gate — same modes as the French one. */
+  spTradingGateMode: ((): "repair" | "warn" | "off" => {
+    const v = (process.env.SP_TRADING_GATE ?? "repair").toLowerCase();
+    return v === "warn" || v === "off" ? v : "repair";
+  })(),
   /** Max tokens for the review call */
   reviewMaxTokens: 800,
   /** Max tokens for the repair call */

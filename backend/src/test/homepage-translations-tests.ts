@@ -72,11 +72,11 @@ async function assertForbidden(locale: string, phrase: string) {
 
 async function main() {
   section("Fractional-trading wording across locales");
-  // ES — review preferred "invertir en acciones fraccionadas"
+  // ES — 05.26 eval: "trading fraccionado" + tú register
   await assertTmTarget(
     "es-ES",
     "Enjoy the flexibility of fractional trading on most EU & US stocks.",
-    "Disfrute de la flexibilidad de invertir en acciones fraccionadas en la mayoría de acciones de la UE y EE. UU.",
+    "Disfruta de la flexibilidad del trading fraccionado en la mayoría de las acciones europeas y estadounidenses.",
   );
   await assertForbidden("es-ES", "negociación fraccionada");
 
@@ -122,18 +122,18 @@ async function main() {
   await assertTmTarget("fr-FR", "170+ Markets", "170+ marchés");
   await assertForbidden("fr-FR", "Plus de 170 marchés");
 
-  section("ES low-trading-fees + corporate overrides");
-  await assertTmTarget("es-ES", "Low Trading Fees", "Tarifas de Negociación Bajas");
-  await assertForbidden("es-ES", "Bajas Tarifas de Negociación");
-  // Corporate verb: "Ponga a trabajar..." in both cases (sentence + headline)
-  await assertTmTarget("es-ES", "PUT YOUR BUSINESS CAPITAL WORK", "PONGA A TRABAJAR SU CAPITAL EMPRESARIAL");
+  section("ES low-trading-fees + corporate overrides (05.26: tú + trading/operar)");
+  await assertTmTarget("es-ES", "Low Trading Fees", "Comisiones de Trading Bajas");
+  await assertForbidden("es-ES", "Tarifas de Negociación Bajas");
+  // Corporate verb in tú register: "Pon a trabajar..."
+  await assertTmTarget("es-ES", "PUT YOUR BUSINESS CAPITAL WORK", "PON A TRABAJAR TU CAPITAL EMPRESARIAL");
+  await assertForbidden("es-ES", "PONGA A TRABAJAR SU CAPITAL EMPRESARIAL");
   await assertForbidden("es-ES", "HAGA TRABAJAR SU CAPITAL EMPRESARIAL");
-  await assertForbidden("es-ES", "Haga trabajar su capital empresarial");
-  // Smoother corporate paragraph
+  // Corporate paragraph in tú register
   await assertTmTarget(
     "es-ES",
     "Your business is making profits, but how you manage them is equally important. A corporate investment account offers a structured, tax-efficient way to allocate capital, while keeping access to global opportunities.",
-    "Su empresa genera beneficios, pero gestionarlos de forma eficiente es igual de importante. Una cuenta de inversión corporativa ofrece una forma estructurada y fiscalmente eficiente de asignar capital, manteniendo al mismo tiempo el acceso a oportunidades globales.",
+    "Tu empresa genera beneficios, pero gestionarlos de forma eficiente es igual de importante. Una cuenta de inversión corporativa ofrece una forma estructurada y fiscalmente eficiente de asignar capital, manteniendo al mismo tiempo el acceso a oportunidades globales.",
   );
   await assertForbidden("es-ES", "la gestión de estos");
 
@@ -215,7 +215,7 @@ async function main() {
     },
     "es-ES": {
       STOCKS: "ACCIONES",
-      ETFs: "ETFs",
+      ETFs: "ETF",
       OPTIONS: "OPCIONES",
       FUTURES: "FUTUROS",
       "MUTUAL FUNDS": "FONDOS DE INVERSIÓN",
@@ -256,7 +256,7 @@ async function main() {
   await assertTmTarget(
     "es-ES",
     "*Trading complex products such as options, futures and warrants carries a high level of risk and may not be suitable for all investors.",
-    "*La negociación de productos complejos como opciones, futuros y warrants conlleva un alto nivel de riesgo y puede no ser adecuada para todos los inversores.",
+    "*Operar con productos complejos como opciones, futuros y warrants conlleva un alto nivel de riesgo y puede no ser adecuado para todos los inversores.",
   );
   await assertTmTarget(
     "fr-FR",
@@ -272,8 +272,8 @@ async function main() {
   assert(/Commissioni di Trading contenute/.test(itStyle), "[it-IT] style-guide mentions 'Commissioni di Trading contenute'");
   assert(/Azioni frazionate/.test(itStyle), "[it-IT] style-guide mentions 'Azioni frazionate'");
   const esStyle = getLocaleStyleGuide("es-ES");
-  assert(/Tarifas de Negociación Bajas/.test(esStyle), "[es-ES] style-guide mentions 'Tarifas de Negociación Bajas'");
-  assert(/Ponga a trabajar/.test(esStyle), "[es-ES] style-guide mentions corporate verb 'Ponga a trabajar'");
+  assert(/operar/i.test(esStyle) && /negociaci[oó]n/i.test(esStyle), "[es-ES] style-guide uses 'operar' and bans 'negociación'");
+  assert(/informal "t[úu]"|"t[úu]" \(/i.test(esStyle), "[es-ES] style-guide sets the informal 'tú' register");
   const nlStyle = getLocaleStyleGuide("nl-NL");
   assert(/Vooroplopen op de weg/.test(nlStyle), "[nl-NL] style-guide mentions 'Vooroplopen op de weg'");
 

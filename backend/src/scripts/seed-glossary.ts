@@ -50,7 +50,7 @@ const GLOSSARY: GlossaryEntry[] = [
       "fr-BE": "plateforme de trading",
       "nl-NL": "handelsplatform",
       "nl-BE": "handelsplatform",
-      "es-ES": "plataforma de negociación",
+      "es-ES": "plataforma de inversión",
       "en-GB": "trading platform",
     },
   },

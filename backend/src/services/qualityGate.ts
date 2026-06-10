@@ -4,6 +4,8 @@ import { reviewTranslationQuality, QualityReviewResult, QualityIssue } from "./t
 import { repairTranslation, regenerateTranslation } from "./translationRepair";
 import { applyFrenchTradingGate } from "./frenchTradingGate";
 import type { FrTradingFinding, FrTradingRepair } from "./frenchTradingLint";
+import { applySpanishTradingGate } from "./spanishTradingGate";
+import type { SpTradingFinding, SpTradingRepair } from "./spanishTradingLint";
 import { prisma } from "../db";
 
 export type ReviewStage = "initial" | "repair" | "regeneration";
@@ -27,6 +29,10 @@ export interface QualityGateResult {
   frTradingRepairs?: FrTradingRepair[];
   /** French trading-terminology findings left as warnings (not auto-mutated). */
   frTradingWarnings?: FrTradingFinding[];
+  /** Deterministic Spanish trading-terminology repairs applied (es-ES). */
+  esTradingRepairs?: SpTradingRepair[];
+  /** Spanish trading-terminology findings left as warnings (not auto-mutated). */
+  esTradingWarnings?: SpTradingFinding[];
 }
 
 interface ReviewTrailEntry {
@@ -57,34 +63,37 @@ export async function runQualityGate(
   systemPrompt: string,
   existingVersions: string[] = []
 ): Promise<QualityGateResult> {
-  // Pre-pass: deterministically clean the input (logs any action taken).
-  const pre = applyFrenchTradingGate(sourceText, translation, targetLocale);
+  // Pre-pass: deterministically clean the input (FR + ES gates; each no-ops
+  // off-locale, so only the one matching targetLocale acts).
+  const fpre = applyFrenchTradingGate(sourceText, translation, targetLocale);
+  const spre = applySpanishTradingGate(sourceText, fpre.text, targetLocale);
+  const preText = spre.text;
 
   const inner = await runQualityGateInner(
-    sourceText, pre.text, targetLocale, textType, sourceLanguage, systemPrompt, existingVersions
+    sourceText, preText, targetLocale, textType, sourceLanguage, systemPrompt, existingVersions
   );
 
   // Post-pass: guarantee the FINAL text is clean even if the LLM regenerated it.
-  // Silent when the inner pipeline didn't change our pre-cleaned text (nothing new).
-  const post = applyFrenchTradingGate(sourceText, inner.outputText, targetLocale, {
-    silent: inner.outputText === pre.text,
-  });
+  const changed = inner.outputText !== preText;
+  const fpost = applyFrenchTradingGate(sourceText, inner.outputText, targetLocale, { silent: !changed });
+  const spost = applySpanishTradingGate(sourceText, fpost.text, targetLocale, { silent: !changed });
 
-  // Repairs from the pre-pass are the canonical record; add any post-pass
-  // repairs only when the LLM actually changed the text.
-  const repairs = inner.outputText === pre.text
-    ? pre.repairs
-    : dedupeRepairs([...pre.repairs, ...post.repairs]);
+  // Pre-pass repairs are the canonical record; add post-pass repairs only when
+  // the LLM actually changed the text.
+  const frRepairs = changed ? dedupeRepairs([...fpre.repairs, ...fpost.repairs]) : fpre.repairs;
+  const esRepairs = changed ? dedupeRepairs([...spre.repairs, ...spost.repairs]) : spre.repairs;
 
   return {
     ...inner,
-    outputText: post.text,
-    frTradingRepairs: repairs,
-    frTradingWarnings: post.warnings,
+    outputText: spost.text,
+    frTradingRepairs: frRepairs,
+    frTradingWarnings: fpost.warnings,
+    esTradingRepairs: esRepairs,
+    esTradingWarnings: spost.warnings,
   };
 }
 
-function dedupeRepairs(repairs: FrTradingRepair[]): FrTradingRepair[] {
+function dedupeRepairs<T extends { rule: string; before: string; after: string }>(repairs: T[]): T[] {
   const seen = new Set<string>();
   return repairs.filter((r) => {
     const key = `${r.rule}|${r.before}|${r.after}`;

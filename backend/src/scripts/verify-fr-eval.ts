@@ -14,11 +14,19 @@
  */
 import { runTranslationJob } from "../services/ai";
 import { lintFrenchTrading } from "../services/frenchTradingLint";
+import { lintSpanishTrading } from "../services/spanishTradingLint";
 import { prisma } from "../db";
 import type { LengthConstraint, LocaleCode } from "@mexem/shared";
 
-/** Target locale — fr-FR (default) or fr-BE. Set via TARGET_LOCALE env. */
+/** Target locale — fr-FR (default) | fr-BE | es-ES. Set via TARGET_LOCALE env. */
 const TARGET_LOCALE = (process.env.TARGET_LOCALE ?? "fr-FR") as LocaleCode;
+
+/** Lint with the locale-appropriate linter. */
+function lint(output: string, sourceText: string): Array<{ rule: string; message: string; excerpt: string }> {
+  return TARGET_LOCALE === "es-ES"
+    ? lintSpanishTrading(output, { sourceText })
+    : lintFrenchTrading(output, { sourceText });
+}
 
 interface Row {
   src: string;
@@ -170,7 +178,7 @@ async function main() {
       continue;
     }
 
-    const findings = lintFrenchTrading(output, { sourceText: src });
+    const findings = lint(output, src);
     const clean = findings.length === 0;
     if (clean) lintClean++;
     else lintDirty++;

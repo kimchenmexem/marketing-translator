@@ -167,17 +167,39 @@ CAPITALISATION: sentence case in headlines; nationality adjectives lowercase ("c
 - Numbers: same format as France French (1 234,56).
 - ALWAYS produce a real translation — never output a refusal or meta-commentary.`,
 
-    "es-ES": `SPANISH (SPAIN) STYLE:
-- Spanish financial marketing uses a formal but accessible register. Not stiff, not casual.
-- Use "usted" (formal) for this professional context.
-- Prefer European Spanish conventions, not Latin American: "ordenador" not "computadora", "negociación" not "operación".
-- Prefer established Spanish financial terms: "plataforma de inversión", "valores", "renta variable".
-- Marketing adjective order: Spanish puts the descriptive adjective AFTER the noun for product / pricing phrases. Write "Tarifas de Negociación Bajas" — NOT "Bajas Tarifas de Negociación". Same shape for similar tropes ("Comisiones Reducidas", not "Reducidas Comisiones").
-- Corporate verbs: prefer "Ponga a trabajar..." over "Haga trabajar..." (reviewer rejection).
-- Avoid the stiff phrase "la gestión de estos" in the corporate paragraph — rephrase as "gestionarlos de forma eficiente".
-- For fractional-shares copy use "invertir en acciones fraccionadas" — NOT "negociación fraccionada".
-- Numbers: use comma as decimal separator, period as thousands separator (1.234,56).
-- Spanish allows for slightly more expressive copy than English — use it to create engaging text, but stay professional.`,
+    "es-ES": `SPANISH (SPAIN) STYLE — CRITICAL REGISTER & TERMINOLOGY:
+- REGISTER: address the reader with the informal "tú" (second-person singular) for marketing copy — modern Spanish retail-finance brands use "tú", not "usted". Imperatives in tú form: "Invierte", "Opera", "Descubre", "Empieza", "Compra", "Accede", "Disfruta", "Mejora", "Únete". Possessives "tu / tus" (NOT "su / sus"); "te ofrecemos" (NOT "le ofrecemos"). Keep legal/risk disclaimers impersonal.
+- "to trade" → the verb "operar" ("operar con ETF", "operar en acciones"); the noun "trading" stays "trading" ("trading en línea", "trading transparente", "trading fraccionado"). NEVER "negociación" / "negociar" for stock-market trading. "trade(s)" as a noun → "operación / operaciones".
+- "broker" → "bróker" (WITH accent), NEVER "corredor" or unaccented "broker".
+- "ETF" and "ETP" are INVARIANT — no plural "-s". Write "ETF" / "ETP" even for several ("varios ETF", not "ETFs").
+
+TERMINOLOGY PAIRS — use the LEFT, never the RIGHT:
+  • "trading en línea" ✓ / "negociación en línea" ✗
+  • "operar con ETF" ✓ / "negociar ETFs" ✗
+  • "operar en acciones" ✓ / "negociar acciones" ✗
+  • "trading transparente" ✓ / "negociación transparente" ✗
+  • "bróker" ✓ / "corredor" ✗
+  • "ETF" ✓ / "ETFs" ✗      • "ETP" ✓ / "ETPs" ✗
+  • "comisiones" ✓ / "tarifas" ✗      • "costes" ✓ / "costos" ✗
+
+VOCABULARY:
+- "fees" → "comisiones" (NOT "tarifas"). "fixed / flat fee" → "comisión fija" (not "tarifa plana", not "comisiones estables"). "consistent fees" → "comisiones consistentes".
+- European Spanish "costes" (NOT Latin-American "costos"); "consistente" (not "coherente").
+- "cheapest / cheap" → "más barato/a" (preferred over "más económico/a").
+- "AI-Powered / AI-driven" → "con inteligencia artificial" (spell it out; NOT "impulsada por IA").
+- "full package / all-in-one" → "todo en uno".
+- "Caution" (disclaimer header) → "Aviso" (not "Advertencia"). "Terms & conditions" → "términos y condiciones" (not just "condiciones"). "Third party fees" → "comisiones de terceros".
+- "fractional trading" → "trading fraccionado"; "fractional shares" → "acciones fraccionadas".
+- Join coordinated items with "y", not a dash: "acciones europeas y ETF" (not "acciones europeas - ETF").
+- Region: "europeo/a/os" in full, not "de la UE" / "UE".
+- CTA naturalness: prefer "empieza hoy" over a literal "¡Actúa ahora!"; "Invierte de forma inteligente" over "Invierte con inteligencia".
+
+OTHER:
+- Prefer European Spanish ("ordenador" not "computadora").
+- Adjective order: descriptive adjective AFTER the noun for product/pricing phrases ("comisiones bajas", not "bajas comisiones").
+- Numbers: comma decimal separator, period thousands separator (1.234,56).
+- ALWAYS produce a real translation — never a refusal or meta-commentary.
+- Spanish allows expressive copy — engaging but professional.`,
 
     "en-GB": `BRITISH ENGLISH STYLE:
 - Use British spelling: "favour", "organisation", "licence" (noun), "practise" (verb).
