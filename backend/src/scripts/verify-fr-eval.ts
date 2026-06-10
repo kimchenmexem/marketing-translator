@@ -15,17 +15,18 @@
 import { runTranslationJob } from "../services/ai";
 import { lintFrenchTrading } from "../services/frenchTradingLint";
 import { lintSpanishTrading } from "../services/spanishTradingLint";
+import { lintDutchTrading } from "../services/dutchTradingLint";
 import { prisma } from "../db";
 import type { LengthConstraint, LocaleCode } from "@mexem/shared";
 
-/** Target locale — fr-FR (default) | fr-BE | es-ES. Set via TARGET_LOCALE env. */
+/** Target locale — fr-FR (default) | fr-BE | es-ES | nl-NL | nl-BE. Set via TARGET_LOCALE env. */
 const TARGET_LOCALE = (process.env.TARGET_LOCALE ?? "fr-FR") as LocaleCode;
 
 /** Lint with the locale-appropriate linter. */
 function lint(output: string, sourceText: string): Array<{ rule: string; message: string; excerpt: string }> {
-  return TARGET_LOCALE === "es-ES"
-    ? lintSpanishTrading(output, { sourceText })
-    : lintFrenchTrading(output, { sourceText });
+  if (TARGET_LOCALE === "es-ES") return lintSpanishTrading(output, { sourceText });
+  if (TARGET_LOCALE === "nl-NL" || TARGET_LOCALE === "nl-BE") return lintDutchTrading(output, { sourceText });
+  return lintFrenchTrading(output, { sourceText });
 }
 
 interface Row {

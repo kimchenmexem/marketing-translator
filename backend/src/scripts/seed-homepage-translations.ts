@@ -68,7 +68,7 @@ const NL: LocaleBundle = {
     { source: "Powerful Trading Platforms", targets: ["Krachtige Handelsplatformen"] },
     {
       source: "Pioneering the path towards transparent, low-cost trading.",
-      targets: ["Vooroplopen op de weg naar transparant beleggen tegen lage kosten."],
+      targets: ["Wij banen de weg naar transparante, voordelige handel."],
     },
     { source: "Trade ETFs with 0 commissions", targets: ["Handel in ETF's zonder commissies"] },
     {
@@ -142,7 +142,7 @@ const NL: LocaleBundle = {
     { source: "CURRENCIES", target: "VALUTA'S" },
   ],
   forbidden: [
-    { phrase: "Wij banen de weg naar transparant en voordelig handelen.", reason: "Reviewer rejected — too literal; use 'Vooroplopen op de weg naar...' instead." },
+    { phrase: "Vooroplopen op de weg naar transparant beleggen tegen lage kosten.", reason: "Superseded by 05.26 eval — use 'Wij banen de weg naar transparante, voordelige handel.'" },
   ],
 };
 

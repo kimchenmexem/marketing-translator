@@ -275,7 +275,8 @@ async function main() {
   assert(/operar/i.test(esStyle) && /negociaci[oó]n/i.test(esStyle), "[es-ES] style-guide uses 'operar' and bans 'negociación'");
   assert(/informal "t[úu]"|"t[úu]" \(/i.test(esStyle), "[es-ES] style-guide sets the informal 'tú' register");
   const nlStyle = getLocaleStyleGuide("nl-NL");
-  assert(/Vooroplopen op de weg/.test(nlStyle), "[nl-NL] style-guide mentions 'Vooroplopen op de weg'");
+  assert(/Wij banen de weg naar transparante, voordelige handel/.test(nlStyle), "[nl-NL] style-guide carries the 05.26 'Pioneering' wording");
+  assert(/NEVER "makelaar"/i.test(nlStyle) && /voordelig/i.test(nlStyle), "[nl-NL] style-guide: broker not makelaar + voordelig");
 
   // ─── Summary ──────────────────────────────────────────────────────
   console.log();

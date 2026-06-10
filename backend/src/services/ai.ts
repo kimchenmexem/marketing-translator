@@ -126,21 +126,34 @@ OTHER GUIDANCE:
 - French readers value logical structure — lead with the value proposition, then explain.`,
 
     "nl-NL": `DUTCH (NETHERLANDS) STYLE:
-- Dutch financial marketing is direct, practical, and no-nonsense. Avoid flowery language.
-- Use "u" (formal) for this professional context.
-- Dutch readers appreciate directness — get to the point quickly.
-- Prefer Dutch financial terms where they exist: "handelsplatform", "beleggen", "effecten".
-- Keep "ETF" and "ETP" as-is — pluralise as "ETF's" (apostrophe-s) in line with Dutch convention.
-- For the "Pioneering" headline write "Vooroplopen op de weg naar transparant beleggen tegen lage kosten" — NOT a literal "Wij banen de weg..." version.
-- Numbers: use comma as decimal separator, period as thousands separator (1.234,56).
-- Avoid long compound words when a shorter phrase is clearer.`,
+- Dutch financial marketing is direct, practical, and no-nonsense. Avoid flowery language. Use "u" (formal). Get to the point quickly.
+- TERMINOLOGY:
+  • Keep the loanword "broker" — NEVER "makelaar" (that means a real-estate agent).
+  • Prefer "trading" / "tradingplatform" over "handelsplatform" (which sounds dated); "beleggen" (investing) is the natural verb for the activity ("Beleg in aandelen", "online beleggen").
+  • Keep "ETF" / "ETP", pluralised as "ETF's" / "ETP's" (apostrophe-s, Dutch convention).
+  • "AI-Powered" → "AI-ondersteund" or, more marketing-forward, "Slimmer beleggen met AI" — NOT "AI-gestuurd".
+  • "full package / all-in-one" → "all-in-one"; keep marketing loanwords where they read well ("Upgrade", "trading").
+- WORD CHOICE:
+  • cheap / cheapest / affordable → "voordelig / voordeligste" — NOT "goedkoop / goedkoopste" (sounds cheap/low-quality).
+  • "with low fees" → "tegen lage kosten" (NOT "met lage kosten").
+  • "fees" → "kosten" in most copy (not "tarieven"); "consistent fee structure" → "stabiele kostenstructuur".
+  • Region: "Europese" in full, not the "EU-" prefix ("Europese aandelen", "Europese beleggers").
+  • Drop a leading "How/Hoe" when it reads awkwardly — rephrase as an imperative ("Verhandel aandelen..." not "Hoe u aandelen kunt verhandelen...").
+  • Use separable verbs fully: "Bouw uw ETF-portefeuille op" (not "...portefeuille"); "stel uw schema op".
+- For the "Pioneering" headline write "Wij banen de weg naar transparante, voordelige handel." (reviewer-approved 05.26).
+- Numbers: comma decimal, period thousands (1.234,56); "€ 1" with a space.
+- ALWAYS produce a real translation — never a refusal or meta-commentary.`,
 
     "nl-BE": `DUTCH (BELGIAN) STYLE:
-- Belgian Dutch is slightly more formal and softer than Netherlands Dutch.
-- Use "u" (formal).
-- The same financial terminology applies as Netherlands Dutch, but tone should be slightly more polished and less blunt.
-- Numbers: same format as Netherlands Dutch (1.234,56).
-- Belgians may use some French-influenced expressions — this is acceptable if natural.`,
+- Belgian Dutch is slightly more formal and softer than Netherlands Dutch. Use "u" (formal); slightly more polished, less blunt.
+- Same terminology as Netherlands Dutch — in particular:
+  • Keep "broker" (NEVER "makelaar" = real-estate agent); prefer "trading" / "tradingplatform" over "handelsplatform".
+  • "ETF's" / "ETP's" (apostrophe-s).
+  • cheap/cheapest/affordable → "voordelig / voordeligste" (not "goedkoop"); "with low fees" → "tegen lage kosten".
+  • "AI-Powered" → "AI-ondersteund" / "Slimmer beleggen met AI" (not "AI-gestuurd"); "all-in-one"; region "Europese" not "EU-".
+- Numbers: same as Netherlands Dutch (1.234,56); "€ 1" with a space.
+- Belgians may use some French-influenced expressions — acceptable if natural.
+- ALWAYS produce a real translation — never a refusal or meta-commentary.`,
 
     "fr-BE": `FRENCH (BELGIAN) STYLE:
 - Belgian French is very close to France French but slightly less formal in register. Use "vous" (formal).
