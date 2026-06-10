@@ -216,6 +216,9 @@ async function main() {
   expectRepair("transparent trading", "La trading transparente", "Le trading transparente");
   expectRepair("Trade EU stocks", "Échangez des actions européennes", "Tradez des actions européennes");
   expectRepair("trade ETFs", "échanger des ETF mondiaux", "trader des ETF mondiaux");
+  // save-CTA: économiser → épargner (conjugation preserved)
+  expectRepair("EU Stocks & ETFs Just €1. Join & save today!", "Rejoignez-nous et économisez dès aujourd'hui !", "Rejoignez-nous et épargnez dès aujourd'hui !");
+  expectRepair("Start Saving Now with MEXEM stocks", "Commencez à économiser dès maintenant", "Commencez à épargner dès maintenant");
 
   section("M. auto-repair stays conservative");
   {
@@ -235,6 +238,9 @@ async function main() {
     // Genuine negotiation source → never touched.
     const genuine = repairFrenchTrading("Nous négocions le contrat", { sourceText: "We negotiate the contract terms" });
     assert(genuine.repairs.length === 0, "genuine-negotiation source is never repaired");
+    // "économiser" outside a save-CTA source is NOT rewritten to épargner.
+    const econ = repairFrenchTrading("Économisez sur vos frais de courtage", { sourceText: "Reduce your brokerage fees" });
+    assert(econ.repairs.length === 0, "économiser is left alone when the source is not a save-CTA");
   }
 
   // ── A3. Runtime gate (scoping + modes) ─────────────────────────────────────

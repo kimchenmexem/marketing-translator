@@ -31,6 +31,13 @@ const TRADING_SIGNAL =
 /** Genuine "negotiation" in the SOURCE — suppresses the négociation ban. */
 const GENUINE_NEGOTIATION = /\bnegotiat(?:e|es|ed|ing|ion|ions|or|ors)\b/i;
 
+/**
+ * Financial "save" CTA in the SOURCE — these mean grow/save long-term, so the
+ * French must be "épargner", not "économiser" (= spend less). Used to gate both
+ * the warning and the auto-repair.
+ */
+const SAVE_CTA = /\b(start saving|save today|save now|saving now|begin (?:saving|today)|join (?:&|and) save|& save\b)/i;
+
 function excerpt(text: string, index: number, length: number): string {
   const start = Math.max(0, index - 24);
   const end = Math.min(text.length, index + length + 24);
@@ -206,7 +213,7 @@ export function lintFrenchTrading(
 
     // 10. Financial "save" CTA → "épargner", not "économiser".
     if (
-      /\b(start saving|save today|save now|saving now|begin (?:saving|today))\b/i.test(src) &&
+      SAVE_CTA.test(src) &&
       /[ée]conomis(?:er|ez|e|ent)\b/i.test(output) &&
       !/[ée]pargn/i.test(output)
     ) {
@@ -312,6 +319,16 @@ export function repairFrenchTrading(
     { rule: "tradez-des", re: /[ÉéEe]changez(\s+des\s+(?:actions|etfs?|etps?))/gi, fn: (m, g1) => casedSwap(m, "tradez") + g1 },
     { rule: "trading-gender", re: /\b(la)(\s+trading)\b/gi, fn: (_m, g1, g2) => casedSwap(g1, "le") + g2 },
   ];
+
+  // Source-gated: in a financial "save" CTA, "économiser" → "épargner"
+  // (grow/save long-term). Conjugation is preserved via the captured suffix.
+  if (SAVE_CTA.test(src)) {
+    rules.push({
+      rule: "save-epargner",
+      re: /[ÉéEe]conomis(er|ez|e|ons|[ée]s?|ent)/g,
+      fn: (m, suf) => casedSwap(m, "épargn") + suf,
+    });
+  }
 
   const repairs: FrTradingRepair[] = [];
   let text = output;
