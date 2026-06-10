@@ -65,7 +65,7 @@ interface LocaleBundle {
 const NL: LocaleBundle = {
   tm: [
     { source: "TRADERS WHO WANT IT ALL", targets: ["HANDELAARS DIE ALLES WILLEN"] },
-    { source: "Powerful Trading Platforms", targets: ["Krachtige Handelsplatformen"] },
+    { source: "Powerful Trading Platforms", targets: ["Krachtige tradingplatformen"] },
     {
       source: "Pioneering the path towards transparent, low-cost trading.",
       targets: ["Wij banen de weg naar transparante, voordelige handel."],

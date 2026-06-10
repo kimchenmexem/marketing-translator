@@ -68,6 +68,8 @@ async function main() {
   expectRepair("Expand portfolio with low fees", "Breid uw portefeuille uit met lage kosten", "Breid uw portefeuille uit tegen lage kosten");
   expectRepair("AI-Powered Investing", "AI-gestuurd beleggen", "AI-ondersteund beleggen");
   expectRepair("Cheapest broker for EU stocks", "Goedkoopste broker voor Europese aandelen", "Voordeligste broker voor Europese aandelen");
+  expectRepair("best trading platforms for EU investors", "Een van de beste handelsplatforms voor Europese beleggers", "Een van de beste tradingplatformen voor Europese beleggers");
+  expectRepair("Powerful trading platform", "Krachtig handelsplatform", "Krachtig tradingplatform");
   {
     // makelaar is warned, not blind-repaired (compound risk).
     const r = repairDutchTrading("Goedkope aandelenhandelsmakelaar", { sourceText: "Low-cost broker" });
@@ -105,6 +107,7 @@ async function main() {
   assert(/Wij banen de weg naar transparante, voordelige handel/.test(nl), "[nl-NL] 05.26 Pioneering wording");
   const nlBe = getLocaleStyleGuide("nl-BE");
   assert(/makelaar/i.test(nlBe) && /broker/i.test(nlBe), "[nl-BE] inherits broker/makelaar rule");
+  assert(/investeren/i.test(nlBe), "[nl-BE] notes 'investeren' is natural in Belgian context");
 
   section("G. DB rule channels (skipped if DB unreachable)");
   if (!(await dbReachable())) {

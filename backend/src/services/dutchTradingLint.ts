@@ -154,6 +154,9 @@ export function repairDutchTrading(
   const rules: Array<{ rule: string; re: RegExp; fn: (m: string, ...g: string[]) => string }> = [
     { rule: "tegen-lage-kosten", re: /\bmet(\s+lage\s+kosten)\b/gi, fn: (m, g1) => casedSwap(m, "tegen") + g1 },
     { rule: "ai-ondersteund", re: /\bAI-gestuurd\b/gi, fn: (m) => (m.charAt(3) === "G" ? "AI-Ondersteund" : "AI-ondersteund") },
+    // "handelsplatform(en/s)" → "tradingplatform(en)" (plural normalised to -en).
+    { rule: "tradingplatform", re: /\bhandelsplatform(?:en|s)\b/gi, fn: (m) => casedSwap(m, "tradingplatformen") },
+    { rule: "tradingplatform", re: /\bhandelsplatform\b/gi, fn: (m) => casedSwap(m, "tradingplatform") },
   ];
   if (/\b(cheap(?:est)?|affordable|low[\s-]?cost)\b/i.test(src)) {
     rules.push(

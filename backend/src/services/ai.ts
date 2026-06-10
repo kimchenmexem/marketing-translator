@@ -146,6 +146,7 @@ OTHER GUIDANCE:
 
     "nl-BE": `DUTCH (BELGIAN) STYLE:
 - Belgian Dutch is slightly more formal and softer than Netherlands Dutch. Use "u" (formal); slightly more polished, less blunt.
+- In Belgian context "investeren" is a natural verb for investing and is sometimes preferred over "beleggen" ("Investeren in aandelen"); both are acceptable — "beleggen" / "Beleg" still reads well for short CTAs.
 - Same terminology as Netherlands Dutch — in particular:
   • Keep "broker" (NEVER "makelaar" = real-estate agent); prefer "trading" / "tradingplatform" over "handelsplatform".
   • "ETF's" / "ETP's" (apostrophe-s).
