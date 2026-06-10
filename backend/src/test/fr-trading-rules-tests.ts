@@ -181,6 +181,25 @@ async function main() {
   expectFlagged("refusal", "Then you should know this.", "Je suis là pour vous aider. Comment puis-je vous assister aujourd'hui ?");
   expectClean("Then you should know this.", "Dans ce cas, vous devriez savoir ceci :");
 
+  // ── fr-BE eval additions ──────────────────────────────────────────────────
+  section("K2. 'trade' → trader/Tradez, never 'échanger/Échangez'");
+  expectFlagged("trade-as-echanger", "Trade EU stocks and ETFs at €1", "Échangez des actions et ETF européens à 1 €");
+  expectClean("Trade EU stocks and ETFs at €1", "Tradez des actions et ETF européens à 1 €");
+  expectFlagged("trade-as-echanger", "Trade US and EU stocks at MEXEM", "Échangez des actions américaines et européennes chez MEXEM");
+  expectClean("Trade US and EU stocks at MEXEM", "Tradez des actions américaines et européennes chez MEXEM");
+  // Genuine "exchange" in the source is NOT flagged.
+  expectClean("Exchange currencies easily", "Échangez des devises facilement");
+
+  section("K3. broker → courtier; AI-Powered → propulsé; like a pro → professionnel");
+  expectFlagged("broker-courtier", "zero commission ETP broker", "broker d'ETP à zéro commission");
+  expectClean("zero commission ETP broker", "courtier d'ETP sans commission");
+  // Brand name is exempt.
+  expectClean("Cheapest alternative to Interactive Brokers", "Alternative la moins chère à Interactive Brokers");
+  expectFlagged("ai-propulse", "AI-Powered Investing", "Investissement alimenté par l'IA");
+  expectClean("AI-Powered Investing", "Investissement propulsé par l'IA");
+  expectFlagged("comme-un-pro", "Trade ETPs like a pro", "Tradez des ETP comme un pro");
+  expectClean("Trade ETPs like a pro", "Tradez des ETP comme un professionnel");
+
   // ── A2. Auto-repair (conservative, deterministic) ─────────────────────────
   section("L. auto-repair fixes the clearly-unsafe collocations");
   function expectRepair(source: string, bad: string, expected: string) {
@@ -195,6 +214,8 @@ async function main() {
   expectRepair("Trade stocks", "Négociez des actions", "Tradez des actions");
   expectRepair("ETF trading", "votre courtier pour la trading d'ETF", "votre courtier pour le trading d'ETF");
   expectRepair("transparent trading", "La trading transparente", "Le trading transparente");
+  expectRepair("Trade EU stocks", "Échangez des actions européennes", "Tradez des actions européennes");
+  expectRepair("trade ETFs", "échanger des ETF mondiaux", "trader des ETF mondiaux");
 
   section("M. auto-repair stays conservative");
   {
@@ -255,8 +276,16 @@ async function main() {
   assert(/never output a refusal/i.test(fr), "[fr-FR] never refuse — always translate");
 
   const frBe = getLocaleStyleGuide("fr-BE");
-  assert(/NEVER "la trading"|never "la trading"/i.test(frBe), "[fr-BE] inherits 'le trading' masculine rule");
+  assert(/never "la trading"/i.test(frBe), "[fr-BE] inherits 'le trading' masculine rule");
   assert(/n[ée]gociation/i.test(frBe) && /trading/i.test(frBe), "[fr-BE] inherits the négociation→trading rule");
+  assert(/[ée]changer/i.test(frBe), "[fr-BE] bans 'échanger' for trade");
+  assert(/propuls[ée]/i.test(frBe), "[fr-BE] AI-Powered → propulsé par l'IA");
+  assert(/comme un professionnel/i.test(frBe), "[fr-BE] like a pro → comme un professionnel");
+  assert(/courtier/i.test(frBe) && /broker/i.test(frBe), "[fr-BE] broker → courtier");
+  assert(/exigeants/i.test(frBe), "[fr-BE] investors who want it all → investisseurs exigeants");
+  // fr-FR carries the same new universal rules.
+  assert(/[ée]changer/i.test(fr), "[fr-FR] bans 'échanger' for trade");
+  assert(/propuls[ée]/i.test(fr), "[fr-FR] AI-Powered → propulsé par l'IA");
 
   // ── C. DB rule channels (skipped if the DB is unreachable) ────────────────
   section("DB rule channels (glossary + forbidden phrases)");
@@ -270,6 +299,8 @@ async function main() {
       await assertForbidden(locale, "négociation en ligne");
       await assertForbidden(locale, "négocier des ETF");
       await assertForbidden(locale, "la trading");
+      await assertForbidden(locale, "Échangez des actions");
+      await assertForbidden(locale, "broker d'ETP");
     }
   }
 

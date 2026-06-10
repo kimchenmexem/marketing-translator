@@ -75,15 +75,16 @@ HOMEPAGE / MARKETING NUANCES:
 
     "fr-FR": `FRENCH (FRANCE) STYLE — CRITICAL TERMINOLOGY RULES:
 - "trading" is the ONLY acceptable word for stock-market trading. NEVER use "négociation" / "négocier" — French native readers do not use these for the stock market and they sound wrong. This overrides any general "prefer French terms" instinct.
-- "le trading" is a MASCULINE noun: always "le trading" / "du trading" / "au trading", NEVER "la trading". The verb is "trader" (Tradez, trader), NEVER "négocier".
+- "le trading" is a MASCULINE noun: always "le trading" / "du trading" / "au trading", NEVER "la trading".
+- The verb "to trade" is "trader" / "Tradez" — NEVER "négocier" and NEVER "échanger" / "Échangez" (which means to exchange/swap goods or currencies, not to trade on the markets).
 
 TRADING TERM PAIRS — use the LEFT, never the RIGHT:
   • "Trading en ligne" ✓ / "Négociation en ligne" ✗
   • "Trading d'actions" ✓ / "Négociation d'actions" ✗
   • "Plateforme de trading" ✓ / "Plateforme de négociation" ✗
   • "Courtier de trading" / "Courtier en trading" ✓ / "Courtier en négociation" ✗
-  • "Tradez des actions" ✓ / "Négociez des actions" ✗
-  • "trader des ETF" ✓ / "négocier des ETF" ✗
+  • "Tradez des actions" ✓ / "Négociez des actions" ✗ / "Échangez des actions" ✗
+  • "trader des ETF" ✓ / "négocier des ETF" ✗ / "échanger des ETF" ✗
   • "le trading d'ETF" ✓ / "la trading d'ETF" ✗
   • "le trading transparent" ✓ / "la négociation transparente" ✗
 
@@ -100,7 +101,13 @@ REGISTER, VOCABULARY & TONE:
 - "frais fixes" (not "frais stables") — the precise financial term for fixed fees.
 - "faible coût" (not "économique") — sounds technical, not like a cheap/discount retail product.
 - "chez MEXEM" (not "sur MEXEM") when naming the broker as the provider.
-- Smooth, non-aggressive marketing tone: "Ne payez plus de commissions..." (not "Cessez de surpayer...").
+- Always translate "broker" → "courtier"; never leave the English word "broker" (the only exception is the brand name "Interactive Brokers").
+- Spell out regions in running copy: use "européen(ne/s)" in full, not the abbreviation "EU" / "UE" ("courtier européen", "investisseurs européens", "plateforme européenne"). The only exception is a reviewer-approved homepage stat line that keeps the short "EU et US" form.
+- "AI-Powered" → "propulsé par l'IA" (NOT "alimenté par l'IA" — "alimenté" means power-supplied or fed).
+- "like a pro" → "comme un professionnel" (not the casual "comme un pro").
+- "investors who want it all" → "investisseurs exigeants" (discerning/demanding), not the literal "investisseurs qui veulent tout" (sounds childish).
+- "zero / €0 commission" → "sans commission" (not "à zéro commission").
+- Smooth, non-aggressive marketing tone: "Ne payez plus de commissions..." (not "Cessez de surpayer..." or "Arrêtez de payer...").
 - Translate superlatives FAITHFULLY: "cheapest" → "le moins cher" / "la moins chère" (NOT softened to "le plus compétitif" or "le meilleur"). "best" → "le meilleur".
 - Prefer punchy, empowering phrasing: "Le pouvoir d'investir" over "La puissance de l'investissement"; "optimisez votre achat" over "faites en sorte que... ait un impact"; "tout-en-un" for "full package".
 
@@ -136,18 +143,29 @@ OTHER GUIDANCE:
 - Belgians may use some French-influenced expressions — this is acceptable if natural.`,
 
     "fr-BE": `FRENCH (BELGIAN) STYLE:
-- Belgian French is very close to France French but slightly less formal in register.
-- Use "vous" (formal).
-- Financial terminology is the SAME as France French — in particular:
-  • Use "trading" / "trader" / "Tradez" for stock-market trading; NEVER "négociation" / "négocier". "négociation" is not used for the stock market in French.
-  • "le trading" is MASCULINE — never "la trading".
-  • "actions" (lowercase) for shares; "la Bourse" / "boursier" for the market in general (not "marché des actions").
-  • "faible coût" (not "économique"), "frais fixes" (not "frais stables"), "épargner" (not "économiser") for long-term saving, "actions fractionnées" (not "fractions").
-  • Translate superlatives faithfully: "cheapest" → "le moins cher" / "la moins chère".
-  • Sentence case in headlines; nationality adjectives lowercase ("courtier européen", not "Européen").
+- Belgian French is very close to France French but slightly less formal in register. Use "vous" (formal).
+- Belgian French readers appreciate clarity and directness over literary elegance.
+
+CRITICAL TERMINOLOGY (same as France French):
+- Use "trading" / "trader" / "Tradez" for stock-market trading; NEVER "négociation" / "négocier" (not used for the stock market in French) and NEVER "échanger" / "Échangez" (that means to exchange/swap, not to trade). "Trade EU stocks" → "Tradez des actions européennes", NOT "Échangez...".
+- "le trading" is MASCULINE — never "la trading".
+- "actions" (lowercase) for shares; "la Bourse" / "boursier" for the market in general (not "marché des actions"). "Invest in Stocks" → "Investir en Bourse".
+- "fractional shares" → "actions fractionnées" (never bare "fractions"). "ETF" is invariant.
+
+VOCABULARY & TONE:
+- Always translate "broker" → "courtier"; never leave the English "broker" (except the brand "Interactive Brokers").
+- Spell out regions: "européen(ne/s)" in full, NOT the abbreviation "EU" / "UE" ("courtier européen", "investisseurs européens", "plateforme européenne").
+- "AI-Powered" → "propulsé par l'IA" (NOT "alimenté par l'IA" — "alimenté" means power-supplied/fed).
+- "like a pro" → "comme un professionnel" (not the casual "comme un pro").
+- "investors who want it all" → "investisseurs exigeants" (discerning), not the literal "qui veulent tout" (sounds childish).
+- "épargner" (not "économiser") for long-term saving; "faible coût" (not "économique"); "frais fixes" (not "frais stables"); "zero / €0 commission" → "sans commission".
+- Smooth, non-aggressive tone: "Ne payez plus de commissions..." (not "Arrêtez de payer..." / "Cessez de surpayer...").
+- Translate superlatives faithfully: "cheapest" → "le moins cher" / "la moins chère".
+
+CAPITALISATION: sentence case in headlines; nationality adjectives lowercase ("courtier européen", not "Européen"); common nouns lowercase mid-sentence ("Achetez des actions").
+
 - Numbers: same format as France French (1 234,56).
-- ALWAYS produce a real translation — never output a refusal or meta-commentary.
-- Belgian French readers appreciate clarity and directness over literary elegance.`,
+- ALWAYS produce a real translation — never output a refusal or meta-commentary.`,
 
     "es-ES": `SPANISH (SPAIN) STYLE:
 - Spanish financial marketing uses a formal but accessible register. Not stiff, not casual.

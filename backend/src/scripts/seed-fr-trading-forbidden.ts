@@ -34,6 +34,13 @@ const PHRASES: Array<{ phrase: string; reason: string }> = [
   { phrase: "Négociez des ETF", reason: "Trading context: use 'Tradez des ETF'." },
   { phrase: "négociation transparente", reason: "Trading context: use 'trading transparent' (and 'le trading', masculine)." },
   { phrase: "la trading", reason: "'le trading' is masculine — never 'la trading'." },
+  // "to trade" must be "trader/Tradez", never "échanger/Échangez" (= exchange/swap).
+  { phrase: "Échangez des actions", reason: "Trade context: use 'Tradez des actions' — 'échanger' means exchange/swap, not trade." },
+  { phrase: "Échangez des ETF", reason: "Trade context: use 'Tradez des ETF'." },
+  { phrase: "échanger des actions", reason: "Trade context: use 'trader des actions'." },
+  { phrase: "échanger des ETF", reason: "Trade context: use 'trader des ETF'." },
+  // "broker" must be translated to "courtier" (except the brand "Interactive Brokers").
+  { phrase: "broker d'ETP", reason: "Translate 'broker' → 'courtier' ('courtier d'ETP')." },
 ];
 
 async function main() {

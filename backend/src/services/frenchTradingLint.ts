@@ -71,6 +71,19 @@ export function lintFrenchTrading(
     );
   }
 
+  // 1b. "to trade" mistranslated as "échanger" (= exchange/swap) instead of "trader".
+  //     Gated on the SOURCE saying "trade" (not "exchange"), so genuine
+  //     exchange/swap copy (e.g. currency exchange) is left alone.
+  if (tradingContext && /\btrad(?:e|es|ed|ing)\b/i.test(src) && !/\bexchange\b/i.test(src)) {
+    flagFirst(
+      findings,
+      output,
+      /[ÉéEe]chang\w*/i,
+      "trade-as-echanger",
+      'Translate "trade" as "trader" / "Tradez" — "échanger" means to exchange/swap, not to trade on the markets.',
+    );
+  }
+
   // 2. "la trading" — "le trading" is masculine.
   flagFirst(
     findings,
@@ -123,6 +136,18 @@ export function lintFrenchTrading(
       /frais\s+stables?/i,
       "fixed-fees-frais-fixes",
       'Use "frais fixes" (the precise financial term), not "frais stables".',
+    );
+  }
+
+  // 5b. English "broker" left untranslated (should be "courtier"). The brand
+  //     "Interactive Brokers" is exempt.
+  if (tradingContext && /\bbroker\b/i.test(output) && !/interactive brokers?/i.test(output)) {
+    flagFirst(
+      findings,
+      output,
+      /\bbroker\b/i,
+      "broker-courtier",
+      'Translate "broker" → "courtier"; do not leave the English word "broker".',
     );
   }
 
@@ -205,6 +230,28 @@ export function lintFrenchTrading(
         'The market in general → "la Bourse" / "marché boursier", not "marché des actions".',
       );
     }
+
+    // 12. "AI-Powered" → "propulsé par l'IA", not "alimenté" (= power-supplied/fed).
+    if (/\bAI[-\s]?(?:powered|driven)\b|\bpowered by ai\b/i.test(src) && /aliment[ée]/i.test(output)) {
+      flagFirst(
+        findings,
+        output,
+        /aliment[ée]\w*/i,
+        "ai-propulse",
+        '"AI-Powered" → "propulsé par l\'IA", not "alimenté" (which means power-supplied/fed).',
+      );
+    }
+
+    // 13. "like a pro" → "comme un professionnel", not the casual "comme un pro".
+    if (/\blike a pro\b/i.test(src) && /\bcomme un pro\b/i.test(output)) {
+      flagFirst(
+        findings,
+        output,
+        /\bcomme un pro\b/i,
+        "comme-un-pro",
+        '"like a pro" → "comme un professionnel", not the casual "comme un pro".',
+      );
+    }
   }
 
   return findings;
@@ -260,6 +307,9 @@ export function repairFrenchTrading(
     { rule: "trading-d-actions", re: /n[ée]gociation(\s+d['’]\s*actions)/gi, fn: (m, g1) => casedSwap(m, "trading") + g1 },
     { rule: "trader-des", re: /n[ée]gocier(\s+des\s+(?:actions|etfs?|etps?))/gi, fn: (m, g1) => casedSwap(m, "trader") + g1 },
     { rule: "tradez-des", re: /n[ée]gociez(\s+des\s+(?:actions|etfs?|etps?))/gi, fn: (m, g1) => casedSwap(m, "tradez") + g1 },
+    // "to trade" mistranslated as "échanger/Échangez" → trader/Tradez (safe collocations only).
+    { rule: "trader-des", re: /[ÉéEe]changer(\s+des\s+(?:actions|etfs?|etps?))/gi, fn: (m, g1) => casedSwap(m, "trader") + g1 },
+    { rule: "tradez-des", re: /[ÉéEe]changez(\s+des\s+(?:actions|etfs?|etps?))/gi, fn: (m, g1) => casedSwap(m, "tradez") + g1 },
     { rule: "trading-gender", re: /\b(la)(\s+trading)\b/gi, fn: (_m, g1, g2) => casedSwap(g1, "le") + g2 },
   ];
 

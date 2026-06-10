@@ -15,7 +15,10 @@
 import { runTranslationJob } from "../services/ai";
 import { lintFrenchTrading } from "../services/frenchTradingLint";
 import { prisma } from "../db";
-import type { LengthConstraint } from "@mexem/shared";
+import type { LengthConstraint, LocaleCode } from "@mexem/shared";
+
+/** Target locale — fr-FR (default) or fr-BE. Set via TARGET_LOCALE env. */
+const TARGET_LOCALE = (process.env.TARGET_LOCALE ?? "fr-FR") as LocaleCode;
 
 interface Row {
   src: string;
@@ -114,7 +117,7 @@ async function translateOne(src: string): Promise<string> {
   const out = await runTranslationJob({
     sourceText: src,
     sourceLanguage: "English",
-    targetLocale: "fr-FR",
+    targetLocale: TARGET_LOCALE,
     textType: "ad",
     persona: "potential_investors",
     tone: "persuasive",
@@ -139,7 +142,7 @@ async function mapPool<T, R>(items: T[], limit: number, fn: (t: T, i: number) =>
 }
 
 async function main() {
-  console.log(`Translating ${ROWS.length} eval source texts → fr-FR (production path)…\n`);
+  console.log(`Translating ${ROWS.length} eval source texts → ${TARGET_LOCALE} (production path)…\n`);
 
   const outputs = await mapPool(ROWS, 5, async (row, i) => {
     try {
