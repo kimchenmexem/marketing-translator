@@ -67,46 +67,154 @@ OTHER GUIDANCE:
 - Keep brand names (MEXEM, WisdomTree) and product terms (ETF, ETP) unchanged.
 - Tone: warm, direct, approachable, but factual and professional. Not cold, not slangy.
 - Numbers: comma as decimal separator, period as thousands (1.234,56).
-- Adapt idioms — never translate English expressions literally.`,
+- Adapt idioms — never translate English expressions literally.
 
-    "fr-FR": `FRENCH (FRANCE) STYLE:
-- French financial copy uses a precise, formal register. Clarity and elegance matter.
-- Use "vous" (formal), never "tu".
-- Prefer established French financial terms: "plateforme de négociation", "instruments financiers", "courtier".
-- Avoid anglicisms when a good French term exists: "trading" → "négociation" or "investissement" depending on context, but keep "ETF" and "ETP" as-is (industry standard).
+HOMEPAGE / MARKETING NUANCES:
+- For marketing tropes, prefer reviewer-blessed wordings: "Commissioni di Trading contenute" (NOT "...Basse"), "Azioni frazionate" (NOT "Frazionali"), "trading frazionato" (NOT "frazionale"), "Scopri i Conti societari" (NOT "Esplora Conti Aziendali").
+- In the fractional-trading sentence write "azioni europee e statunitensi", not "azioni EU e US".
+- "Powerful Trading Platforms" → "Piattaforme di trading evolute" (NOT "Potenti").`,
+
+    "fr-FR": `FRENCH (FRANCE) STYLE — CRITICAL TERMINOLOGY RULES:
+- "trading" is the ONLY acceptable word for stock-market trading. NEVER use "négociation" / "négocier" — French native readers do not use these for the stock market and they sound wrong. This overrides any general "prefer French terms" instinct.
+- "le trading" is a MASCULINE noun: always "le trading" / "du trading" / "au trading", NEVER "la trading".
+- The verb "to trade" is "trader" / "Tradez" — NEVER "négocier" and NEVER "échanger" / "Échangez" (which means to exchange/swap goods or currencies, not to trade on the markets).
+
+TRADING TERM PAIRS — use the LEFT, never the RIGHT:
+  • "Trading en ligne" ✓ / "Négociation en ligne" ✗
+  • "Trading d'actions" ✓ / "Négociation d'actions" ✗
+  • "Plateforme de trading" ✓ / "Plateforme de négociation" ✗
+  • "Courtier de trading" / "Courtier en trading" ✓ / "Courtier en négociation" ✗
+  • "Tradez des actions" ✓ / "Négociez des actions" ✗ / "Échangez des actions" ✗
+  • "trader des ETF" ✓ / "négocier des ETF" ✗ / "échanger des ETF" ✗
+  • "le trading d'ETF" ✓ / "la trading d'ETF" ✗
+  • "le trading transparent" ✓ / "la négociation transparente" ✗
+
+STOCK-MARKET VOCABULARY:
+- "Stock Market" / the market in general → "la Bourse" (or "marché boursier"), NOT "marché des actions". "La Bourse" is the natural everyday term.
+- "stocks / shares" as a specific product → "actions" (lowercase).
+- "Invest in the Stock Market" → "Investir en Bourse"; use "Bourse" for the market, "actions" for the products.
+- "fractional shares" → "actions fractionnées" (NEVER just "fractions" — that is meaningless on its own).
+- "ETF" is invariant — use the singular form even when listing several products.
+
+REGISTER, VOCABULARY & TONE:
+- Use "vous" (formal), never "tu". Precise, clear register.
+- "épargner" (not "économiser") for saving/growing money long-term ("Commencez à épargner").
+- "frais fixes" (not "frais stables") — the precise financial term for fixed fees.
+- "faible coût" (not "économique") — sounds technical, not like a cheap/discount retail product.
+- "chez MEXEM" (not "sur MEXEM") when naming the broker as the provider.
+- Always translate "broker" → "courtier"; never leave the English word "broker" (the only exception is the brand name "Interactive Brokers").
+- Spell out regions in running copy: use "européen(ne/s)" in full, not the abbreviation "EU" / "UE" ("courtier européen", "investisseurs européens", "plateforme européenne"). The only exception is a reviewer-approved homepage stat line that keeps the short "EU et US" form.
+- "AI-Powered" → "propulsé par l'IA" (NOT "alimenté par l'IA" — "alimenté" means power-supplied or fed).
+- "like a pro" → "comme un professionnel" (not the casual "comme un pro").
+- "investors who want it all" → "investisseurs exigeants" (discerning/demanding), not the literal "investisseurs qui veulent tout" (sounds childish).
+- "zero / €0 commission" → "sans commission" (not "à zéro commission").
+- Smooth, non-aggressive marketing tone: "Ne payez plus de commissions..." (not "Cessez de surpayer..." or "Arrêtez de payer...").
+- Translate superlatives FAITHFULLY: "cheapest" → "le moins cher" / "la moins chère" (NOT softened to "le plus compétitif" or "le meilleur"). "best" → "le meilleur".
+- Prefer punchy, empowering phrasing: "Le pouvoir d'investir" over "La puissance de l'investissement"; "optimisez votre achat" over "faites en sorte que... ait un impact"; "tout-en-un" for "full package".
+
+CAPITALISATION (these are punctuation rules — getting them wrong is an error, not a style choice):
+- SENTENCE CASE in headlines and titles. NEVER capitalise every word ("Investissez dans Votre Avenir Dès Maintenant" ✗ → "Investissez dans votre avenir dès maintenant" ✓).
+- Region/nationality ADJECTIVES are lowercase: "courtier européen", "actions européennes". Only the noun for a person is capitalised ("un Européen").
+- Common nouns mid-sentence stay lowercase: "Achetez des actions" (not "Achetez des Actions").
+
+OTHER GUIDANCE:
+- For slogans/titles, dropping a leading article is often punchier: "Marchés mondiaux, une seule plateforme !" (not "Des marchés mondiaux...").
+- Keep the "&" ampersand when the source uses it in short marketing strings ("Actions & trading en ligne").
+- "dès 2025" rather than "à partir de 2025" for a start date in marketing copy.
+- For homepage stat cards, keep the "170+ marchés / 40+ pays / 29+ devises" form — do not expand to "Plus de 170...".
 - Numbers: use comma as decimal separator, space as thousands separator (1 234,56).
+- ALWAYS produce a real translation — never output a refusal or meta-commentary ("Je suis désolé, mais je ne peux pas..."). Every input is marketing copy to be translated.
 - French readers value logical structure — lead with the value proposition, then explain.`,
 
     "nl-NL": `DUTCH (NETHERLANDS) STYLE:
-- Dutch financial marketing is direct, practical, and no-nonsense. Avoid flowery language.
-- Use "u" (formal) for this professional context.
-- Dutch readers appreciate directness — get to the point quickly.
-- Prefer Dutch financial terms where they exist: "handelsplatform", "beleggen", "effecten".
-- Keep "ETF" and "ETP" as-is (standard in Dutch financial media).
-- Numbers: use comma as decimal separator, period as thousands separator (1.234,56).
-- Avoid long compound words when a shorter phrase is clearer.`,
+- Dutch financial marketing is direct, practical, and no-nonsense. Avoid flowery language. Use "u" (formal). Get to the point quickly.
+- TERMINOLOGY:
+  • Keep the loanword "broker" — NEVER "makelaar" (that means a real-estate agent).
+  • Prefer "trading" / "tradingplatform" over "handelsplatform" (which sounds dated); "beleggen" (investing) is the natural verb for the activity ("Beleg in aandelen", "online beleggen").
+  • Keep "ETF" / "ETP", pluralised as "ETF's" / "ETP's" (apostrophe-s, Dutch convention).
+  • "AI-Powered" → "AI-ondersteund" or, more marketing-forward, "Slimmer beleggen met AI" — NOT "AI-gestuurd".
+  • "full package / all-in-one" → "all-in-one"; keep marketing loanwords where they read well ("Upgrade", "trading").
+- WORD CHOICE:
+  • cheap / cheapest / affordable → "voordelig / voordeligste" — NOT "goedkoop / goedkoopste" (sounds cheap/low-quality).
+  • "with low fees" → "tegen lage kosten" (NOT "met lage kosten").
+  • "fees" → "kosten" in most copy (not "tarieven"); "consistent fee structure" → "stabiele kostenstructuur".
+  • Region: "Europese" in full, not the "EU-" prefix ("Europese aandelen", "Europese beleggers").
+  • Drop a leading "How/Hoe" when it reads awkwardly — rephrase as an imperative ("Verhandel aandelen..." not "Hoe u aandelen kunt verhandelen...").
+  • Use separable verbs fully: "Bouw uw ETF-portefeuille op" (not "...portefeuille"); "stel uw schema op".
+- For the "Pioneering" headline write "Wij banen de weg naar transparante, voordelige handel." (reviewer-approved 05.26).
+- Numbers: comma decimal, period thousands (1.234,56); "€ 1" with a space.
+- ALWAYS produce a real translation — never a refusal or meta-commentary.`,
 
     "nl-BE": `DUTCH (BELGIAN) STYLE:
-- Belgian Dutch is slightly more formal and softer than Netherlands Dutch.
-- Use "u" (formal).
-- The same financial terminology applies as Netherlands Dutch, but tone should be slightly more polished and less blunt.
-- Numbers: same format as Netherlands Dutch (1.234,56).
-- Belgians may use some French-influenced expressions — this is acceptable if natural.`,
+- Belgian Dutch is slightly more formal and softer than Netherlands Dutch. Use "u" (formal); slightly more polished, less blunt.
+- In Belgian context "investeren" is a natural verb for investing and is sometimes preferred over "beleggen" ("Investeren in aandelen"); both are acceptable — "beleggen" / "Beleg" still reads well for short CTAs.
+- Same terminology as Netherlands Dutch — in particular:
+  • Keep "broker" (NEVER "makelaar" = real-estate agent); prefer "trading" / "tradingplatform" over "handelsplatform".
+  • "ETF's" / "ETP's" (apostrophe-s).
+  • cheap/cheapest/affordable → "voordelig / voordeligste" (not "goedkoop"); "with low fees" → "tegen lage kosten".
+  • "AI-Powered" → "AI-ondersteund" / "Slimmer beleggen met AI" (not "AI-gestuurd"); "all-in-one"; region "Europese" not "EU-".
+- Numbers: same as Netherlands Dutch (1.234,56); "€ 1" with a space.
+- Belgians may use some French-influenced expressions — acceptable if natural.
+- ALWAYS produce a real translation — never a refusal or meta-commentary.`,
 
     "fr-BE": `FRENCH (BELGIAN) STYLE:
-- Belgian French is very close to France French but slightly less formal in register.
-- Use "vous" (formal).
-- Financial terminology is the same as France French.
-- Numbers: same format as France French (1 234,56).
-- Belgian French readers appreciate clarity and directness over literary elegance.`,
+- Belgian French is very close to France French but slightly less formal in register. Use "vous" (formal).
+- Belgian French readers appreciate clarity and directness over literary elegance.
 
-    "es-ES": `SPANISH (SPAIN) STYLE:
-- Spanish financial marketing uses a formal but accessible register. Not stiff, not casual.
-- Use "usted" (formal) for this professional context.
-- Prefer European Spanish conventions, not Latin American: "ordenador" not "computadora", "negociación" not "operación".
-- Prefer established Spanish financial terms: "plataforma de inversión", "valores", "renta variable".
-- Numbers: use comma as decimal separator, period as thousands separator (1.234,56).
-- Spanish allows for slightly more expressive copy than English — use it to create engaging text, but stay professional.`,
+CRITICAL TERMINOLOGY (same as France French):
+- Use "trading" / "trader" / "Tradez" for stock-market trading; NEVER "négociation" / "négocier" (not used for the stock market in French) and NEVER "échanger" / "Échangez" (that means to exchange/swap, not to trade). "Trade EU stocks" → "Tradez des actions européennes", NOT "Échangez...".
+- "le trading" is MASCULINE — never "la trading".
+- "actions" (lowercase) for shares; "la Bourse" / "boursier" for the market in general (not "marché des actions"). "Invest in Stocks" → "Investir en Bourse".
+- "fractional shares" → "actions fractionnées" (never bare "fractions"). "ETF" is invariant.
+
+VOCABULARY & TONE:
+- Always translate "broker" → "courtier"; never leave the English "broker" (except the brand "Interactive Brokers").
+- Spell out regions: "européen(ne/s)" in full, NOT the abbreviation "EU" / "UE" ("courtier européen", "investisseurs européens", "plateforme européenne").
+- "AI-Powered" → "propulsé par l'IA" (NOT "alimenté par l'IA" — "alimenté" means power-supplied/fed).
+- "like a pro" → "comme un professionnel" (not the casual "comme un pro").
+- "investors who want it all" → "investisseurs exigeants" (discerning), not the literal "qui veulent tout" (sounds childish).
+- "épargner" (not "économiser") for long-term saving; "faible coût" (not "économique"); "frais fixes" (not "frais stables"); "zero / €0 commission" → "sans commission".
+- Smooth, non-aggressive tone: "Ne payez plus de commissions..." (not "Arrêtez de payer..." / "Cessez de surpayer...").
+- Translate superlatives faithfully: "cheapest" → "le moins cher" / "la moins chère".
+
+CAPITALISATION: sentence case in headlines; nationality adjectives lowercase ("courtier européen", not "Européen"); common nouns lowercase mid-sentence ("Achetez des actions").
+
+- Numbers: same format as France French (1 234,56).
+- ALWAYS produce a real translation — never output a refusal or meta-commentary.`,
+
+    "es-ES": `SPANISH (SPAIN) STYLE — CRITICAL REGISTER & TERMINOLOGY:
+- REGISTER: address the reader with the informal "tú" (second-person singular) for marketing copy — modern Spanish retail-finance brands use "tú", not "usted". Imperatives in tú form: "Invierte", "Opera", "Descubre", "Empieza", "Compra", "Accede", "Disfruta", "Mejora", "Únete". Possessives "tu / tus" (NOT "su / sus"); "te ofrecemos" (NOT "le ofrecemos"). Keep legal/risk disclaimers impersonal.
+- "to trade" → the verb "operar" ("operar con ETF", "operar en acciones"); the noun "trading" stays "trading" ("trading en línea", "trading transparente", "trading fraccionado"). NEVER "negociación" / "negociar" for stock-market trading. "trade(s)" as a noun → "operación / operaciones".
+- "broker" → "bróker" (WITH accent), NEVER "corredor" or unaccented "broker".
+- "ETF" and "ETP" are INVARIANT — no plural "-s". Write "ETF" / "ETP" even for several ("varios ETF", not "ETFs").
+
+TERMINOLOGY PAIRS — use the LEFT, never the RIGHT:
+  • "trading en línea" ✓ / "negociación en línea" ✗
+  • "operar con ETF" ✓ / "negociar ETFs" ✗
+  • "operar en acciones" ✓ / "negociar acciones" ✗
+  • "trading transparente" ✓ / "negociación transparente" ✗
+  • "bróker" ✓ / "corredor" ✗
+  • "ETF" ✓ / "ETFs" ✗      • "ETP" ✓ / "ETPs" ✗
+  • "comisiones" ✓ / "tarifas" ✗      • "costes" ✓ / "costos" ✗
+
+VOCABULARY:
+- "fees" → "comisiones" (NOT "tarifas"). "fixed / flat fee" → "comisión fija" (not "tarifa plana", not "comisiones estables"). "consistent fees" → "comisiones consistentes".
+- European Spanish "costes" (NOT Latin-American "costos"); "consistente" (not "coherente").
+- "cheapest / cheap" → "más barato/a" (preferred over "más económico/a").
+- "AI-Powered / AI-driven" → "con inteligencia artificial" (spell it out; NOT "impulsada por IA").
+- "full package / all-in-one" → "todo en uno".
+- "Caution" (disclaimer header) → "Aviso" (not "Advertencia"). "Terms & conditions" → "términos y condiciones" (not just "condiciones"). "Third party fees" → "comisiones de terceros".
+- "fractional trading" → "trading fraccionado"; "fractional shares" → "acciones fraccionadas".
+- Join coordinated items with "y", not a dash: "acciones europeas y ETF" (not "acciones europeas - ETF").
+- Region: "europeo/a/os" in full, not "de la UE" / "UE".
+- CTA naturalness: prefer "empieza hoy" over a literal "¡Actúa ahora!"; "Invierte de forma inteligente" over "Invierte con inteligencia".
+
+OTHER:
+- Prefer European Spanish ("ordenador" not "computadora").
+- Adjective order: descriptive adjective AFTER the noun for product/pricing phrases ("comisiones bajas", not "bajas comisiones").
+- Numbers: comma decimal separator, period thousands separator (1.234,56).
+- ALWAYS produce a real translation — never a refusal or meta-commentary.
+- Spanish allows expressive copy — engaging but professional.`,
 
     "en-GB": `BRITISH ENGLISH STYLE:
 - Use British spelling: "favour", "organisation", "licence" (noun), "practise" (verb).
@@ -466,7 +574,10 @@ HARD RULES:
 - Preserve brand names (MEXEM, WisdomTree) and asterisks (*) exactly as written.
 - Do not add disclaimers unless instructed.
 - This is for a regulated financial platform — use factual, professional language. Never imply guaranteed returns, capital safety, or urgency.
-- Output only the translated text, nothing else.`;
+- Output only the translated text, nothing else.
+- NEVER prefix output with "CTA " — "CTA" is a metadata label, not user-visible copy. For source like "CTA All Products" output only the translated button label (e.g. "Tous les produits"), not "CTA Tous les produits".
+- Preserve approved product names exactly (the GLOSSARY block above lists them). Do not "improve" or pluralise them differently than the glossary.
+- For legal / disclaimer fragments, stay close to the approved reviewer wording — these are regulated lines, not creative copy.${request.textType === "homepage" ? "\n- HOMEPAGE CONTEXT: the source may arrive split across UI lines. Translate phrase-by-phrase so each line remains grammatical in the target language. When a reviewer-approved split exists (see TRANSLATION MEMORY), match it." : ""}`;
 
   try {
     const versionHints = [

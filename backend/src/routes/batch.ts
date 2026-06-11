@@ -69,7 +69,8 @@ TRANSLATION PRINCIPLES:
 - Preserve brand names (MEXEM, WisdomTree, etc.) and asterisks (*) exactly as written.
 - Do not add, remove, or invent information.
 - Use factual, professional language. Never imply guaranteed returns, capital safety, or urgency.
-- Output only the translated text, nothing else.${styleBlock}${formatInstruction}${limitInstruction}${bannedInstruction}${forbiddenBlock ?? ""}${glossaryBlock ?? ""}`;
+- Output only the translated text, nothing else.
+- NEVER prefix output with "CTA " — "CTA" is metadata, not user-visible copy. Translate only the button label.${styleBlock}${formatInstruction}${limitInstruction}${bannedInstruction}${forbiddenBlock ?? ""}${glossaryBlock ?? ""}`;
 }
 
 // Mirror of /api/options textTypes — when `textType` is supplied without an

@@ -19,6 +19,17 @@ export async function runComplianceCheck(payload: {
   return data as any;
 }
 
+export type ComplianceVerdict = "correct" | "false_positive" | "missed_violation";
+
+/** Feedback on a compliance ASSESSMENT (distinct from a translation review). */
+export async function submitComplianceFeedback(
+  outputId: number,
+  payload: { verdict: ComplianceVerdict; note?: string },
+) {
+  const { data } = await api.post(`/api/compliance/check/${outputId}/feedback`, payload);
+  return data as { ok: boolean; verdict: ComplianceVerdict };
+}
+
 // ─── Sources ────────────────────────────────────────────────────────
 
 export async function listSources(jurisdiction?: string) {

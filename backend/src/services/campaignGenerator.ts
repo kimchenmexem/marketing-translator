@@ -218,7 +218,8 @@ HARD CONSTRAINTS:
 - Each variant MUST be ≤ the asset's maxChars (count characters strictly, including spaces and punctuation).
 - Never imply guaranteed returns, capital safety, or risk-free investing.
 - Do not create artificial urgency or scarcity.
-- Do not write personalised investment advice ("you should invest", "we recommend buying", etc.).${banBlock}${forbiddenBlock}
+- Do not write personalised investment advice ("you should invest", "we recommend buying", etc.).
+- NEVER prefix any CTA variant with "CTA " — "CTA" is metadata, not user-visible copy.${banBlock}${forbiddenBlock}
 
 OUTPUT FORMAT: Return ONLY valid JSON matching this exact shape — no preamble, no markdown, no code fences:
 {

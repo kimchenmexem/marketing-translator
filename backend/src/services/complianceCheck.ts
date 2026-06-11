@@ -24,6 +24,7 @@ import type {
 import { validateCompliance } from "./compliance";
 import { getJurisdictionRules } from "./jurisdictionRules";
 import { rewriteForCompliance } from "./semantic-compliance";
+import { sentenceAround } from "../compliance/engine/executor";
 
 // Locale → country display name
 const COUNTRY_NAME: Record<string, string> = {
@@ -252,7 +253,7 @@ function resolveEvidence(text: string, finding: LlmFinding): string {
  *  surfaced — they just have an empty `evidence`. */
 function buildMatchedRules(
   text: string,
-  bundleMatches: Array<{ ruleType: string; severity: string; message: string; evidence?: string }> | undefined,
+  bundleMatches: Array<{ ruleType: string; severity: string; message: string; evidence?: string; context?: string }> | undefined,
   semanticFindings: LlmFinding[] | undefined,
   semanticIssues: string[] | undefined,
   independentFindings: LlmFinding[] | undefined,
@@ -276,12 +277,21 @@ function buildMatchedRules(
     rules.push(r);
   };
 
+  // Resolve the enclosing sentence for an LLM evidence quote (bundle matches
+  // already carry their own context from the executor).
+  const contextFor = (ev?: string): string | undefined => {
+    if (!ev) return undefined;
+    const idx = text.toLowerCase().indexOf(ev.toLowerCase());
+    return idx === -1 ? undefined : sentenceAround(text, idx, ev.length);
+  };
+
   for (const m of bundleMatches ?? []) {
     add({
       type: m.ruleType as any,
       severity: (m.severity as any) ?? "major",
       message: m.message,
       evidence: m.evidence,
+      context: m.context,
       sourceCode: primarySource,
     });
   }
@@ -298,6 +308,7 @@ function buildMatchedRules(
         severity: f.severity ?? "minor",
         message: f.category,
         evidence: evidence || undefined,
+        context: contextFor(evidence),
       });
     }
   } else {
@@ -318,6 +329,7 @@ function buildMatchedRules(
         severity: f.severity ?? "minor",
         message: f.category,
         evidence: evidence || undefined,
+        context: contextFor(evidence),
       });
     }
   } else {
