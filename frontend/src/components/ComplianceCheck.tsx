@@ -8,7 +8,7 @@
  */
 
 import { useState } from "react";
-import ReviewPanel from "./ReviewPanel";
+import ComplianceFeedbackPanel from "./ComplianceFeedbackPanel";
 import * as compliance from "../api/compliance";
 
 const LOCALES: Array<{ code: string; label: string }> = [
@@ -81,9 +81,9 @@ export default function ComplianceCheck() {
                 onChange={e => setText(e.target.value)}
                 placeholder="Paste marketing copy to check against the target locale's compliance bundle…"
                 required
-                maxLength={10000}
+                maxLength={20000}
               />
-              <span className="field-hint">{text.length}/10000 characters — no translation is performed.</span>
+              <span className="field-hint">{text.length}/20000 characters — no translation is performed.</span>
             </div>
           </div>
         </div>
@@ -215,8 +215,9 @@ function ResultCard({ result, checkedText }: { result: any; checkedText: string 
             : " decision from legacy fallback rules (no published bundle for this locale)."}
         </div>
 
-        {/* Feedback — was the compliance assessment correct? */}
-        {result.outputId && <ReviewPanel outputId={result.outputId} />}
+        {/* Feedback — was the compliance assessment correct? (compliance-specific,
+            not the translation review panel) */}
+        {result.outputId && <ComplianceFeedbackPanel outputId={result.outputId} />}
       </div>
     </div>
   );

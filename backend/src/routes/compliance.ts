@@ -7,6 +7,7 @@ import { diffLatestVersions } from "../compliance/ingestion/diff";
 import { runComplianceCheck } from "../services/complianceCheck";
 import type { SourceFamilyCode } from "@mexem/shared";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { canReadAllJobs } from "../services/access";
 
 const router = Router();
 
@@ -16,7 +17,7 @@ const router = Router();
 const SUPPORTED_LOCALES = ["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB"] as const;
 
 const complianceCheckSchema = z.object({
-  text: z.string().min(1).max(10_000),
+  text: z.string().min(1).max(20_000),
   locale: z.enum(SUPPORTED_LOCALES),
   withSuggestedFixes: z.boolean().optional(),
 });
@@ -82,6 +83,62 @@ router.post("/check", requireAuth, async (req, res) => {
     if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
     console.error("POST /api/compliance/check failed:", err);
     res.status(500).json({ error: err?.message ?? "Compliance check failed." });
+  }
+});
+
+// ─── POST /api/compliance/check/:outputId/feedback ──────────────────
+// Dedicated feedback on a compliance ASSESSMENT (distinct from translation
+// review). The reviewer says whether the assessment was correct, a false
+// positive (over-flagged), or whether it missed a real violation. Stored on
+// the same TranslationReview table the compliance_check output lives under —
+// the compliance verdict is recorded in issueCodes (JSON) so it never mixes
+// with the translation-quality issue codes.
+const complianceFeedbackSchema = z.object({
+  verdict: z.enum(["correct", "false_positive", "missed_violation"]),
+  note: z.string().max(2000).optional(),
+});
+
+router.post("/check/:outputId/feedback", requireAuth, async (req, res) => {
+  const outputId = Number(req.params.outputId);
+  if (Number.isNaN(outputId)) return res.status(400).json({ error: "Invalid output id." });
+
+  try {
+    const { verdict, note } = complianceFeedbackSchema.parse(req.body);
+    const authUser = req.authUser!;
+
+    const output = await prisma.translationOutput.findUnique({
+      where: { id: outputId },
+      include: { job: { select: { createdByUserId: true, textType: true } } },
+    });
+    if (!output) return res.status(404).json({ error: "Output not found." });
+    // Only compliance-check outputs accept compliance feedback.
+    if (output.job.textType !== "compliance_check") {
+      return res.status(400).json({ error: "This output is not a compliance check." });
+    }
+    // Ownership gate for plain USER (REVIEWER+ may review any).
+    if (!canReadAllJobs(authUser.role) && output.job.createdByUserId !== authUser.id) {
+      return res.status(404).json({ error: "Output not found." });
+    }
+
+    // "correct" → the assessment is endorsed (approved); a false positive or a
+    // missed violation means the assessment was wrong (rejected).
+    const decision = verdict === "correct" ? "approved" : "rejected";
+
+    await prisma.translationReview.create({
+      data: {
+        outputId,
+        decision,
+        note: note ?? null,
+        issueCodes: JSON.stringify([`compliance:${verdict}`]),
+        reviewerUserId: authUser.id,
+      },
+    });
+
+    res.json({ ok: true, verdict });
+  } catch (err: any) {
+    if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
+    console.error("POST /api/compliance/check/:outputId/feedback failed:", err);
+    res.status(500).json({ error: err?.message ?? "Failed to submit compliance feedback." });
   }
 });
 

@@ -31,6 +31,7 @@
     "seed:es-trading-forbidden": "ts-node --transpile-only src/scripts/seed-es-trading-forbidden.ts",
     "seed:nl-trading-forbidden": "ts-node --transpile-only src/scripts/seed-nl-trading-forbidden.ts",
     "test:compliance": "ts-node --transpile-only src/test/compliance-sot-tests.ts",
+    "test:compliance-executor": "ts-node --transpile-only src/test/compliance-executor-tests.ts",
     "test:homepage-translations": "ts-node --transpile-only src/test/homepage-translations-tests.ts",
     "test:fr-trading-rules": "ts-node --transpile-only src/test/fr-trading-rules-tests.ts",
     "test:es-trading-rules": "ts-node --transpile-only src/test/es-trading-rules-tests.ts",
