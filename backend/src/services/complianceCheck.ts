@@ -24,7 +24,7 @@ import type {
 import { validateCompliance } from "./compliance";
 import { getJurisdictionRules } from "./jurisdictionRules";
 import { rewriteForCompliance } from "./semantic-compliance";
-import { sentenceAround } from "../compliance/engine/executor";
+import { sentenceAround, hasAnyDisclaimer } from "../compliance/engine/executor";
 
 // Locale → country display name
 const COUNTRY_NAME: Record<string, string> = {
@@ -245,6 +245,46 @@ function resolveEvidence(text: string, finding: LlmFinding): string {
   return fallbackQuoteForCategory(text, finding.category);
 }
 
+/** Explicit "this is not advice / educational only" disclaimer, across locales. */
+const NOT_ADVICE_DISCLAIMER =
+  /\b(do(es)? not constitute (investment |financial )?advice|not (intended as |investment |financial )?advice|(educational|informational) purposes only|for (educational|informational) purposes|ne constitue pas un conseil|à titre (informatif|éducatif)|no constituye (asesoramiento|consejo)|fines (informativos|educativos)|non costituisce (consulenza|consiglio)|vormt geen (beleggings)?advies|informatieve doeleinden)\b/iu;
+
+/** "Missing risk / performance disclosure" categories — satisfied when the text
+ *  actually carries a risk disclaimer, so they should not be raised then. */
+const DISCLOSURE_SATISFIED_CATEGORIES = new Set(["risk_balance", "past_performance"]);
+
+/** Language that actually signals a guarantee / capital-safety claim. A genuine
+ *  "no_guarantees" violation must quote something like this; an LLM that flags a
+ *  benign phrase ("put your shares to work") without any such wording is
+ *  misfiring. Multilingual. */
+const GUARANTEE_MARKERS =
+  /\b(guarantee[sd]?|assured?|assure[sd]?|risk-?free|no risk|100\s*%|capital protected|fully protected|protected|completely safe|safe|certain (?:returns?|gains?|profits?)|won'?t lose|can'?t lose|garanti\w*|asegurad\w*|garantizad\w*|garantit\w*|gegarandeerd|sans risque|sin riesgo|senza rischio|zonder risico)\b/iu;
+
+/**
+ * An LLM finding is a false positive — and should be suppressed — when it is
+ * flagging the compliance safeguards themselves rather than a real breach:
+ *   1. its quote IS disclaimer / risk-disclosure language (you cannot violate a
+ *      rule by stating the disclaimer);
+ *   2. it is a "missing risk/performance disclosure" category but the text
+ *      already carries a risk disclaimer;
+ *   3. it is an evidence-less "no guarantees" concern on a text that discloses
+ *      the risk of loss (a genuine guarantee claim would be quotable);
+ *   4. it is a "gives investment advice" concern but the text carries an explicit
+ *      not-advice / educational-only disclaimer.
+ */
+export function suppressLlmFinding(category: string, evidence: string | undefined, text: string): boolean {
+  const cat = (category || "").toLowerCase().trim();
+  if (evidence && hasAnyDisclaimer(evidence)) return true;
+  if (DISCLOSURE_SATISFIED_CATEGORIES.has(cat) && hasAnyDisclaimer(text)) return true;
+  // no_guarantees is about an affirmative guarantee/capital-safety claim. When
+  // the text already discloses risk, a finding that does not actually quote
+  // guarantee language is a misfire (covers both the no-quote case and a quote
+  // of a benign phrase like "put your shares to work").
+  if (cat === "no_guarantees" && hasAnyDisclaimer(text) && !(evidence && GUARANTEE_MARKERS.test(evidence))) return true;
+  if (cat === "no_financial_advice" && NOT_ADVICE_DISCLAIMER.test(text)) return true;
+  return false;
+}
+
 /** Merge bundle rule matches + LLM findings into one dedup'd list.
  *
  *  Each LLM-flagged finding now carries the exact substring from the input
@@ -303,6 +343,7 @@ function buildMatchedRules(
   if (semanticFindings && semanticFindings.length > 0) {
     for (const f of semanticFindings) {
       const evidence = resolveEvidence(text, f);
+      if (suppressLlmFinding(f.category, evidence, text)) continue;
       add({
         type: "llm_semantic",
         severity: f.severity ?? "minor",
@@ -317,6 +358,7 @@ function buildMatchedRules(
       // Category-only fallback path (older LLM responses) — still try to
       // surface a keyword from the text so highlighting works.
       const evidence = fallbackQuoteForCategory(text, issue);
+      if (suppressLlmFinding(issue, evidence, text)) continue;
       add({ type: "llm_semantic", severity: "minor", message: issue, evidence: evidence || undefined });
     }
   }
@@ -324,6 +366,7 @@ function buildMatchedRules(
   if (independentFindings && independentFindings.length > 0) {
     for (const f of independentFindings) {
       const evidence = resolveEvidence(text, f);
+      if (suppressLlmFinding(f.category, evidence, text)) continue;
       add({
         type: "llm_independent",
         severity: f.severity ?? "minor",
@@ -336,6 +379,7 @@ function buildMatchedRules(
     for (const v of independentViolations ?? []) {
       if (!v || typeof v !== "string") continue;
       const evidence = fallbackQuoteForCategory(text, v);
+      if (suppressLlmFinding(v, evidence, text)) continue;
       add({ type: "llm_independent", severity: "minor", message: v, evidence: evidence || undefined });
     }
   }
@@ -391,9 +435,9 @@ export async function runComplianceCheck(
   const hasCritical = isCriticalBundleMatch(bundleMatches);
   const hasAnyHardRule = bundleMatches.length > 0;
 
-  const externalStatus = mapStatus(decision.status, decision.finalAction, hasCritical, hasAnyHardRule);
-  const externalRisk = mapRiskLevel(decision.riskLevel, decision.status, decision.finalAction, hasCritical, hasAnyHardRule);
-  const recommendedAction = mapRecommendedAction(decision.finalAction, hasAnyHardRule);
+  let externalStatus = mapStatus(decision.status, decision.finalAction, hasCritical, hasAnyHardRule);
+  let externalRisk = mapRiskLevel(decision.riskLevel, decision.status, decision.finalAction, hasCritical, hasAnyHardRule);
+  let recommendedAction = mapRecommendedAction(decision.finalAction, hasAnyHardRule);
 
   const matchedRules = buildMatchedRules(
     text,
@@ -406,17 +450,35 @@ export async function runComplianceCheck(
     externalStatus
   );
 
+  // If the non-approval was driven SOLELY by LLM concerns, and every one of them
+  // was vetted as a false positive (e.g. flagging the risk disclaimer itself, or
+  // a missing-disclosure concern on text that does disclose), and no
+  // deterministic rule fired — there is no actionable issue. Approve it.
+  const hadLlmConcerns =
+    (decision.semanticResult?.findings?.length ?? 0) +
+    (decision.semanticResult?.issues?.length ?? 0) +
+    (decision.independentResult?.findings?.length ?? 0) +
+    (decision.independentResult?.violations?.length ?? 0) > 0;
+  const approvedAfterVetting =
+    externalStatus !== "approved" && !hasAnyHardRule && matchedRules.length === 0 && hadLlmConcerns;
+  if (approvedAfterVetting) {
+    externalStatus = "approved";
+    externalRisk = "low";
+    recommendedAction = "publish_as_is";
+  }
+
   const regulatorsApplied = deriveRegulators(bundleVersion, sourceRefs, locale);
   const summary = buildSummary(externalStatus, locale, bundleVersion, matchedRules);
 
   // Issues list — short labels surfaced to the caller. Already deduped in decision-layer.
   const issues = externalStatus === "approved" ? [] : (decision.issues ?? []);
 
-  // Human review gate: any non-approved status, or critical bundle match, or low confidence
+  // Human review gate: any non-approved status, or critical bundle match, or low
+  // confidence (but not when we just approved after vetting away false positives).
   const needsHumanReview =
     externalStatus !== "approved" ||
     hasCritical ||
-    decision.finalConfidence < 55;
+    (decision.finalConfidence < 55 && !approvedAfterVetting);
 
   // Optional suggested fixes — opt-in, off by default
   let suggestedFixes: ComplianceCheckResponse["suggestedFixes"] | undefined;
