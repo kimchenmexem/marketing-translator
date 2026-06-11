@@ -101,6 +101,26 @@ assert(
 // No trigger → never flagged regardless.
 assert(disclaimerMissing("A neutral sentence about the platform.") === false, "no trigger → not flagged");
 
+// ─── Whole-sentence context + exact reason ───────────────────────────
+console.log("\n═══ context = full sentence + precise message ═══");
+{
+  const text = "Open an account today. You will win guaranteed profits. Trade now.";
+  const r = executeBundleRules(text, bundle(["guaranteed profits"]));
+  const m = r.matches.find((x) => x.ruleType === "banned_phrase");
+  assert(m?.context === "You will win guaranteed profits.", `context is the full sentence (got: "${m?.context}")`);
+  assert(m?.evidence === "guaranteed profits", "evidence is the exact fragment");
+  assert(!!m && m.message.includes('"guaranteed profits"') && m.message.includes("You will win guaranteed profits."),
+    "message names the exact phrase AND the sentence");
+}
+{
+  // Required-disclaimer reason names the exact trigger + its sentence.
+  const b = bundle([], { requiredDisclaimers: [{ text: "Capital at risk.", triggers: ["profit"] }] });
+  const r = executeBundleRules("Make a profit fast. Sign up here.", b);
+  const m = r.matches.find((x) => x.ruleType === "required_disclaimer");
+  assert(!!m && m.message.includes('"profit"') && m.message.includes("Make a profit fast."),
+    `disclaimer reason names trigger + sentence (got: "${m?.message}")`);
+}
+
 console.log("\n═══ hasAnyDisclaimer (multilingual) ═══");
 assert(hasAnyDisclaimer("your capital is at risk") === true, "EN risk marker");
 assert(hasAnyDisclaimer("risque de perte") === true, "FR risk/loss marker");

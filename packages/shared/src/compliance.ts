@@ -232,7 +232,11 @@ export interface ComplianceCheckMatchedRule {
   type: "banned_phrase" | "regex" | "required_disclaimer" | "llm_semantic" | "llm_independent";
   severity: "critical" | "major" | "minor";
   message: string;
+  /** The exact fragment that triggered the rule. */
   evidence?: string;
+  /** The full sentence containing the evidence — so a finding is judged and
+   *  shown in context, not as a bare fragment. */
+  context?: string;
   sourceCode?: string;
 }
 

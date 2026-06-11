@@ -418,10 +418,14 @@ function HighlightedSourceText({ text, matchedRules }: { text: string; matchedRu
     (r) => r.type === "required_disclaimer" && (!r.evidence || r.evidence === ""),
   );
 
-  // Compute and merge ranges.
+  // Compute and merge ranges. Highlight the FULL sentence the match sits in
+  // (the backend-provided `context`) rather than the bare fragment, so the
+  // finding is shown in its whole-sentence context. Fall back to the evidence
+  // fragment if no context is available (older responses).
   const allRanges: Range[] = [];
   for (const r of evidenceRules) {
-    allRanges.push(...findRanges(text, r.evidence, r.severity ?? "minor", r.message ?? ""));
+    const span = typeof r.context === "string" && r.context.trim().length > 0 ? r.context : r.evidence;
+    allRanges.push(...findRanges(text, span, r.severity ?? "minor", r.message ?? ""));
   }
   const ranges = mergeRanges(allRanges);
 
