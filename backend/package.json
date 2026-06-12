@@ -25,6 +25,7 @@
     "seed:source-placeholders": "ts-node --transpile-only src/scripts/seed-source-placeholders.ts",
     "seed:cysec-overlay": "ts-node --transpile-only src/scripts/seed-cysec-overlay.ts",
     "recompile:bundles": "ts-node --transpile-only src/scripts/recompile-bundles.ts",
+    "eval:compliance": "ts-node --transpile-only src/scripts/compliance-eval.ts",
     "seed:glossary": "ts-node --transpile-only src/scripts/seed-glossary.ts",
     "seed:homepage-translations": "ts-node --transpile-only src/scripts/seed-homepage-translations.ts",
     "seed:fr-trading-forbidden": "ts-node --transpile-only src/scripts/seed-fr-trading-forbidden.ts",

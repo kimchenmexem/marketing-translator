@@ -126,6 +126,8 @@ assert(hasAnyDisclaimer("your capital is at risk") === true, "EN risk marker");
 assert(hasAnyDisclaimer("risque de perte") === true, "FR risk/loss marker");
 assert(hasAnyDisclaimer("uw kapitaal loopt risico") === true, "NL risk marker");
 assert(hasAnyDisclaimer("riesgo de pérdida de capital") === true, "ES risk marker");
+assert(hasAnyDisclaimer("Investments may lose value") === true, "EN 'may lose value' is a risk disclosure");
+assert(hasAnyDisclaimer("vous pouvez perdre votre capital") === true, "FR 'perdre' marker");
 assert(hasAnyDisclaimer("Acquista azioni adesso") === false, "no disclaimer language → false");
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
