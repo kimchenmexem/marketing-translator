@@ -165,6 +165,16 @@ export interface RuleBundleContent {
   requiredDisclaimers: Array<{ text: string; triggers?: string[] }>;
   promptContext: string;
   disclaimers: { riskWarning: string; pastPerformance: string };
+  /** Per-obligation regulatory basis, keyed implicitly by `category`, so a
+   *  finding can cite the exact regulation it traces to (regulator + document +
+   *  quote). Populated by the compiler from approved obligations. */
+  obligationRefs?: Array<{
+    category: string;
+    severity: ObligationSeverity;
+    sourceCode: string;
+    documentRef?: string;
+    quote?: string;
+  }>;
 }
 
 export interface RuleBundle {
@@ -238,6 +248,14 @@ export interface ComplianceCheckMatchedRule {
    *  shown in context, not as a bare fragment. */
   context?: string;
   sourceCode?: string;
+  /** The specific regulation this finding traces to — regulator, document/
+   *  article, and the governing quote. Lets a reviewer audit the finding
+   *  against the rulebook, not just a category label. */
+  regulatoryBasis?: {
+    sourceCode: string;
+    documentRef?: string;
+    quote?: string;
+  };
 }
 
 export interface ComplianceCheckResponse {

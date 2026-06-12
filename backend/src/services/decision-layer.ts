@@ -3,7 +3,7 @@
  * Combines semantic and independent validation results into deterministic decisions.
  */
 
-import { LocaleCode, SourceRef } from "@mexem/shared";
+import { LocaleCode, SourceRef, RuleBundleContent } from "@mexem/shared";
 import { validateSemanticCompliance, SemanticValidationResult } from "./semantic-compliance";
 import { validateComplianceIndependently, IndependentValidationResult } from "./independent-validator";
 import { loadBundle, LoadedBundle } from "../compliance/bundles/loader";
@@ -36,6 +36,9 @@ export interface ComplianceDecisionResult {
   sourceRefs?: SourceRef[];
   /** Deterministic rule matches from the bundle executor. */
   bundleRuleMatches?: BundleRuleMatch[];
+  /** Per-obligation regulatory basis (category → regulator/document/quote), used
+   *  to cite the exact regulation behind each surfaced finding. */
+  obligationRefs?: RuleBundleContent["obligationRefs"];
 }
 
 export interface DecisionConfig {
@@ -292,6 +295,7 @@ export async function makeComplianceDecisionWithValidators(
       bundleVersion: bundleExec?.bundleVersion ?? null,
       sourceRefs: bundleExec?.sourceRefs ?? [],
       bundleRuleMatches: bundleExec?.matches ?? [],
+      obligationRefs: bundle?.content.obligationRefs,
     };
     return result;
   }
@@ -390,6 +394,7 @@ export async function makeComplianceDecisionWithValidators(
     bundleVersion: bundleExec?.bundleVersion ?? null,
     sourceRefs: bundleExec?.sourceRefs ?? [],
     bundleRuleMatches: bundleExec?.matches ?? [],
+      obligationRefs: bundle?.content.obligationRefs,
   };
 
   if (uncertainCaseLogged) {

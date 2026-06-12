@@ -299,7 +299,8 @@ function buildMatchedRules(
   independentFindings: LlmFinding[] | undefined,
   independentViolations: string[] | undefined,
   sourceRefs: Array<{ sourceCode: string }>,
-  externalStatus: ComplianceCheckStatus
+  externalStatus: ComplianceCheckStatus,
+  obligationRefs?: Array<{ category: string; sourceCode: string; documentRef?: string; quote?: string }>
 ): ComplianceCheckMatchedRule[] {
   // When approved, suppress all match output (consistent with decision-layer SAFE behavior)
   if (externalStatus === "approved") return [];
@@ -307,6 +308,17 @@ function buildMatchedRules(
   const rules: ComplianceCheckMatchedRule[] = [];
   const seen = new Set<string>();
   const primarySource = sourceRefs[0]?.sourceCode;
+
+  // category → the exact regulation it traces to (regulator + document + quote),
+  // so an LLM finding cites the rulebook, not just a category label.
+  const basisByCategory = new Map<string, ComplianceCheckMatchedRule["regulatoryBasis"]>();
+  for (const o of obligationRefs ?? []) {
+    const key = (o.category || "").toLowerCase().trim();
+    if (key && !basisByCategory.has(key)) {
+      basisByCategory.set(key, { sourceCode: o.sourceCode, documentRef: o.documentRef, quote: o.quote });
+    }
+  }
+  const basisFor = (category: string) => basisByCategory.get((category || "").toLowerCase().trim());
 
   const add = (r: ComplianceCheckMatchedRule) => {
     // Include the evidence in the dedup key so two distinct phrases under
@@ -350,6 +362,7 @@ function buildMatchedRules(
         message: f.category,
         evidence: evidence || undefined,
         context: contextFor(evidence),
+        regulatoryBasis: basisFor(f.category),
       });
     }
   } else {
@@ -373,6 +386,7 @@ function buildMatchedRules(
         message: f.category,
         evidence: evidence || undefined,
         context: contextFor(evidence),
+        regulatoryBasis: basisFor(f.category),
       });
     }
   } else {
@@ -447,7 +461,8 @@ export async function runComplianceCheck(
     decision.independentResult?.findings as LlmFinding[] | undefined,
     decision.independentResult?.violations,
     sourceRefs,
-    externalStatus
+    externalStatus,
+    decision.obligationRefs ?? undefined
   );
 
   // If the non-approval was driven SOLELY by LLM concerns, and every one of them

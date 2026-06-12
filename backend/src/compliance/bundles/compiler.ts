@@ -141,6 +141,7 @@ export async function compileDraftBundle(input: CompileInput, db: DbClient = pri
   const requiredDisclaimers: RuleBundleContent["requiredDisclaimers"] = [];
   const promptLines: string[] = [];
   const allSourceRefs: SourceRef[] = [];
+  const obligationRefs: NonNullable<RuleBundleContent["obligationRefs"]> = [];
   let ruleCount = 0;
 
   // Collect disclaimers (may be overridden per obligation)
@@ -151,8 +152,30 @@ export async function compileDraftBundle(input: CompileInput, db: DbClient = pri
     const sourceRefs = safeParse<SourceRef[]>(obl.sourceRefsJson, []);
     allSourceRefs.push(...sourceRefs);
 
-    // Add to prompt context for LLM validators
-    promptLines.push(`[${obl.severity.toUpperCase()}] ${obl.category}: ${obl.description}`);
+    // The obligation's primary regulatory citation (regulator + document + quote).
+    const primaryRef = sourceRefs[0];
+    const citation = primaryRef
+      ? [primaryRef.sourceCode, primaryRef.documentRef].filter(Boolean).join(" — ")
+      : "";
+    const quote = sourceRefs.map(r => r.quote).find(q => q && q.trim().length > 0);
+
+    // Record the per-obligation basis so findings can cite the exact regulation.
+    if (primaryRef) {
+      obligationRefs.push({
+        category: obl.category,
+        severity: obl.severity as ObligationSeverity,
+        sourceCode: primaryRef.sourceCode,
+        documentRef: primaryRef.documentRef,
+        quote: quote || undefined,
+      });
+    }
+
+    // Add to prompt context for the LLM validators — now grounded in the actual
+    // regulation: severity, category, the citation, the rule, and the governing
+    // quote. So the model reasons against the rulebook, not a bare label.
+    promptLines.push(
+      `[${obl.severity.toUpperCase()}] ${obl.category}${citation ? ` (${citation})` : ""}: ${obl.description}${quote ? ` — governing text: "${quote}"` : ""}`
+    );
 
     for (const rule of obl.rules) {
       ruleCount++;
@@ -212,6 +235,7 @@ export async function compileDraftBundle(input: CompileInput, db: DbClient = pri
       riskWarning: riskWarning || "(not specified in obligations — use locale default)",
       pastPerformance: pastPerformance || "(not specified in obligations — use locale default)",
     },
+    obligationRefs,
   };
 
   // ── 3. Hash + persist ───────────────────────────────────────────────
