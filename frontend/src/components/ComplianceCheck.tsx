@@ -570,6 +570,22 @@ function FindingCard({ rule }: { rule: any }) {
         </div>
       )}
 
+      {/* Regulatory basis — the exact regulation this finding traces to. */}
+      {rule.regulatoryBasis && (rule.regulatoryBasis.documentRef || rule.regulatoryBasis.sourceCode) && (
+        <div style={{ fontSize: "0.6875rem", marginTop: "0.375rem", paddingTop: "0.375rem", borderTop: "1px dashed var(--border)" }}>
+          <span style={{ fontWeight: 600, color: "var(--text-3)" }}>Regulatory basis: </span>
+          <span className="badge badge-blue" style={{ fontSize: "0.625rem" }}>{rule.regulatoryBasis.sourceCode}</span>
+          {rule.regulatoryBasis.documentRef && (
+            <span style={{ color: "var(--text-2)" }}> {rule.regulatoryBasis.documentRef}</span>
+          )}
+          {rule.regulatoryBasis.quote && (
+            <div style={{ color: "var(--text-3)", fontStyle: "italic", marginTop: "0.125rem" }}>
+              “{rule.regulatoryBasis.quote}”
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Type explanation on hover / expandable */}
       {typeInfo.description && (
         <div style={{ fontSize: "0.6875rem", color: "var(--text-4)", marginTop: "0.375rem" }}>
