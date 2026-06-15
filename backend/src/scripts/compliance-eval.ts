@@ -67,6 +67,10 @@ const CASES: Case[] = [
     expect: "flagged", category: "no_guarantees", strict: true, note: "capital protection / safety guarantee",
   },
   {
+    text: "MEXEM will make you a millionaire.",
+    expect: "flagged", category: "no_guarantees", strict: true, note: "get-rich/wealth-promise (deterministic banned phrase)",
+  },
+  {
     text: "You should buy Tesla shares right now — it's the single best investment you can make today.",
     expect: "flagged", category: "no_financial_advice", note: "direct investment advice, no disclaimer",
   },
