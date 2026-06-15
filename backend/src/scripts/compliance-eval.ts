@@ -56,6 +56,16 @@ const CASES: Case[] = [
     text: "MEXEM is regulated by CySEC (licence 325/17) and offers transparent, low-cost trading. Investments may lose value.",
     expect: "approved", note: "regulatory facts + risk note",
   },
+  {
+    text: "Earn returns on global ETFs with MEXEM. Opening an account is free and fully online. All investments carry risk, including the possible loss of capital. This is not investment advice.",
+    expect: "approved", strict: true, note: "benefit + disclaimer in DIFFERENT sentences — must not over-flag per-sentence",
+  },
+
+  // ── Buried violation (sentence-by-sentence must catch it) ──────────────────
+  {
+    text: "MEXEM is a regulated European broker offering low-cost access to 170 markets. MEXEM will make you a millionaire. Investing involves risk, including the possible loss of capital.",
+    expect: "flagged", category: "no_guarantees", strict: true, note: "one bad sentence buried between compliant ones",
+  },
 
   // ── Violations (must be caught — NOT approved) ─────────────────────────────
   {
@@ -65,6 +75,10 @@ const CASES: Case[] = [
   {
     text: "Your capital is 100% protected — completely safe, with guaranteed monthly income.",
     expect: "flagged", category: "no_guarantees", strict: true, note: "capital protection / safety guarantee",
+  },
+  {
+    text: "MEXEM will make you a millionaire.",
+    expect: "flagged", category: "no_guarantees", strict: true, note: "get-rich/wealth-promise (deterministic banned phrase)",
   },
   {
     text: "You should buy Tesla shares right now — it's the single best investment you can make today.",

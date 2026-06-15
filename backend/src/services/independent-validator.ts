@@ -119,6 +119,10 @@ CLASSIFICATION RULES:
 - NON-COMPLIANT: Contains any hard prohibition above, or explicit/implied claims about returns, profits, or safety of capital
 - BORDERLINE: Ambiguous phrasing that could be read as either a product feature or a performance claim
 
+EVALUATE SENTENCE BY SENTENCE (IMPORTANT):
+- Audit the content one sentence at a time; check EACH sentence independently against every rule above.
+- A single non-compliant sentence makes the whole content non-compliant — surrounding compliant or disclaimer text does NOT excuse an offending sentence. Flag every offending sentence separately.
+
 FINDINGS RULES (IMPORTANT):
 - For each violation, include the VERBATIM substring from the input that triggered it in the "quote" field.
 - "quote" must be a character-by-character copy of a contiguous span from CONTENT UNDER REVIEW — never paraphrase, translate or summarise.

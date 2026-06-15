@@ -50,16 +50,23 @@ const OBLIGATIONS: SeedObligation[] = [
         config: {
           kind: "banned_phrase",
           phrases: [
-            // EN
+            // EN — guarantees / risk-free
             "guaranteed returns", "assured profits", "risk-free", "100% safe", "no risk",
+            // EN — get-rich / wealth-promise claims
+            "get rich", "get rich quick", "make you a millionaire", "become a millionaire",
+            "make you rich", "become rich", "millionaire overnight", "double your money", "triple your money",
             // FR
             "rendement garanti", "profit assuré", "sans risque",
+            "devenez millionnaire", "devenir riche", "doublez votre argent",
             // IT
             "rendimento garantito", "profitto assicurato", "senza rischio",
+            "diventa milionario", "diventare ricco", "raddoppia i tuoi soldi",
             // ES
             "rentabilidad garantizada", "sin riesgo",
+            "hazte millonario", "vuélvete rico", "duplica tu dinero",
             // NL
-            "gegarandeerd rendement", "risicovrij"
+            "gegarandeerd rendement", "risicovrij",
+            "word miljonair", "word rijk", "verdubbel je geld"
           ]
         }
       }
