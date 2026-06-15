@@ -176,6 +176,11 @@ CLASSIFICATION RULES:
 - NON-COMPLIANT: Explicit or implied claims about investment returns, profits, guaranteed outcomes, or risk-free investing; or any hard prohibition above
 - AMBIGUOUS: Borderline cases where a claim could be read as either a product feature or a performance promise
 
+EVALUATE SENTENCE BY SENTENCE (IMPORTANT):
+- Examine the content one sentence at a time, and check EACH sentence independently against every rule above.
+- A single non-compliant sentence makes the content non-compliant even if every other sentence is fine — surrounding compliant or disclaimer text does NOT excuse an offending sentence. Do not let an overall "positive impression" hide one bad sentence.
+- Return a separate finding for every offending sentence, quoting that sentence's offending span.
+
 FINDINGS RULES (IMPORTANT):
 - For each concern you identify, include the VERBATIM substring from the input that triggered it in the "quote" field.
 - "quote" must be an exact character-by-character copy of a contiguous span from CONTENT TO EVALUATE — do NOT paraphrase, translate, or summarise.
