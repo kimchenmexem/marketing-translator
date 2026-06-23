@@ -114,10 +114,13 @@ CONTENT UNDER REVIEW:
 
 ${buildRulesBlock(locale, bundlePromptContext)}
 
-CLASSIFICATION RULES:
-- COMPLIANT: Factual product/feature descriptions with no investment return or performance claims
-- NON-COMPLIANT: Contains any hard prohibition above, or explicit/implied claims about returns, profits, or safety of capital
-- BORDERLINE: Ambiguous phrasing that could be read as either a product feature or a performance claim
+HOW TO JUDGE — GROUND EVERY DECISION IN THE SUPPLIED RULES ABOVE:
+- The "APPROVED COMPLIANCE RULES" block above (from the supplied regulatory sources) is the AUTHORITATIVE and EXCLUSIVE basis.
+- COMPLIANT: factual product/feature descriptions, neutral information, regulatory facts — do NOT flag these. A risk disclaimer or "not advice" notice is compliant content, never a violation.
+- NON-COMPLIANT: a sentence that breaches a SPECIFIC supplied rule (or a hard prohibition above) — claims of returns/profit, guaranteed outcomes, risk-free, get-rich promises.
+- This is a CONSTRAINT, not a licence to over-flag: if a sentence does not clearly breach a specific supplied rule, do NOT flag it. Never flag normal marketing wording that no supplied rule prohibits.
+- For every violation, set "category" to the category of the SPECIFIC supplied rule it breaches, so it ties back to its regulatory source.
+- BORDERLINE: plausibly breaches a specific supplied rule but uncertain.
 
 EVALUATE SENTENCE BY SENTENCE (IMPORTANT):
 - Audit the content one sentence at a time; check EACH sentence independently against every rule above.

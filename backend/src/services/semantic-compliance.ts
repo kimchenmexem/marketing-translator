@@ -171,10 +171,13 @@ CONTENT TO EVALUATE:
 
 ${buildRulesBlock(locale, bundlePromptContext)}
 
-CLASSIFICATION RULES:
-- COMPLIANT: Factual product/feature descriptions, neutral information, no return/profit/capital-safety claims
-- NON-COMPLIANT: Explicit or implied claims about investment returns, profits, guaranteed outcomes, or risk-free investing; or any hard prohibition above
-- AMBIGUOUS: Borderline cases where a claim could be read as either a product feature or a performance promise
+HOW TO JUDGE — GROUND EVERY DECISION IN THE SUPPLIED RULES ABOVE:
+- The "APPROVED COMPLIANCE RULES" block above (drawn from the supplied regulatory sources) is the AUTHORITATIVE and EXCLUSIVE basis.
+- COMPLIANT: factual product/feature descriptions, neutral information, and regulatory facts (regulator, licence, account mechanics) — do NOT flag these. A risk disclaimer or "not advice" notice is compliant content, never a violation.
+- NON-COMPLIANT: a sentence that breaches a SPECIFIC supplied rule (or a hard prohibition listed above) — e.g. claims of returns/profit, guaranteed outcomes, risk-free investing, get-rich promises.
+- This is a CONSTRAINT, not a licence to over-flag: if a sentence does not clearly breach a specific supplied rule, do NOT flag it. Do not invent a breach, and do not flag normal marketing wording that no supplied rule prohibits.
+- For every finding, set "category" to the category of the SPECIFIC supplied rule it breaches, so the finding ties back to its regulatory source.
+- AMBIGUOUS: it plausibly breaches a specific supplied rule but the reading is genuinely uncertain.
 
 EVALUATE SENTENCE BY SENTENCE (IMPORTANT):
 - Examine the content one sentence at a time, and check EACH sentence independently against every rule above.
