@@ -272,7 +272,13 @@ export interface ComplianceCheckResponse {
   recommendedAction: ComplianceCheckRecommendedAction;
   confidence: number; // 0-100
   needsHumanReview: boolean;
-  suggestedFixes?: Array<{ rewrittenText: string; changesMade: string[] }>;
+  suggestedFixes?: Array<{
+    rewrittenText: string;
+    changesMade: string[];
+    /** Whether the suggested rewrite itself passed a re-check (status approved).
+     *  When false, the rewrite reduced issues but still needs human review. */
+    passesCompliance: boolean;
+  }>;
   checkedAt: string;
 }
 

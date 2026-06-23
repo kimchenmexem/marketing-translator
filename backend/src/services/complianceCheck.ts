@@ -495,14 +495,29 @@ export async function runComplianceCheck(
     hasCritical ||
     (decision.finalConfidence < 55 && !approvedAfterVetting);
 
-  // Optional suggested fixes — opt-in, off by default
+  // Optional suggested fixes — opt-in. Produce a compliant alternative and
+  // RE-CHECK it (up to one retry) so we only present a rewrite that actually
+  // passes compliance. If it still doesn't pass, surface the best attempt
+  // flagged as needing review (never claim a non-passing rewrite is compliant).
   let suggestedFixes: ComplianceCheckResponse["suggestedFixes"] | undefined;
   if (req.withSuggestedFixes && externalStatus !== "approved" && issues.length > 0) {
     try {
-      const r = await rewriteForCompliance(text, issues, locale);
-      if (r?.rewrittenText && r.rewrittenText !== text) {
-        suggestedFixes = [{ rewrittenText: r.rewrittenText, changesMade: r.changesMade ?? [] }];
+      let candidate = text;
+      let candidateIssues = issues;
+      let best: { rewrittenText: string; changesMade: string[]; passesCompliance: boolean } | undefined;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const r = await rewriteForCompliance(candidate, candidateIssues, locale);
+        if (!r?.rewrittenText || r.rewrittenText === candidate) break;
+        // Re-check the rewrite (without withSuggestedFixes — no recursion).
+        const recheck = await runComplianceCheck({ text: r.rewrittenText, locale });
+        const passes = recheck.status === "approved";
+        best = { rewrittenText: r.rewrittenText, changesMade: r.changesMade ?? [], passesCompliance: passes };
+        if (passes) break;
+        // Feed the remaining issues into another attempt.
+        candidate = r.rewrittenText;
+        candidateIssues = recheck.issues.length ? recheck.issues : candidateIssues;
       }
+      if (best) suggestedFixes = [best];
     } catch {
       // Non-fatal — suggestions are advisory only
       suggestedFixes = undefined;
