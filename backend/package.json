@@ -42,7 +42,9 @@
     "test:nl-trading-rules": "ts-node --transpile-only src/test/nl-trading-rules-tests.ts",
     "test:admin-auth": "ts-node --transpile-only src/test/admin-auth-tests.ts",
     "test:translation-failures": "ts-node --transpile-only src/test/translation-failure-tests.ts",
-    "test:integration": "ts-node --transpile-only src/test/integration-tests.ts"
+    "test:integration": "ts-node --transpile-only src/test/integration-tests.ts",
+    "ingest:regulatory-docs": "ts-node --transpile-only src/scripts/ingest-regulatory-docs.ts",
+    "verify:obligation-sources": "ts-node --transpile-only src/scripts/verify-obligation-sources.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.7",
