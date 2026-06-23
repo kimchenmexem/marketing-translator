@@ -6,6 +6,7 @@
 import { LocaleCode } from "@mexem/shared";
 import { buildRulesBlock } from "./jurisdictionRules";
 import { lazyOpenAI } from "./openaiHelpers";
+import { loadBundle } from "../compliance/bundles/loader";
 
 const openai = lazyOpenAI();
 
@@ -119,7 +120,11 @@ export async function rewriteForCompliance(
   issues: string[],
   locale: LocaleCode
 ): Promise<SemanticRewriteResult> {
-  const prompt = buildRewritePrompt(text, issues, locale);
+  // Ground the rewrite in the SAME supplied regulatory rules used to judge, so
+  // the rewrite complies with the rulebook (not generic heuristics).
+  const bundle = await loadBundle(locale).catch(() => null);
+  const rulesBlock = buildRulesBlock(locale, bundle?.content.promptContext);
+  const prompt = buildRewritePrompt(text, issues, locale, rulesBlock);
 
   try {
     const response = await openai.chat.completions.create({
@@ -214,9 +219,10 @@ function normaliseSeverity(v: any): 'critical' | 'major' | 'minor' {
 /**
  * REWRITE PROMPT BUILDER
  */
-function buildRewritePrompt(text: string, issues: string[], locale: LocaleCode): string {
-  return `You are a financial compliance editor. Rewrite the following marketing content to be compliant with the regulatory rules for ${locale}.
+function buildRewritePrompt(text: string, issues: string[], locale: LocaleCode, rulesBlock?: string): string {
+  return `You are a financial compliance editor. Rewrite the following marketing content so it complies with the SUPPLIED regulatory rules for ${locale}.
 
+${rulesBlock ? `${rulesBlock}\n\nThe rewrite MUST satisfy the supplied rules above.\n` : ""}
 ORIGINAL CONTENT:
 "${text}"
 

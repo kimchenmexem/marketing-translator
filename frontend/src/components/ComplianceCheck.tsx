@@ -40,7 +40,8 @@ export default function ComplianceCheck() {
     setResult(null);
     try {
       const submitted = text;
-      const r = await compliance.runComplianceCheck({ text: submitted, locale });
+      // Ask for a compliant rewrite too — surfaced when the text doesn't pass.
+      const r = await compliance.runComplianceCheck({ text: submitted, locale, withSuggestedFixes: true });
       setResult(r);
       setCheckedText(submitted);
     } catch (err: any) {
@@ -147,6 +148,12 @@ function ResultCard({ result, checkedText }: { result: any; checkedText: string 
         <ProblematicPhrasesPanel
           matchedRules={Array.isArray(result.matchedRules) ? result.matchedRules : []}
         />
+
+        {/* Suggested compliant version — shown when the text didn't pass and a
+            rewrite is available. Tells the user whether the rewrite itself passes. */}
+        {Array.isArray(result.suggestedFixes) && result.suggestedFixes.length > 0 && (
+          <SuggestedFixPanel fix={result.suggestedFixes[0]} />
+        )}
 
         {/* Source text with inline highlights of every matched fragment.
             Only rendered when there is at least one finding to highlight; an
@@ -590,6 +597,44 @@ function FindingCard({ rule }: { rule: any }) {
       {typeInfo.description && (
         <div style={{ fontSize: "0.6875rem", color: "var(--text-4)", marginTop: "0.375rem" }}>
           {typeInfo.description}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SuggestedFixPanel({ fix }: { fix: { rewrittenText: string; changesMade: string[]; passesCompliance: boolean } }) {
+  const [copied, setCopied] = useState(false);
+  const passes = fix.passesCompliance;
+  return (
+    <div style={{
+      padding: "0.75rem 0.9rem",
+      background: passes ? "rgba(42, 138, 62, 0.06)" : "rgba(217, 119, 6, 0.06)",
+      border: `1px solid ${passes ? "rgba(42, 138, 62, 0.3)" : "rgba(217, 119, 6, 0.3)"}`,
+      borderRadius: "var(--radius-sm)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem" }}>
+        <span style={{ fontWeight: 600, color: "var(--text-3)", fontSize: "0.75rem" }}>SUGGESTED COMPLIANT VERSION</span>
+        <span className={`badge ${passes ? "badge-green" : "badge-amber"}`} style={{ fontSize: "0.625rem" }}>
+          {passes ? "✓ passes compliance" : "⚠ still needs review"}
+        </span>
+        <button
+          className="btn btn-sm btn-secondary"
+          style={{ marginLeft: "auto", fontSize: "0.7rem", padding: "0.15rem 0.6rem" }}
+          onClick={() => { navigator.clipboard?.writeText(fix.rewrittenText); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <div style={{ whiteSpace: "pre-wrap", fontSize: "0.8125rem", lineHeight: 1.5 }}>{fix.rewrittenText}</div>
+      {fix.changesMade.length > 0 && (
+        <div style={{ marginTop: "0.4rem", fontSize: "0.6875rem", color: "var(--text-3)" }}>
+          Changes: {fix.changesMade.join("; ")}
+        </div>
+      )}
+      {!passes && (
+        <div style={{ marginTop: "0.3rem", fontSize: "0.6875rem", color: "var(--amber, #d97706)" }}>
+          This rewrite reduced the issues but did not fully pass on re-check — review before publishing.
         </div>
       )}
     </div>
