@@ -46,7 +46,8 @@
     "test:integration": "ts-node --transpile-only src/test/integration-tests.ts",
     "ingest:regulatory-docs": "ts-node --transpile-only src/scripts/ingest-regulatory-docs.ts",
     "verify:obligation-sources": "ts-node --transpile-only src/scripts/verify-obligation-sources.ts",
-    "verify:all-locales": "ts-node --transpile-only src/scripts/verify-all-locales.ts"
+    "verify:all-locales": "ts-node --transpile-only src/scripts/verify-all-locales.ts",
+    "verify:translation-quality": "ts-node --transpile-only src/scripts/verify-translation-quality.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.7",
