@@ -56,6 +56,12 @@ async function main() {
       errors++;
       continue;
     }
+    // Never ingest a scaffold placeholder as authoritative text.
+    if (/AWAITING AUTHORITATIVE TEXT|DO NOT INGEST/i.test(parsed.body)) {
+      console.warn(`  ⚠ ${file}: placeholder body (awaiting authoritative text) — skipped. Fill the verbatim text, then re-run.`);
+      skipped++;
+      continue;
+    }
     const { sourceCode, externalRef, title, url } = parsed.header;
     const source = await prisma.regulatorySource.findUnique({ where: { code: sourceCode } });
     if (!source) {

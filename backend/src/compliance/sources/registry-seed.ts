@@ -139,4 +139,18 @@ export const COMPLIANCE_SOURCES: RegulatorySourceSeed[] = [
     baseUrl: "https://www.consob.it",
     notes: "Italian CONSOB regulations and communications on the marketing of financial products to retail investors; complements ESMA baseline domestically.",
   },
+  {
+    code: "HCMC",
+    name: "HCMC",
+    regulator: "Hellenic Capital Market Commission",
+    jurisdiction: "GR",
+    localeScope: ["el-GR"],
+    sourceType: "CIRCULAR",
+    canonicality: "PRIMARY",
+    parserKey: "hcmc-html",
+    pollCadence: "weekly",
+    active: true,
+    baseUrl: "https://www.hcmc.gr",
+    notes: "Greek HCMC (Hellenic Capital Market Commission). Greece transposes MiFID II via Law 4514/2018 (art. 24 — fair, clear, not-misleading marketing communications); HCMC supplements with national circulars and public investor warnings on misleading 'guaranteed/high-return' and 'get-rich' marketing by unauthorised firms. Authoritative text ingested manually (site blocks programmatic fetch).",
+  },
 ];
