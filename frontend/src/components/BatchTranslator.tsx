@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { LocaleOption } from "@mexem/shared";
 import { runBatchTranslation, getTranslationAlternatives } from "../api/client";
 import ReviewPanel from "./ReviewPanel";
 
@@ -12,7 +13,6 @@ const LOCALE_LABELS: Record<string, string> = {
   "en-GB": "🇬🇧 UK",
   "el-GR": "🇬🇷 EL",
 };
-const ALL_LOCALES = Object.keys(LOCALE_LABELS);
 
 interface AdFormat { id: string; label: string; maxChars: number; hint?: string }
 const AD_FORMATS: AdFormat[] = [
@@ -68,7 +68,10 @@ function getCellQG(cell: string | TranslationCell | undefined): TranslationCell[
   return cell.qualityGate;
 }
 
-export default function BatchTranslator() {
+export default function BatchTranslator({ locales }: { locales: LocaleOption[] }) {
+  // Selectable locales come from the API (single source of truth); LOCALE_LABELS
+  // is presentation-only and falls back to the code for any locale without a flag.
+  const ALL_LOCALES = locales.map((l) => l.code);
   const [inputText,       setInputText]       = useState("");
   const [selectedFormat,  setSelectedFormat]  = useState("google_search_headline");
   const [customMaxChars,  setCustomMaxChars]  = useState(30);
@@ -111,7 +114,7 @@ export default function BatchTranslator() {
 
   const handleExportCSV = () => {
     if (!results.length) return;
-    const headers = ["Source", ...selectedLocales.map(l => LOCALE_LABELS[l].replace(/\p{Emoji}/gu, "").trim())];
+    const headers = ["Source", ...selectedLocales.map(l => (LOCALE_LABELS[l] ?? l).replace(/\p{Emoji}/gu, "").trim())];
     const rows = results.map(r => [
       `"${r.source.replace(/"/g, '""')}"`,
       ...selectedLocales.map(l => `"${getCellText(r.translations[l]).replace(/"/g, '""')}"`),
@@ -246,7 +249,7 @@ export default function BatchTranslator() {
               {ALL_LOCALES.map(l => (
                 <button key={l} className={`toggle-pill${selectedLocales.includes(l) ? " active" : ""}`}
                   onClick={() => toggleLocale(l)}>
-                  {LOCALE_LABELS[l]}
+                  {LOCALE_LABELS[l] ?? l}
                 </button>
               ))}
             </div>
@@ -309,7 +312,7 @@ export default function BatchTranslator() {
               <thead>
                 <tr>
                   <th style={{ minWidth: 180 }}>Source</th>
-                  {selectedLocales.map(l => <th key={l} style={{ minWidth: 160 }}>{LOCALE_LABELS[l]}</th>)}
+                  {selectedLocales.map(l => <th key={l} style={{ minWidth: 160 }}>{LOCALE_LABELS[l] ?? l}</th>)}
                 </tr>
               </thead>
               <tbody>

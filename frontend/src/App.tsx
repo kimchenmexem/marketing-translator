@@ -147,14 +147,14 @@ export default function App() {
           <p className="page-subtitle">{active.desc}</p>
         </div>
 
-        {tab === "campaign" && <CampaignGenerator />}
-        {tab === "batch" && <BatchTranslator />}
+        {tab === "campaign" && <CampaignGenerator locales={locales} />}
+        {tab === "batch" && <BatchTranslator locales={locales} />}
         {tab === "translate" && (
           optionsLoaded
             ? <TranslationForm locales={locales} textTypes={textTypes} personas={personas} tones={tones} />
             : <div style={{ color: "var(--text-3)", padding: "2rem 0", fontSize: "0.875rem" }}>Loading…</div>
         )}
-        {tab === "quick" && <QuickTranslate />}
+        {tab === "quick" && <QuickTranslate locales={locales} />}
         {tab === "check" && <ComplianceCheck />}
         {tab === "queue" && <ReviewerQueue />}
         {tab === "compliance" && <ComplianceAdmin />}

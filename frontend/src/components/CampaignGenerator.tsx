@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState } from "react";
+import type { LocaleOption } from "@mexem/shared";
 import {
   getCampaignCatalogue,
   generateCampaign,
@@ -15,20 +16,9 @@ import {
   type CampaignPlatform,
 } from "../api/client";
 
-const SUPPORTED_LOCALES = [
-  { code: "it-IT", label: "Italian — Italy" },
-  { code: "fr-FR", label: "French — France" },
-  { code: "nl-NL", label: "Dutch — Netherlands" },
-  { code: "nl-BE", label: "Dutch — Belgium" },
-  { code: "fr-BE", label: "French — Belgium" },
-  { code: "es-ES", label: "Spanish — Spain" },
-  { code: "en-GB", label: "English — United Kingdom" },
-  { code: "el-GR", label: "Greek — Greece" },
-];
-
 const TONES = ["Professional", "Friendly", "Confident", "Approachable", "Premium", "Persuasive", "Educational", "Direct"];
 
-export default function CampaignGenerator() {
+export default function CampaignGenerator({ locales }: { locales: LocaleOption[] }) {
   const [brief, setBrief] = useState("");
   const [locale, setLocale] = useState("en-GB");
   const [persona, setPersona] = useState("");
@@ -112,7 +102,7 @@ export default function CampaignGenerator() {
             <div className="field">
               <label className="field-label" style={{ fontSize: "0.7rem" }}>Locale *</label>
               <select className="input" value={locale} onChange={(e) => setLocale(e.target.value)}>
-                {SUPPORTED_LOCALES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+                {locales.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
               </select>
             </div>
             <div className="field">
