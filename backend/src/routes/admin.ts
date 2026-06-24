@@ -76,7 +76,7 @@ function publicUser(u: {
 // ─── Users: list ──────────────────────────────────────────────────────
 router.get(
   "/users",
-  requireRole("ADMIN"),
+  requireRole("MANAGER", "ADMIN"),
   asyncHandler(async (_req, res) => {
     const users = await prisma.user.findMany({
       orderBy: { createdAt: "desc" },
@@ -108,7 +108,7 @@ const roleSchema = z.object({ role: z.nativeEnum(Role) });
 
 router.patch(
   "/users/:id/role",
-  requireRole("ADMIN"),
+  requireRole("MANAGER", "ADMIN"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (Number.isNaN(id)) return res.status(400).json({ error: "Invalid user id." });
@@ -122,6 +122,13 @@ router.patch(
         const target = await tx.user.findUnique({ where: { id } });
         if (!target) throw new HttpError(404, "User not found.");
         if (target.role === role) return target;
+
+        // Privilege-escalation guard: only an ADMIN may grant the ADMIN role
+        // or change a user who is already an ADMIN. A MANAGER can manage
+        // non-admin users but cannot mint admins or touch existing ones.
+        if (actor.role !== Role.ADMIN && (role === Role.ADMIN || target.role === Role.ADMIN)) {
+          throw new HttpError(403, "Only an ADMIN can grant or change the ADMIN role.");
+        }
 
         // Last-active-ADMIN guard. Only relevant when this mutation actually
         // reduces the active-admin count. Lock the full active-ADMIN set
@@ -170,7 +177,7 @@ const activeSchema = z.object({ isActive: z.boolean() });
 
 router.patch(
   "/users/:id/active",
-  requireRole("ADMIN"),
+  requireRole("MANAGER", "ADMIN"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (Number.isNaN(id)) return res.status(400).json({ error: "Invalid user id." });
@@ -184,6 +191,12 @@ router.patch(
         const target = await tx.user.findUnique({ where: { id } });
         if (!target) throw new HttpError(404, "User not found.");
         if (target.isActive === isActive) return target;
+
+        // Privilege guard: only an ADMIN may change an ADMIN's activation, so
+        // a MANAGER cannot disable admins to weaken oversight.
+        if (actor.role !== Role.ADMIN && target.role === Role.ADMIN) {
+          throw new HttpError(403, "Only an ADMIN can change an ADMIN's activation.");
+        }
 
         if (!isActive && id === actor.id) {
           throw new HttpError(409, "Cannot deactivate yourself.");
