@@ -28,6 +28,7 @@ const LOCALE_LABELS: Record<string, { language: string; country: string }> = {
   "fr-BE": { language: "French", country: "Belgium" },
   "es-ES": { language: "Spanish", country: "Spain" },
   "en-GB": { language: "English", country: "United Kingdom" },
+  "el-GR": { language: "Greek", country: "Greece" },
 };
 
 const quickTranslateSchema = z.object({

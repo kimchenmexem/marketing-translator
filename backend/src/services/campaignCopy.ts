@@ -55,6 +55,7 @@ const SUPPORTED_LOCALES: LocaleCode[] = [
   "fr-BE",
   "es-ES",
   "en-GB",
+  "el-GR",
 ];
 
 // All currently supported locales are LTR. Hebrew/Arabic are not yet

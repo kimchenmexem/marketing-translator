@@ -18,6 +18,7 @@ const LOCALES: Array<{ code: string; label: string }> = [
   { code: "fr-BE", label: "French — Belgium" },
   { code: "es-ES", label: "Spanish — Spain" },
   { code: "en-GB", label: "English — United Kingdom" },
+  { code: "el-GR", label: "Greek — Greece" },
 ];
 
 // Use the shared axios client from ../api/client. It already:
