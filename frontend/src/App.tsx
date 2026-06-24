@@ -35,7 +35,7 @@ const NAV: NavItem[] = [
   { id: "queue",      icon: "☷",  label: "Reviewer Queue",     desc: "Recent translations awaiting review", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
   { id: "compliance", icon: "⊘",  label: "Compliance Admin",   desc: "Sources, obligations, bundles", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
   { id: "publishers", icon: "◎",  label: "Publisher Admin",    desc: "Market intelligence & media planning (advisory, non-compliance)", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
-  { id: "users",      icon: "⎔",  label: "User Management",    desc: "List users, change role, activate/deactivate", section: "Admin", requiresRole: ["ADMIN"] },
+  { id: "users",      icon: "⎔",  label: "User Management",    desc: "List users, change role, activate/deactivate", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
   { id: "audit",      icon: "⎘",  label: "Audit Logs",         desc: "Recent audit activity across the app", section: "Admin", requiresRole: ["MANAGER", "ADMIN"] },
 ];
 

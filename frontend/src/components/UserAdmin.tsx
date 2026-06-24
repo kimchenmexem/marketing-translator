@@ -3,6 +3,7 @@ import {
   listAdminUsers,
   updateUserRole,
   updateUserActive,
+  getMe,
   type AdminUser,
 } from "../api/client";
 
@@ -14,6 +15,14 @@ export default function UserAdmin() {
   const [err, setErr] = useState<string | null>(null);
   const [rowErr, setRowErr] = useState<Record<number, string>>({});
   const [busyId, setBusyId] = useState<number | null>(null);
+  // The viewer's own role. Only an ADMIN may grant/modify the ADMIN role
+  // (mirrors the backend guard); a MANAGER manages non-admin users only.
+  const [viewerRole, setViewerRole] = useState<AdminUser["role"] | null>(null);
+  const canManageAdmins = viewerRole === "ADMIN";
+
+  useEffect(() => {
+    getMe().then((me) => setViewerRole(me.user.role)).catch(() => {});
+  }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -74,14 +83,15 @@ export default function UserAdmin() {
               <td style={{ padding: "0.5rem" }}>
                 <select
                   value={u.role}
-                  disabled={busyId === u.id}
+                  disabled={busyId === u.id || (!canManageAdmins && u.role === "ADMIN")}
+                  title={!canManageAdmins && u.role === "ADMIN" ? "Only an ADMIN can change an ADMIN's role" : undefined}
                   onChange={(e) => {
                     const next = e.target.value as AdminUser["role"];
                     if (next !== u.role) void wrap(u.id, () => updateUserRole(u.id, next));
                   }}
                   style={{ fontSize: "0.8rem" }}
                 >
-                  {ROLES.map((r) => (<option key={r} value={r}>{r}</option>))}
+                  {ROLES.filter((r) => canManageAdmins || r !== "ADMIN").map((r) => (<option key={r} value={r}>{r}</option>))}
                 </select>
               </td>
               <td style={{ padding: "0.5rem" }}>
@@ -89,7 +99,8 @@ export default function UserAdmin() {
                   <input
                     type="checkbox"
                     checked={u.isActive}
-                    disabled={busyId === u.id}
+                    disabled={busyId === u.id || (!canManageAdmins && u.role === "ADMIN")}
+                    title={!canManageAdmins && u.role === "ADMIN" ? "Only an ADMIN can change an ADMIN's activation" : undefined}
                     onChange={(e) => void wrap(u.id, () => updateUserActive(u.id, e.target.checked))}
                   />
                   <span style={{ color: u.isActive ? "var(--text-1)" : "var(--danger, #c00)" }}>
