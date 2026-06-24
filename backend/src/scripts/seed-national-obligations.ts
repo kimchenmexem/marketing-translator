@@ -213,10 +213,10 @@ const NATIONAL_SEEDS: NationalSeed[] = [
     localeCode: "es-ES",
     regulator: "CNMV",
     title: "CNMV national marketing-conduct rules for retail financial promotions (ES)",
-    description: "CNMV Circular 1/2018 (Norma 9 — publicidad de productos de inversión) sets Spanish-specific standards: messages must be clear, balanced and not create unrealistic expectations, with the CNMV-prescribed Spanish risk-warning disclosure.",
+    description: "CNMV Circular 2/2020 (publicidad de productos y servicios de inversión; Norma 9 — cese y rectificación) sets Spanish-specific standards: advertising must be clara, equilibrada, imparcial y no engañosa, must not create unrealistic expectations, and must carry the CNMV-prescribed Spanish risk-warning disclosure. (Circular 1/2018 separately governs complex-instrument warnings.)",
     category: "national_marketing_conduct",
     sourceRefs: [
-      { sourceCode: "CNMV", documentRef: "Circular 1/2018, Norma 9", quote: "Publicidad de productos y servicios de inversión" },
+      { sourceCode: "CNMV", documentRef: "Circular 2/2020, Norma 9", quote: "clara, equilibrada, imparcial y no engañosa" },
       { sourceCode: "CNMV", documentRef: "Real Decreto 217/2008" },
     ],
     bannedPhrases: [

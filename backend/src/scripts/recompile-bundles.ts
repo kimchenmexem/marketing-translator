@@ -12,7 +12,7 @@ import { prisma } from "../db";
 import { compileDraftBundle } from "../compliance/bundles/compiler";
 import { publishBundle } from "../compliance/bundles/publisher";
 
-const NEW_VERSION = "1.6.0";
+const NEW_VERSION = "1.7.0";
 const TARGETS: Array<{ localeCode: string; primary: string; overlays: string[] }> = [
   { localeCode: "it-IT", primary: "IT", overlays: ["CY"] },
   { localeCode: "fr-FR", primary: "FR", overlays: ["CY"] },
