@@ -36,11 +36,12 @@ const COUNTRY_NAME: Record<string, string> = {
   "es-ES": "Spain",
   "en-GB": "United Kingdom",
   "el-GR": "Greece",
+  "de-DE": "Germany",
 };
 
 const COUNTRY_CODE: Record<string, string> = {
   "it-IT": "IT", "fr-FR": "FR", "nl-NL": "NL", "nl-BE": "BE",
-  "fr-BE": "BE", "es-ES": "ES", "en-GB": "GB", "el-GR": "GR",
+  "fr-BE": "BE", "es-ES": "ES", "en-GB": "GB", "el-GR": "GR", "de-DE": "DE",
 };
 
 /** Internal DecisionStatus → external product status. */
@@ -248,7 +249,7 @@ function resolveEvidence(text: string, finding: LlmFinding): string {
 
 /** Explicit "this is not advice / educational only" disclaimer, across locales. */
 const NOT_ADVICE_DISCLAIMER =
-  /\b(do(es)? not constitute (investment |financial )?advice|not (intended as |investment |financial )?advice|(educational|informational) purposes only|for (educational|informational) purposes|ne constitue pas un conseil|à titre (informatif|éducatif)|no constituye (asesoramiento|consejo)|fines (informativos|educativos)|non costituisce (consulenza|consiglio)|vormt geen (beleggings)?advies|informatieve doeleinden)\b|δεν (?:αποτελεί|συνιστά) (?:επενδυτική |οικονομική |χρηματοοικονομική )?συμβουλή|για (?:ενημερωτικούς|εκπαιδευτικούς) (?:σκοπούς|λόγους)/iu;
+  /\b(do(es)? not constitute (investment |financial )?advice|not (intended as |investment |financial )?advice|(educational|informational) purposes only|for (educational|informational) purposes|ne constitue pas un conseil|à titre (informatif|éducatif)|no constituye (asesoramiento|consejo)|fines (informativos|educativos)|non costituisce (consulenza|consiglio)|vormt geen (beleggings)?advies|informatieve doeleinden)\b|δεν (?:αποτελεί|συνιστά) (?:επενδυτική |οικονομική |χρηματοοικονομική )?συμβουλή|για (?:ενημερωτικούς|εκπαιδευτικούς) (?:σκοπούς|λόγους)|stellt keine (?:Anlage|Finanz|Anlage-?)beratung dar|keine (?:Anlage|Finanz)beratung|zu (?:Informations|Bildungs)zwecken/iu;
 
 /** "Missing risk / performance disclosure" categories — satisfied when the text
  *  actually carries a risk disclaimer, so they should not be raised then. */

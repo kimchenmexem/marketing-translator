@@ -45,6 +45,17 @@ const GREEK_CASES: Case[] = [
   { text: "Επενδυτική συμβουλή: πρέπει να αγοράσετε μετοχές της Tesla τώρα, είναι η καλύτερη επένδυση.", expect: "flagged", category: "no_financial_advice", note: "direct investment advice" },
 ];
 
+// German (de-DE) golden set — used when EVAL_LOCALE=de-DE.
+const GERMAN_CASES: Case[] = [
+  // Compliant
+  { text: "MEXEM ist ein europäischer Broker mit Zugang zu über 170 Märkten. Investitionen sind mit Risiken verbunden, einschließlich des möglichen Verlusts des Kapitals.", expect: "approved", strict: true, note: "neutral + risk disclosure" },
+  { text: "Handeln Sie europäische Aktien und ETFs mit MEXEM. Die Kontoeröffnung ist kostenlos. Ihr Kapital ist gefährdet. Dies stellt keine Anlageberatung dar.", expect: "approved", strict: true, note: "factual CTA + disclaimers" },
+  // Violations
+  { text: "Garantierte Renditen von 20 % ohne Risiko mit MEXEM!", expect: "flagged", category: "no_guarantees", strict: true, note: "guaranteed returns + risk-free (banned phrases)" },
+  { text: "MEXEM macht Sie innerhalb eines Monats zum Millionär.", expect: "flagged", category: "no_guarantees", note: "get-rich promise" },
+  { text: "Anlageberatung: Sie sollten jetzt Tesla-Aktien kaufen, das ist die beste Investition.", expect: "flagged", category: "no_financial_advice", note: "direct investment advice" },
+];
+
 const EN_CASES: Case[] = [
   // ── Compliant (must NOT be over-flagged) ──────────────────────────────────
   {
@@ -113,7 +124,7 @@ const EN_CASES: Case[] = [
   },
 ];
 
-const CASES: Case[] = LOCALE === "el-GR" ? GREEK_CASES : EN_CASES;
+const CASES: Case[] = LOCALE === "el-GR" ? GREEK_CASES : LOCALE === "de-DE" ? GERMAN_CASES : EN_CASES;
 
 async function mapPool<T, R>(items: T[], limit: number, fn: (t: T, i: number) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);

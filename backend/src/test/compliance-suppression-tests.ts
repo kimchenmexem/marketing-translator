@@ -45,6 +45,10 @@ assert(!suppressLlmFinding("no_financial_advice", "you should buy MEXEM shares n
 const EL_ARTICLE = "Επενδύστε σε ευρωπαϊκές μετοχές με τη MEXEM. Το κεφάλαιό σας διατρέχει κίνδυνο. Δεν αποτελεί επενδυτική συμβουλή.";
 assert(suppressLlmFinding("no_financial_advice", "Επενδύστε σε μετοχές", EL_ARTICLE), "EL not-advice disclaimer present → suppressed");
 assert(!suppressLlmFinding("no_financial_advice", "αγοράστε μετοχές Tesla", "Πρέπει να αγοράσετε μετοχές της Tesla τώρα."), "EL advice w/o not-advice disclaimer → kept");
+// German: not-advice disclaimer present → suppressed.
+const DE_ARTICLE = "Investieren Sie in europäische Aktien mit MEXEM. Ihr Kapital ist Risiken ausgesetzt. Dies stellt keine Anlageberatung dar.";
+assert(suppressLlmFinding("no_financial_advice", "Investieren Sie in Aktien", DE_ARTICLE), "DE not-advice disclaimer present → suppressed");
+assert(!suppressLlmFinding("no_financial_advice", "kaufen Sie Tesla-Aktien", "Sie sollten jetzt Tesla-Aktien kaufen."), "DE advice w/o not-advice disclaimer → kept");
 // A guarantee claim is NOT excused merely because a risk disclaimer also appears.
 assert(
   !suppressLlmFinding("no_guarantees", "guaranteed returns", "Guaranteed returns! (Capital at risk.)"),

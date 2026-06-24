@@ -17,7 +17,7 @@ import { prisma } from "../db";
 const router = Router();
 
 const SUPPORTED_LOCALES = [
-  "it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR",
+  "it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR", "de-DE",
 ] as const;
 
 const LOCALE_LABELS: Record<string, { language: string; country: string }> = {
@@ -29,6 +29,7 @@ const LOCALE_LABELS: Record<string, { language: string; country: string }> = {
   "es-ES": { language: "Spanish", country: "Spain" },
   "en-GB": { language: "English", country: "United Kingdom" },
   "el-GR": { language: "Greek", country: "Greece" },
+  "de-DE": { language: "German", country: "Germany" },
 };
 
 const quickTranslateSchema = z.object({

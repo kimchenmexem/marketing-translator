@@ -33,12 +33,12 @@ function pLimit(concurrency: number) {
 
 const limit = pLimit(10);
 
-const LOCALES = ["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR"] as const;
+const LOCALES = ["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR", "de-DE"] as const;
 
 const LOCALE_LANGUAGE: Record<string, string> = {
   "it-IT": "Italian", "fr-FR": "French", "nl-NL": "Dutch",
   "nl-BE": "Dutch (Belgium)", "fr-BE": "French (Belgium)", "es-ES": "Spanish", "en-GB": "English (UK)",
-  "el-GR": "Greek",
+  "el-GR": "Greek", "de-DE": "German",
 };
 
 function buildSystemPrompt(locale: string, maxChars?: number, formatContext?: string, bundle?: LoadedBundle | null, glossaryBlock?: string, forbiddenBlock?: string): string {

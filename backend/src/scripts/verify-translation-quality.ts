@@ -20,8 +20,8 @@ import type { LocaleCode, LengthConstraint } from "@mexem/shared";
 import { prisma } from "../db";
 
 const SOURCE = "Open a free account and trade European stocks and ETFs from €1 with MEXEM. Your capital is at risk.";
-const LOCALES: LocaleCode[] = ["it-IT", "fr-FR", "fr-BE", "nl-NL", "nl-BE", "es-ES", "en-GB", "el-GR"];
-const REFUSAL = /\b(i'?m sorry|i cannot|as an ai|je suis (là|desolé)|lo siento|het spijt me|mi dispiace|λυπάμαι)\b/i;
+const LOCALES: LocaleCode[] = ["it-IT", "fr-FR", "fr-BE", "nl-NL", "nl-BE", "es-ES", "en-GB", "el-GR", "de-DE"];
+const REFUSAL = /\b(i'?m sorry|i cannot|as an ai|je suis (là|desolé)|lo siento|het spijt me|mi dispiace|λυπάμαι|es tut mir leid|als (eine )?ki)\b/i;
 
 function localeLint(locale: LocaleCode, out: string): string[] {
   if (locale === "fr-FR" || locale === "fr-BE") return lintFrenchTrading(out, { sourceText: SOURCE }).map(f => f.rule);
@@ -42,9 +42,10 @@ async function check(locale: LocaleCode) {
   if (!out) fails.push("empty");
   if (locale !== "en-GB" && out.toLowerCase() === SOURCE.toLowerCase()) fails.push("untranslated");
   if (!hasAnyDisclaimer(out)) fails.push("no risk disclaimer");
-  // ETF/ETP are invariant in the EU target languages, but English legitimately
-  // pluralises ("ETFs"), so this brand rule does not apply to en-GB.
-  if (locale !== "en-GB" && /\bET[FP]s\b/.test(out)) fails.push("ETF/ETP pluralised");
+  // ETF/ETP are invariant in the Italian/Spanish/Dutch/Greek brand style, but
+  // English AND German legitimately pluralise ("ETFs"), so the rule is scoped out
+  // for en-GB and de-DE.
+  if (locale !== "en-GB" && locale !== "de-DE" && /\bET[FP]s\b/.test(out)) fails.push("ETF/ETP pluralised");
   if (REFUSAL.test(out)) fails.push("refusal/meta");
   const lint = localeLint(locale, out);
   if (lint.length) fails.push("lint:" + lint.join(","));

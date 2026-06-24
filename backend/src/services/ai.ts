@@ -30,7 +30,8 @@ function getLocaleLanguage(locale: string): string {
     "fr-BE": "French (Belgian)",
     "es-ES": "Spanish (European)",
     "en-GB": "English (British)",
-    "el-GR": "Greek"
+    "el-GR": "Greek",
+    "de-DE": "German"
   };
   return map[locale] || "the target";
 }
@@ -237,6 +238,21 @@ OTHER:
 - COMPLIANCE-SENSITIVE: never imply guaranteed returns or risk-free investing ("εγγυημένες αποδόσεις", "χωρίς ρίσκο", "μηδενικό ρίσκο") and never get-rich promises ("γίνετε εκατομμυριούχος", "πλουτίστε"). Balance any benefit with a risk note.
 - Keep brand names (MEXEM, WisdomTree) unchanged.
 - Numbers: comma as decimal separator, period as thousands separator (1.234,56). Currency: "1 €" / "€ 1" with the symbol per Greek convention.
+- ALWAYS produce a real translation — never a refusal or meta-commentary.`,
+
+    "de-DE": `GERMAN (GERMANY) STYLE:
+- Write natural, fluent High German (Hochdeutsch) — do NOT mirror English syntax; adapt phrasing, compounding and word order to read as if written by a native German copywriter.
+- Register: formal and professional. Address the reader with the polite "Sie" (capitalised), never "du", in this financial context.
+- TERMINOLOGY (German fintech keeps several loanwords — do not force calques):
+  • "trading" → keep "Trading" (noun, capitalised) or use the verb "handeln" ("handeln Sie mit Aktien", "Aktienhandel"). "broker" → "Broker" (loanword).
+  • "stocks / shares" → "Aktien"; "stock market" → "Börse"; "bond(s)" → "Anleihen"; "fractional shares" → "Aktienbruchteile / Bruchteilsaktien".
+  • "ETF" / "ETP": German pluralises NORMALLY — "ETFs" / "ETPs" are correct and natural (do NOT force an invariant singular). Keep the acronym uppercase.
+  • "fees / commissions" → "Gebühren" / "Provisionen"; "commission-free" → "provisionsfrei" / "ohne Provision".
+  • "free account" → "kostenloses Konto" / "gebührenfreies Konto".
+- ORTHOGRAPHY: use the ß/ss rules correctly (e.g. "Straße", but "muss"); capitalise ALL nouns; use German quotation marks („ ") where natural.
+- COMPLIANCE-SENSITIVE: never imply guaranteed returns or risk-free investing ("garantierte Renditen", "risikofrei", "ohne Risiko", "sichere Anlage") and never get-rich promises ("werden Sie Millionär", "reich werden"). Balance any benefit with a risk note (BaFin / MiFID II: klar, redlich und nicht irreführend).
+- Keep brand names (MEXEM, WisdomTree) unchanged.
+- Numbers: comma as decimal separator, period as thousands separator (1.234,56). Currency: "1 €" with the symbol after the amount per German convention.
 - ALWAYS produce a real translation — never a refusal or meta-commentary.`,
   };
   return guides[locale] ?? "";

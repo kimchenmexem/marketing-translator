@@ -33,6 +33,19 @@ const regulatorRules: Record<LocaleCode, RegulatorRules> = {
       { name: "wealth", patterns: [/εκατομμυριούχ/i, /πλουτίστε/i, /γίνετε πλούσι/i], severity: 9, description: "Get-rich / wealth-outcome promises" },
     ],
   },
+  "de-DE": {
+    regulator: "BaFin/ESMA",
+    disclaimer: "Investitionen sind mit Risiken verbunden, einschließlich des möglichen Verlusts des Kapitals. Konsultieren Sie einen professionellen Finanzberater.",
+    toneGuidelines: "Maintain neutral, informational tone. Avoid urgency or guarantees.",
+    additionalConstraints: ["No future performance claims", "Include risk warnings"],
+    categories: [
+      { name: "guarantees", patterns: [/garantiert/i, /sicher(?:e|er|es)?\b/i, /risikofrei/i, /ohne Risiko/i, /100\s*%\s*sicher/i], severity: 9, description: "Implied or explicit guarantees of returns or safety" },
+      { name: "urgency", patterns: [/jetzt\b/i, /sofort/i, /begrenzt/i, /letzte Chance/i], severity: 7, description: "Creating false urgency or scarcity" },
+      { name: "authority", patterns: [/beste[rs]?\b/i, /\btop\b/i, /Marktführer/i, /Nummer eins/i], severity: 6, description: "False authority or superiority claims" },
+      { name: "promotional", patterns: [/einfach/i, /\bschnell/i, /mühelos/i, /kinderleicht/i], severity: 5, description: "Overly promotional or simplified claims" },
+      { name: "wealth", patterns: [/Millionär/i, /reich werden/i, /finanzielle Freiheit/i], severity: 9, description: "Get-rich / wealth-outcome promises" },
+    ],
+  },
   "it-IT": {
     regulator: "ESMA/CySEC",
     disclaimer: "Investimenti finanziari comportano rischi, inclusa la perdita del capitale. Consultare un professionista finanziario.",

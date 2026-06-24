@@ -129,6 +129,10 @@ assert(hasAnyDisclaimer("riesgo de pérdida de capital") === true, "ES risk mark
 assert(hasAnyDisclaimer("Investments may lose value") === true, "EN 'may lose value' is a risk disclosure");
 assert(hasAnyDisclaimer("vous pouvez perdre votre capital") === true, "FR 'perdre' marker");
 assert(hasAnyDisclaimer("Το κεφάλαιό σας διατρέχει κίνδυνο") === true, "EL risk marker (κίνδυνο)");
+assert(hasAnyDisclaimer("Ihr Kapital ist Risiken ausgesetzt") === true, "DE risk marker (Risiken)");
+assert(hasAnyDisclaimer("Anlagen können zu Verlusten führen") === true, "DE loss marker (Verluste)");
+assert(hasAnyDisclaimer("Ihr Kapital ist gefährdet.") === true, "DE risk marker (gefährdet)");
+assert(hasAnyDisclaimer("Handeln Sie jetzt mit Aktien") === false, "DE non-disclaimer → false");
 assert(hasAnyDisclaimer("κίνδυνος απώλειας κεφαλαίου") === true, "EL loss marker (απώλεια)");
 assert(hasAnyDisclaimer("Κάντε trading σε μετοχές τώρα") === false, "EL non-disclaimer → false");
 assert(hasAnyDisclaimer("Acquista azioni adesso") === false, "no disclaimer language → false");
