@@ -150,7 +150,7 @@ const OBLIGATIONS: SeedObligation[] = [
     category: "no_financial_advice",
     severity: "major",
     sourceRefs: [
-      { sourceCode: "EUR_LEX", documentRef: "MiFID II (Directive 2014/65/EU)", quote: "Article 24(4) — investment advice definition" },
+      { sourceCode: "EUR_LEX", documentRef: "MiFID II Delegated Reg. 2017/565", quote: "the provision of personal recommendations to a client, either upon its request or at the initiative of the investment firm, in respect of one or more transactions relating to financial instruments" },
       { sourceCode: "ESMA", documentRef: "ESMA35-43-349" }
     ],
     rules: [
