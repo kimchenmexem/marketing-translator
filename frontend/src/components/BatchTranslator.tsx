@@ -10,6 +10,7 @@ const LOCALE_LABELS: Record<string, string> = {
   "fr-BE": "🇧🇪 BE-FR",
   "es-ES": "🇪🇸 ES",
   "en-GB": "🇬🇧 UK",
+  "el-GR": "🇬🇷 EL",
 };
 const ALL_LOCALES = Object.keys(LOCALE_LABELS);
 

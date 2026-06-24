@@ -23,6 +23,7 @@ const SUPPORTED_LOCALES = [
   { code: "fr-BE", label: "French — Belgium" },
   { code: "es-ES", label: "Spanish — Spain" },
   { code: "en-GB", label: "English — United Kingdom" },
+  { code: "el-GR", label: "Greek — Greece" },
 ];
 
 const TONES = ["Professional", "Friendly", "Confident", "Approachable", "Premium", "Persuasive", "Educational", "Direct"];
