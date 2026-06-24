@@ -60,17 +60,21 @@ export default function App() {
       .catch(() => setOptionsLoaded(true));
 
     // Fetch the signed-in user's role to gate admin nav visibility. Backend
-    // remains authoritative; this is purely UX. Ignore 401/503 silently —
-    // those are the "not signed in" / "Clerk not configured" cases.
-    if (import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
-      getMe().then((me) => setRole(me.user.role)).catch(() => {});
-    }
+    // remains authoritative; this is purely UX. Always attempt it (not just
+    // when Clerk is configured) — otherwise the role stays null and every
+    // role-gated tab, including admin ones, is hidden even from an ADMIN.
+    // Ignore 401/503 silently — those are the "not signed in" / "auth not
+    // configured" cases.
+    getMe().then((me) => setRole(me.user.role)).catch(() => {});
   }, []);
 
   // Filter NAV to tabs this role is permitted to see. Falls through to
   // showing only non-admin tabs when role is unknown (not signed in yet).
   const visibleNav = NAV.filter((n) => {
     if (!n.requiresRole) return true;
+    // ADMIN is a superuser — it sees every tab regardless of the tab's
+    // specific role requirement (mirrors the backend's ADMIN bypass).
+    if (role === "ADMIN") return true;
     return role !== null && n.requiresRole.includes(role);
   });
   const active = visibleNav.find(n => n.id === tab) ?? visibleNav[0];

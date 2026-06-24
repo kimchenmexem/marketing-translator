@@ -114,7 +114,9 @@ export function requireRole(...roles: Role[]): RequestHandler {
         res.status(403).json({ error: "Account is inactive." });
         return;
       }
-      if (!allowed.has(user.role)) {
+      // ADMIN is a superuser: it implicitly satisfies every role requirement.
+      // Any non-admin must be explicitly in the allowed set.
+      if (user.role !== Role.ADMIN && !allowed.has(user.role)) {
         res.status(403).json({
           error: "Insufficient role.",
           required: [...allowed],
