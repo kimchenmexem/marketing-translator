@@ -5,7 +5,7 @@ Files starting with `_` are ignored. Format: a small header, a `---` line, then
 the FULL authoritative text of the relevant article(s).
 
 Header keys: sourceCode (required, must match a registered RegulatorySource:
-EUR_LEX | ESMA | FCA | CYSEC | AMF | AFM | FSMA | CNMV | CONSOB), externalRef
+EUR_LEX | ESMA | FCA | CYSEC | AMF | AFM | FSMA | CNMV | CONSOB | HCMC), externalRef
 (required — should match how obligations cite it, e.g. "MiFID II (Directive
 2014/65/EU)"), title, url, versionLabel (optional).
 

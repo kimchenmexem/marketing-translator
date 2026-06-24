@@ -379,9 +379,11 @@ async function testBundleLoader() {
   assert(enBundle!.content.bannedPhrases.length > 0, "bundle has banned phrases");
   assert(typeof enBundle!.version === "string", "bundle has version string");
 
-  // it-IT has no published bundle → null (fallback)
-  const itBundle = await loadBundle("it-IT");
-  assert(itBundle === null, "loadBundle('it-IT') returns null (no bundle)");
+  // A locale with no published bundle → null (fallback). Use a synthetic locale
+  // so this stays true regardless of which real locales have bundles published
+  // (it-IT, used here before, now has a published bundle).
+  const noBundle = await loadBundle("zz-ZZ" as any);
+  assert(noBundle === null, "loadBundle('zz-ZZ') returns null (no bundle)");
 
   // Caching: second call hits cache
   const t0 = Date.now();
