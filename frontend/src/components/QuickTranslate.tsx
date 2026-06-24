@@ -6,20 +6,10 @@
  */
 
 import { useState } from "react";
+import type { LocaleOption } from "@mexem/shared";
 import { api } from "../api/client";
 import ReviewPanel from "./ReviewPanel";
 import HistoryPanel from "./HistoryPanel";
-
-const LOCALES: Array<{ code: string; label: string }> = [
-  { code: "it-IT", label: "Italian — Italy" },
-  { code: "fr-FR", label: "French — France" },
-  { code: "nl-NL", label: "Dutch — Netherlands" },
-  { code: "nl-BE", label: "Dutch — Belgium" },
-  { code: "fr-BE", label: "French — Belgium" },
-  { code: "es-ES", label: "Spanish — Spain" },
-  { code: "en-GB", label: "English — United Kingdom" },
-  { code: "el-GR", label: "Greek — Greece" },
-];
 
 // Use the shared axios client from ../api/client. It already:
 //   - respects VITE_API_BASE_URL (Vercel → Render in production)
@@ -38,7 +28,7 @@ interface TranslationResult {
   jobId?: number;
 }
 
-export default function QuickTranslate() {
+export default function QuickTranslate({ locales }: { locales: LocaleOption[] }) {
   const [text, setText] = useState("");
   const [selected, setSelected] = useState<string[]>(["it-IT"]);
   const [loading, setLoading] = useState(false);
@@ -101,14 +91,14 @@ export default function QuickTranslate() {
             <div className="field">
               <label className="field-label">Target languages <span style={{ fontWeight: 400, color: "var(--text-3)" }}>(select one or more)</span></label>
               <div className="toggle-group" style={{ flexWrap: "wrap" }}>
-                {LOCALES.map(l => (
+                {locales.map(l => (
                   <button
                     key={l.code}
                     type="button"
                     className={`toggle-pill${selected.includes(l.code) ? " active" : ""}`}
                     onClick={() => toggle(l.code)}
                   >
-                    {l.label}
+                    {`${l.language} — ${l.country}`}
                   </button>
                 ))}
               </div>
