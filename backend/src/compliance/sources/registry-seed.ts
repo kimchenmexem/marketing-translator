@@ -153,4 +153,18 @@ export const COMPLIANCE_SOURCES: RegulatorySourceSeed[] = [
     baseUrl: "https://www.hcmc.gr",
     notes: "Greek HCMC (Hellenic Capital Market Commission). Greece transposes MiFID II via Law 4514/2018 (art. 24 — fair, clear, not-misleading marketing communications); HCMC supplements with national circulars and public investor warnings on misleading 'guaranteed/high-return' and 'get-rich' marketing by unauthorised firms. Authoritative text ingested manually (site blocks programmatic fetch).",
   },
+  {
+    code: "BAFIN",
+    name: "BaFin",
+    regulator: "Bundesanstalt für Finanzdienstleistungsaufsicht",
+    jurisdiction: "DE",
+    localeScope: ["de-DE"],
+    sourceType: "CIRCULAR",
+    canonicality: "PRIMARY",
+    parserKey: "bafin-html",
+    pollCadence: "weekly",
+    active: true,
+    baseUrl: "https://www.bafin.de",
+    notes: "German BaFin (Bundesanstalt für Finanzdienstleistungsaufsicht). Germany transposes MiFID II via the Wertpapierhandelsgesetz (WpHG, §63 ff. — information including marketing communications must be klar, redlich und nicht irreführend); BaFin supplements with national guidance (Rundschreiben/Merkblätter) and consumer warnings on misleading 'guaranteed-return' / 'get-rich' marketing. Authoritative text ingested manually.",
+  },
 ];

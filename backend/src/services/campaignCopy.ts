@@ -56,6 +56,7 @@ const SUPPORTED_LOCALES: LocaleCode[] = [
   "es-ES",
   "en-GB",
   "el-GR",
+  "de-DE",
 ];
 
 // All currently supported locales are LTR. Hebrew/Arabic are not yet
@@ -76,6 +77,7 @@ function localeLanguageLabel(locale: LocaleCode): string {
     "es-ES": "Spanish (Spain)",
     "en-GB": "English (United Kingdom)",
     "el-GR": "Greek (Greece)",
+    "de-DE": "German (Germany)",
   };
   return map[locale];
 }

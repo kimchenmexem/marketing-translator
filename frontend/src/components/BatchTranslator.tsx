@@ -12,6 +12,7 @@ const LOCALE_LABELS: Record<string, string> = {
   "es-ES": "🇪🇸 ES",
   "en-GB": "🇬🇧 UK",
   "el-GR": "🇬🇷 EL",
+  "de-DE": "🇩🇪 DE",
 };
 
 interface AdFormat { id: string; label: string; maxChars: number; hint?: string }

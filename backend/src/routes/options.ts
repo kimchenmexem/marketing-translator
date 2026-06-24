@@ -11,7 +11,8 @@ const locales: LocaleOption[] = [
   { code: "fr-BE", label: "French (Belgium)", language: "French", country: "Belgium" },
   { code: "es-ES", label: "Spanish (Spain)", language: "Spanish", country: "Spain" },
   { code: "en-GB", label: "English (UK)", language: "English", country: "United Kingdom" },
-  { code: "el-GR", label: "Greek (Greece)", language: "Greek", country: "Greece" }
+  { code: "el-GR", label: "Greek (Greece)", language: "Greek", country: "Greece" },
+  { code: "de-DE", label: "German (Germany)", language: "German", country: "Germany" }
 ];
 
 const textTypes: TextTypeOption[] = [

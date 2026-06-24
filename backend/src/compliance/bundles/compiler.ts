@@ -30,7 +30,7 @@ function safeParse<T>(s: string | null | undefined, fallback: T): T {
  * GB is intentionally excluded — FCA bundles stay GB-only unless a caller
  * explicitly opts in via `overlays: ["EU"]`.
  */
-const EU_MEMBER_JURISDICTIONS = new Set(["IT", "FR", "NL", "BE", "ES", "CY", "GR"]);
+const EU_MEMBER_JURISDICTIONS = new Set(["IT", "FR", "NL", "BE", "ES", "CY", "GR", "DE"]);
 
 export interface CompileInput {
   localeCode: string;

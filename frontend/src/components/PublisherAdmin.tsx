@@ -22,8 +22,8 @@ const SUB_TABS: { id: SubTab; label: string }[] = [
   { id: "plan",    label: "Channel Plan" },
 ];
 
-const LOCALES = ["it-IT", "es-ES", "nl-NL", "fr-FR", "nl-BE", "fr-BE", "en-GB", "el-GR"] as const;
-const COUNTRIES = ["IT", "ES", "NL", "FR", "BE", "GB", "GR"] as const;
+const LOCALES = ["it-IT", "es-ES", "nl-NL", "fr-FR", "nl-BE", "fr-BE", "en-GB", "el-GR", "de-DE"] as const;
+const COUNTRIES = ["IT", "ES", "NL", "FR", "BE", "GB", "GR", "DE"] as const;
 const SOURCE_CLASSES = ["publisher", "exchange", "community", "business_media", "official_market"] as const;
 const AUDIENCE_TYPES = ["retail", "active_trader", "professional", "mass_market"] as const;
 const FUNNEL_ROLES = ["awareness", "research", "high_intent", "community", "official_market"] as const;

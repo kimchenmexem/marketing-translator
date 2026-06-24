@@ -23,6 +23,7 @@ const CHECK: Record<LocaleCode, { markers?: RegExp; script?: RegExp; note: strin
   "es-ES": { markers: /\b(acciones|gratis|gratuita|cuenta|riesgo)\b/i, note: "Spanish" },
   "en-GB": { markers: /\b(account|stocks|capital|risk)\b/i, note: "English (UK)" },
   "el-GR": { script: /[Ͱ-Ͽ]/, note: "Greek" },
+  "de-DE": { markers: /\b(Aktien|kostenlos|Konto|Risiko|gebührenfrei|provisionsfrei)\b/i, note: "German" },
 };
 
 const LOCALES = Object.keys(CHECK) as LocaleCode[];

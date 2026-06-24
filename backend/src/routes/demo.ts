@@ -10,7 +10,7 @@ const router = Router();
 
 const demoRequestSchema = z.object({
   text: z.string().min(1),
-  locale: z.enum(["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR"])
+  locale: z.enum(["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR", "de-DE"])
 });
 
 router.post("/check", requireAuth, async (req, res) => {

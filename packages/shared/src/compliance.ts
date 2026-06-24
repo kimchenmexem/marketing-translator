@@ -2,7 +2,7 @@ import type { LocaleCode } from "./index";
 
 // ─── Enum-like string unions (validated at app layer with Zod) ──────
 
-export type Jurisdiction = "EU" | "IT" | "FR" | "NL" | "BE" | "ES" | "GB" | "CY" | "GR";
+export type Jurisdiction = "EU" | "IT" | "FR" | "NL" | "BE" | "ES" | "GB" | "CY" | "GR" | "DE";
 
 export type SourceFamilyCode =
   | "EUR_LEX"
@@ -14,7 +14,8 @@ export type SourceFamilyCode =
   | "CNMV"
   | "CYSEC"
   | "CONSOB"
-  | "HCMC";
+  | "HCMC"
+  | "BAFIN";
 
 export type SourceType =
   | "REGULATION"
