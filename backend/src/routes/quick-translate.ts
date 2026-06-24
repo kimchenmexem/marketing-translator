@@ -17,7 +17,7 @@ import { prisma } from "../db";
 const router = Router();
 
 const SUPPORTED_LOCALES = [
-  "it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB",
+  "it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR",
 ] as const;
 
 const LOCALE_LABELS: Record<string, { language: string; country: string }> = {

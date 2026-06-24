@@ -71,6 +71,7 @@ const localizedRiskPhases: Record<LocaleCode, RegExp> = {
   "fr-BE": /risque|perte/i,
   "es-ES": /riesgo|pérdida/i,
   "en-GB": /risk|loss/i,
+  "el-GR": /κίνδυν|κινδύν|απώλεια|ζημία/i,
 };
 
 const strictViolationPatterns = [
@@ -95,6 +96,7 @@ const localeAwareGuaranteePatterns: Record<LocaleCode, RegExp[]> = {
   "fr-BE": [/garanti|sans risque|100% sûr|aucun risque/i],
   "es-ES": [/garantizado|sin riesgo|100% seguro|ningún riesgo/i],
   "en-GB": [/guaranteed|risk-free|100% safe|no risk/i],
+  "el-GR": [/εγγυημέν|χωρίς ρίσκο|χωρίς κίνδυνο|100% ασφαλ/i],
 };
 
 function matchesAny(text: string, patterns: RegExp[]): boolean {

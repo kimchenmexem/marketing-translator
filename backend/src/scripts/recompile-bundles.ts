@@ -12,7 +12,7 @@ import { prisma } from "../db";
 import { compileDraftBundle } from "../compliance/bundles/compiler";
 import { publishBundle } from "../compliance/bundles/publisher";
 
-const NEW_VERSION = "1.3.0";
+const NEW_VERSION = "1.6.0";
 const TARGETS: Array<{ localeCode: string; primary: string; overlays: string[] }> = [
   { localeCode: "it-IT", primary: "IT", overlays: ["CY"] },
   { localeCode: "fr-FR", primary: "FR", overlays: ["CY"] },
@@ -21,6 +21,7 @@ const TARGETS: Array<{ localeCode: string; primary: string; overlays: string[] }
   { localeCode: "fr-BE", primary: "BE", overlays: ["CY"] },
   { localeCode: "es-ES", primary: "ES", overlays: ["CY"] },
   { localeCode: "en-GB", primary: "GB", overlays: ["CY"] },
+  { localeCode: "el-GR", primary: "GR", overlays: ["CY"] },
 ];
 
 async function main() {

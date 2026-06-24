@@ -74,6 +74,7 @@ function localeLanguageLabel(locale: LocaleCode): string {
     "fr-BE": "French (Belgium)",
     "es-ES": "Spanish (Spain)",
     "en-GB": "English (United Kingdom)",
+    "el-GR": "Greek (Greece)",
   };
   return map[locale];
 }

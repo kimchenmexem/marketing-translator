@@ -20,6 +20,19 @@ export interface RegulatorRules {
 }
 
 const regulatorRules: Record<LocaleCode, RegulatorRules> = {
+  "el-GR": {
+    regulator: "HCMC/ESMA",
+    disclaimer: "Οι επενδύσεις ενέχουν κινδύνους, συμπεριλαμβανομένης της πιθανής απώλειας του κεφαλαίου. Συμβουλευτείτε έναν επαγγελματία χρηματοοικονομικό σύμβουλο.",
+    toneGuidelines: "Maintain neutral, informational tone. Avoid urgency or guarantees.",
+    additionalConstraints: ["No future performance claims", "Include risk warnings"],
+    categories: [
+      { name: "guarantees", patterns: [/εγγυημέν/i, /σίγουρ/i, /χωρίς ρίσκο/i, /χωρίς κίνδυνο/i, /100% ασφαλ/i], severity: 9, description: "Implied or explicit guarantees of returns or safety" },
+      { name: "urgency", patterns: [/τώρα/i, /άμεσα/i, /περιορισμέν/i, /τελευταία ευκαιρία/i], severity: 7, description: "Creating false urgency or scarcity" },
+      { name: "authority", patterns: [/καλύτερ/i, /κορυφαί/i, /ηγέτης/i, /νούμερο ένα/i], severity: 6, description: "False authority or superiority claims" },
+      { name: "promotional", patterns: [/εύκολ/i, /απλ[όήάο]/i, /γρήγορ/i, /χωρίς κόπο/i], severity: 5, description: "Overly promotional or simplified claims" },
+      { name: "wealth", patterns: [/εκατομμυριούχ/i, /πλουτίστε/i, /γίνετε πλούσι/i], severity: 9, description: "Get-rich / wealth-outcome promises" },
+    ],
+  },
   "it-IT": {
     regulator: "ESMA/CySEC",
     disclaimer: "Investimenti finanziari comportano rischi, inclusa la perdita del capitale. Consultare un professionista finanziario.",

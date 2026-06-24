@@ -14,7 +14,7 @@ const router = Router();
 // ─── POST /api/compliance/check ─────────────────────────────────────
 // Standalone compliance check (no translation, no rewrite by default).
 // Reuses the published-bundle pipeline with transparent legacy fallback.
-const SUPPORTED_LOCALES = ["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB"] as const;
+const SUPPORTED_LOCALES = ["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR"] as const;
 
 const complianceCheckSchema = z.object({
   text: z.string().min(1).max(20_000),

@@ -35,11 +35,12 @@ const COUNTRY_NAME: Record<string, string> = {
   "fr-BE": "Belgium",
   "es-ES": "Spain",
   "en-GB": "United Kingdom",
+  "el-GR": "Greece",
 };
 
 const COUNTRY_CODE: Record<string, string> = {
   "it-IT": "IT", "fr-FR": "FR", "nl-NL": "NL", "nl-BE": "BE",
-  "fr-BE": "BE", "es-ES": "ES", "en-GB": "GB",
+  "fr-BE": "BE", "es-ES": "ES", "en-GB": "GB", "el-GR": "GR",
 };
 
 /** Internal DecisionStatus → external product status. */

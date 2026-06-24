@@ -66,7 +66,9 @@ const OBLIGATIONS: SeedObligation[] = [
             "hazte millonario", "vuélvete rico", "duplica tu dinero",
             // NL
             "gegarandeerd rendement", "risicovrij",
-            "word miljonair", "word rijk", "verdubbel je geld"
+            "word miljonair", "word rijk", "verdubbel je geld",
+            // EL (Greek)
+            "εγγυημένες αποδόσεις", "εγγυημένο κέρδος", "χωρίς ρίσκο", "χωρίς κίνδυνο", "μηδενικό ρίσκο", "πλουτίστε"
           ]
         }
       }

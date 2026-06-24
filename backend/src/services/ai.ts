@@ -29,7 +29,8 @@ function getLocaleLanguage(locale: string): string {
     "nl-BE": "Dutch (Belgian)",
     "fr-BE": "French (Belgian)",
     "es-ES": "Spanish (European)",
-    "en-GB": "English (British)"
+    "en-GB": "English (British)",
+    "el-GR": "Greek"
   };
   return map[locale] || "the target";
 }
@@ -221,6 +222,20 @@ OTHER:
 - Financial marketing in the UK tends to be understated and factual. Avoid American-style hyperbole.
 - Prefer British financial terms: "shares" not "stocks" (when referring to equities), "current account" not "checking account".
 - The FCA requires a particularly measured tone — no superlatives, no implied guarantees.`,
+
+    "el-GR": `GREEK (GREECE) STYLE:
+- Write natural, fluent Modern Greek (Ελληνικά) — do NOT mirror English syntax; adapt phrasing and word order to read as if written by a native Greek copywriter.
+- Register: professional and clear. Use the polite plural ("εσείς" / πληθυντικός ευγενείας) for this financial context.
+- TERMINOLOGY (Greek fintech keeps several loanwords — do not force calques):
+  • "trading" → keep "trading" (widely used); the activity of investing → "επένδυση" / "επενδύετε".
+  • "stocks / shares" → "μετοχές"; "stock market" → "χρηματιστήριο"; "bond(s)" → "ομόλογα".
+  • "ETF" / "ETP" stay as-is (invariant, Latin letters); "broker" → "broker" (loanword, common) is acceptable.
+  • "fees / commissions" → "προμήθειες" / "χρεώσεις"; "commission-free" → "χωρίς προμήθεια".
+  • "fractional shares" → "κλασματικές μετοχές".
+- COMPLIANCE-SENSITIVE: never imply guaranteed returns or risk-free investing ("εγγυημένες αποδόσεις", "χωρίς ρίσκο") and never get-rich promises ("γίνετε εκατομμυριούχος", "πλουτίστε"). Balance any benefit with a risk note.
+- Keep brand names (MEXEM, WisdomTree) unchanged.
+- Numbers: comma as decimal separator, period as thousands separator (1.234,56). Currency: € after the amount per Greek convention is acceptable.
+- ALWAYS produce a real translation — never a refusal or meta-commentary.`,
   };
   return guides[locale] ?? "";
 }

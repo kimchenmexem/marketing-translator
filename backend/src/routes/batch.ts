@@ -33,7 +33,7 @@ function pLimit(concurrency: number) {
 
 const limit = pLimit(10);
 
-const LOCALES = ["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB"] as const;
+const LOCALES = ["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR"] as const;
 
 const LOCALE_LANGUAGE: Record<string, string> = {
   "it-IT": "Italian", "fr-FR": "French", "nl-NL": "Dutch",

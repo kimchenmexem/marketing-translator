@@ -15,7 +15,7 @@ import { prisma } from "../db";
 import { compileDraftBundle } from "../compliance/bundles/compiler";
 import { publishBundle } from "../compliance/bundles/publisher";
 
-const NEW_VERSION = "1.5.0";
+const NEW_VERSION = "1.6.0";
 const NEW_PHRASES = [
   "get rich", "get rich quick", "make you a millionaire", "become a millionaire",
   "make you rich", "become rich", "millionaire overnight", "double your money", "triple your money",
@@ -23,6 +23,9 @@ const NEW_PHRASES = [
   "diventa milionario", "diventare ricco", "raddoppia i tuoi soldi",
   "hazte millonario", "vuélvete rico", "duplica tu dinero",
   "word miljonair", "word rijk", "verdubbel je geld",
+  // Greek (stable phrases — inflected forms like "εκατομμυριούχο" are left to the LLM)
+  "εγγυημένες αποδόσεις", "εγγυημένο κέρδος", "εγγυημένο εισόδημα",
+  "χωρίς ρίσκο", "χωρίς κίνδυνο", "μηδενικό ρίσκο", "πλουτίστε",
 ];
 
 const TARGETS: Array<{ localeCode: string; primary: string; overlays: string[] }> = [
@@ -33,6 +36,7 @@ const TARGETS: Array<{ localeCode: string; primary: string; overlays: string[] }
   { localeCode: "fr-BE", primary: "BE", overlays: ["CY"] },
   { localeCode: "es-ES", primary: "ES", overlays: ["CY"] },
   { localeCode: "en-GB", primary: "GB", overlays: ["CY"] },
+  { localeCode: "el-GR", primary: "GR", overlays: ["CY"] },
 ];
 
 async function main() {

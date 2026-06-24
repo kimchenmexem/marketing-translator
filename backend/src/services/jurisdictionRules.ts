@@ -13,6 +13,35 @@ export interface JurisdictionRules {
 }
 
 const RULES: Record<LocaleCode, JurisdictionRules> = {
+  "el-GR": {
+    locale: "el-GR",
+    regulator: "HCMC",
+    language: "Greek",
+    prohibited: [
+      "Guaranteed returns: 'εγγυημένες αποδόσεις', 'σίγουρο κέρδος', 'εγγυημένο εισόδημα'",
+      "Risk-free claims: 'χωρίς ρίσκο', 'χωρίς κίνδυνο', 'ασφαλής επένδυση', 'προστατευμένο κεφάλαιο'",
+      "Urgency tactics: 'περιορισμένη προσφορά', 'δράστε τώρα', 'τελευταία ευκαιρία'",
+      "Unsupported superlatives: 'ο καλύτερος', 'κορυφαίος', 'νούμερο ένα'",
+      "Wealth outcome promises: 'γίνετε εκατομμυριούχος', 'πλουτίστε', 'οικονομική ελευθερία'",
+      "Investment advice: 'πρέπει να επενδύσετε', 'είναι η κατάλληλη στιγμή να επενδύσετε'",
+      "Comparative advertising without substantiated data",
+    ],
+    conditionalRequirements: [
+      "If mentioning returns or performance: must immediately balance with capital-loss risk warning",
+      "If referencing past performance: must state 'Οι προηγούμενες αποδόσεις δεν αποτελούν εγγύηση για τις μελλοντικές αποδόσεις'",
+      "Must not present the product as suitable for all investors without qualification",
+      "Every benefit claim must be accompanied by a corresponding risk disclosure (MiFID II Art. 24(3))",
+    ],
+    compliantFeatures: [
+      "'Χωρίς προμήθεια', 'μηδενικές προμήθειες', '0€ προμήθεια' — pricing model, NOT investment return",
+      "'Διαφανής τιμολόγηση', 'ξεκάθαρες χρεώσεις' — fee transparency feature",
+      "'Επαγγελματική πλατφόρμα', 'προηγμένα εργαλεία' — platform capability",
+      "'Πάνω από 70 ETP', 'πρόσβαση στις παγκόσμιες αγορές' — product catalogue",
+    ],
+    riskWarning: "Οι επενδύσεις ενέχουν κινδύνους, συμπεριλαμβανομένης της μερικής ή ολικής απώλειας του επενδεδυμένου κεφαλαίου.",
+    pastPerformanceDisclaimer: "Οι προηγούμενες αποδόσεις δεν αποτελούν εγγύηση για τις μελλοντικές αποδόσεις.",
+    regulatorNotes: "HCMC (Hellenic Capital Market Commission / Επιτροπή Κεφαλαιαγοράς) is the Greek regulator; MiFID II / ESMA rules apply as Greece is an EU member. Communications must be fair, clear and not misleading, with risks given equivalent prominence to benefits.",
+  },
   "it-IT": {
     locale: "it-IT",
     regulator: "ESMA / CySEC",
