@@ -8,6 +8,12 @@ import { upsertActiveForbiddenPhrase } from "../compliance/forbidden/service";
 
 const router = Router();
 
+// Auto-approve: when on, every submitted review marks its output approved,
+// regardless of the reviewer's decision. The decision is still recorded on the
+// TranslationReview row (and in the audit log) for traceability. Default ON;
+// set AUTO_APPROVE_REVIEWS=false to restore manual approve/reject gating.
+const AUTO_APPROVE_REVIEWS = (process.env.AUTO_APPROVE_REVIEWS ?? "true").toLowerCase() !== "false";
+
 const VALID_ISSUE_CODES = [
   "tone",
   "terminology",
@@ -111,7 +117,8 @@ router.post("/:outputId", requireAuth, async (req, res) => {
       const updatedOutput = await tx.translationOutput.update({
         where: { id: outputId },
         data: {
-          approved: payload.decision === "approved",
+          // Auto-approve when enabled: any submitted review approves the output.
+          approved: AUTO_APPROVE_REVIEWS ? true : payload.decision === "approved",
           reviewNote: payload.note,
         },
       });
@@ -222,6 +229,8 @@ router.post("/:outputId", requireAuth, async (req, res) => {
         // True when this review's correctedTranslation seeded a TM entry
         // that future translations will see as a few-shot example.
         correctedTranslationFedTM: hasCorrection && trimmedCorrection !== output.outputText.trim(),
+        // True when auto-approve forced approval despite a non-"approved" decision.
+        autoApproved: AUTO_APPROVE_REVIEWS && payload.decision !== "approved",
       },
     });
 
