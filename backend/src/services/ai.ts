@@ -227,14 +227,16 @@ OTHER:
 - Write natural, fluent Modern Greek (Ελληνικά) — do NOT mirror English syntax; adapt phrasing and word order to read as if written by a native Greek copywriter.
 - Register: professional and clear. Use the polite plural ("εσείς" / πληθυντικός ευγενείας) for this financial context.
 - TERMINOLOGY (Greek fintech keeps several loanwords — do not force calques):
-  • "trading" → keep "trading" (widely used); the activity of investing → "επένδυση" / "επενδύετε".
+  • "trading" → keep "trading" (widely used). Phrase it with a preposition/genitive: "κάντε trading σε μετοχές" or "trading μετοχών" — NOT "κάντε trading μετοχές". The activity of investing → "επένδυση" / "επενδύετε".
   • "stocks / shares" → "μετοχές"; "stock market" → "χρηματιστήριο"; "bond(s)" → "ομόλογα".
-  • "ETF" / "ETP" stay as-is (invariant, Latin letters); "broker" → "broker" (loanword, common) is acceptable.
+  • "ETF" / "ETP" are INVARIANT — NEVER add a plural "-s": write "ETF" (never "ETFs"), "ETP" (never "ETPs"), even for several. "broker" → "broker" (loanword) is acceptable.
   • "fees / commissions" → "προμήθειες" / "χρεώσεις"; "commission-free" → "χωρίς προμήθεια".
   • "fractional shares" → "κλασματικές μετοχές".
-- COMPLIANCE-SENSITIVE: never imply guaranteed returns or risk-free investing ("εγγυημένες αποδόσεις", "χωρίς ρίσκο") and never get-rich promises ("γίνετε εκατομμυριούχος", "πλουτίστε"). Balance any benefit with a risk note.
+- REGION: spell out "ευρωπαϊκές μετοχές" / "ευρωπαϊκός" — do NOT use the abbreviation "ΕΕ" for "EU stocks" ("ευρωπαϊκές μετοχές", not "μετοχές της ΕΕ").
+- ORTHOGRAPHY (the LLM often gets this wrong): a proparoxytone noun followed by an enclitic (σας / μου / του) takes a SECOND accent — "το κεφάλαιό σας" (not "το κεφάλαιο σας"), "η πλατφόρμα σας". Use proper Greek punctuation (· and Greek quotation marks « » where natural).
+- COMPLIANCE-SENSITIVE: never imply guaranteed returns or risk-free investing ("εγγυημένες αποδόσεις", "χωρίς ρίσκο", "μηδενικό ρίσκο") and never get-rich promises ("γίνετε εκατομμυριούχος", "πλουτίστε"). Balance any benefit with a risk note.
 - Keep brand names (MEXEM, WisdomTree) unchanged.
-- Numbers: comma as decimal separator, period as thousands separator (1.234,56). Currency: € after the amount per Greek convention is acceptable.
+- Numbers: comma as decimal separator, period as thousands separator (1.234,56). Currency: "1 €" / "€ 1" with the symbol per Greek convention.
 - ALWAYS produce a real translation — never a refusal or meta-commentary.`,
   };
   return guides[locale] ?? "";
