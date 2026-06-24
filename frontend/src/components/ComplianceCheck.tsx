@@ -8,21 +8,11 @@
  */
 
 import { useState } from "react";
+import type { LocaleOption } from "@mexem/shared";
 import ComplianceFeedbackPanel from "./ComplianceFeedbackPanel";
 import * as compliance from "../api/compliance";
 
-const LOCALES: Array<{ code: string; label: string }> = [
-  { code: "it-IT", label: "Italian (Italy)" },
-  { code: "fr-FR", label: "French (France)" },
-  { code: "nl-NL", label: "Dutch (Netherlands)" },
-  { code: "nl-BE", label: "Dutch (Belgium)" },
-  { code: "fr-BE", label: "French (Belgium)" },
-  { code: "es-ES", label: "Spanish (Spain)" },
-  { code: "en-GB", label: "English (UK)" },
-  { code: "el-GR", label: "Greek (Greece)" },
-];
-
-export default function ComplianceCheck() {
+export default function ComplianceCheck({ locales }: { locales: LocaleOption[] }) {
   const [text, setText] = useState("");
   const [locale, setLocale] = useState("en-GB");
   const [loading, setLoading] = useState(false);
@@ -71,7 +61,7 @@ export default function ComplianceCheck() {
             <div className="field">
               <label className="field-label">Target locale / country</label>
               <select className="select" value={locale} onChange={e => setLocale(e.target.value)}>
-                {LOCALES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+                {locales.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
               </select>
             </div>
             <div className="field">

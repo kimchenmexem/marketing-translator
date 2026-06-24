@@ -155,7 +155,7 @@ export default function App() {
             : <div style={{ color: "var(--text-3)", padding: "2rem 0", fontSize: "0.875rem" }}>Loading…</div>
         )}
         {tab === "quick" && <QuickTranslate locales={locales} />}
-        {tab === "check" && <ComplianceCheck />}
+        {tab === "check" && <ComplianceCheck locales={locales} />}
         {tab === "queue" && <ReviewerQueue />}
         {tab === "compliance" && <ComplianceAdmin />}
         {tab === "publishers" && <PublisherAdmin />}
