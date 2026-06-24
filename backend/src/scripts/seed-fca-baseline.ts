@@ -105,7 +105,7 @@ const OBLIGATIONS: SeedObligation[] = [
     severity: "major",
     sourceRefs: [
       { sourceCode: "FCA", documentRef: "COBS 4.5.2R", quote: "Information must not disguise, diminish or obscure important warnings." },
-      { sourceCode: "FCA", documentRef: "COBS 4.6.7G", quote: "Risk warnings should be presented in a way which is likely to be understood by the average member of the group to whom it is directed." },
+      { sourceCode: "FCA", documentRef: "COBS 4.5.2R", quote: "is sufficient for, and presented in a way that is likely to be understood by, the average member of the group to whom it is directed" },
     ],
     rules: [
       {
@@ -136,12 +136,11 @@ const OBLIGATIONS: SeedObligation[] = [
   // 4 — past performance disclaimer (COBS 4.6)
   {
     title: "Past performance disclaimer required when historical performance is referenced (UK FCA)",
-    description: "FCA COBS 4.6.2R + 4.6.7G require a clear statement that past performance is not a reliable indicator of future results whenever historical or past performance is referenced in a UK retail promotion.",
+    description: "FCA COBS 4.6.2R requires a clear statement that past performance is not a reliable indicator of future results whenever historical or past performance is referenced in a UK retail promotion.",
     category: "past_performance",
     severity: "major",
     sourceRefs: [
       { sourceCode: "FCA", documentRef: "COBS 4.6.2R", quote: "Past performance must not be the most prominent feature of the promotion, and must be accompanied by a prominent warning." },
-      { sourceCode: "FCA", documentRef: "COBS 4.6.7G" },
     ],
     rules: [
       {
