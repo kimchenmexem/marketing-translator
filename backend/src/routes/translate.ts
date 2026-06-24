@@ -27,7 +27,7 @@ const lengthConstraintSchema = z.object({
 const requestSchema = z.object({
   sourceText: z.string().min(1),
   sourceLanguage: z.string().min(2),
-  targetLocale: z.enum(["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB"]),
+  targetLocale: z.enum(["it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR"]),
   textType: z.string(),
   persona: z.string(),
   tone: z.union([z.string(), z.array(z.string())]),

@@ -165,6 +165,7 @@ function getJurisdictionDisclaimer(locale: LocaleCode): string {
     "fr-BE": "Les investissements financiers comportent des risques, y compris la perte du capital. Consultez un conseiller financier.",
     "es-ES": "Las inversiones financieras conllevan riesgos, incluyendo la pérdida del capital. Consulte a un asesor financiero.",
     "en-GB": "Financial investments carry risk, including the potential loss of capital. Seek independent financial advice if unsure.",
+    "el-GR": "Οι επενδύσεις ενέχουν κινδύνους, συμπεριλαμβανομένης της πιθανής απώλειας του κεφαλαίου. Συμβουλευτείτε έναν χρηματοοικονομικό σύμβουλο.",
     "de-DE": "Finanzinvestitionen bergen Risiken, einschließlich des Verlusts des eingesetzten Kapitals. Konsultieren Sie einen Finanzberater.",
     "pt-PT": "Os investimentos financeiros envolvem riscos, incluindo a perda de capital. Consulte um assessor financeiro."
   };

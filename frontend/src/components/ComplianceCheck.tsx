@@ -19,6 +19,7 @@ const LOCALES: Array<{ code: string; label: string }> = [
   { code: "fr-BE", label: "French (Belgium)" },
   { code: "es-ES", label: "Spanish (Spain)" },
   { code: "en-GB", label: "English (UK)" },
+  { code: "el-GR", label: "Greek (Greece)" },
 ];
 
 export default function ComplianceCheck() {

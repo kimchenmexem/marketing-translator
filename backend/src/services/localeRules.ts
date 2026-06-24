@@ -9,6 +9,7 @@ const COMPLIANCE_FORBIDDEN: Record<LocaleCode, string[]> = {
   "fr-BE": ["garanti", "sûr", "sans risque", "immédiatement", "maintenant", "limité", "dernière chance", "meilleur", "top", "leader", "numéro un", "facile", "simple", "rapide", "sans effort"],
   "es-ES": ["garantizado", "seguro", "sin riesgo", "inmediatamente", "ahora", "limitado", "última oportunidad", "mejor", "top", "líder", "número uno", "fácil", "simple", "rápido", "sin esfuerzo"],
   "en-GB": ["guaranteed", "safe", "risk-free", "immediately", "now", "limited", "last chance", "best", "top", "leader", "number one", "easy", "simple", "fast", "effortless"],
+  "el-GR": ["εγγυημένο", "εγγυημένες", "σίγουρο", "ασφαλές", "χωρίς ρίσκο", "χωρίς κίνδυνο", "τώρα", "άμεσα", "περιορισμένη", "τελευταία ευκαιρία", "καλύτερο", "κορυφαίο", "ηγέτης", "νούμερο ένα", "εύκολο", "απλό", "γρήγορο", "εκατομμυριούχος", "πλουτίστε"],
 };
 
 export function getComplianceForbiddenWords(locale: LocaleCode): string[] {
@@ -23,7 +24,8 @@ export function getLocaleRules(locale: LocaleCode): string {
     "nl-BE": "Use Dutch for Belgium with a more neutral, locally aware tone. Avoid Netherlands-specific expressions and use Belgian Dutch conventions.",
     "fr-BE": "Use French for Belgium with Belgian conventions and a slightly warmer tone. Avoid France-specific idioms and keep compliance language accurate.",
     "es-ES": "Use Castilian Spanish for Spain with natural marketing phrasing. Keep regulatory language clear and factual.",
-    "en-GB": "Use British English spelling and conventions (e.g. 'capitalise', 'colour', 'programme'). Maintain a professional, FCA-compliant tone. Keep language factual and avoid promotional exaggeration."
+    "en-GB": "Use British English spelling and conventions (e.g. 'capitalise', 'colour', 'programme'). Maintain a professional, FCA-compliant tone. Keep language factual and avoid promotional exaggeration.",
+    "el-GR": "Use standard Modern Greek (Ελληνικά) for Greece with a professional, clear marketing tone. 'trading' and 'ETF'/'ETP' are commonly kept as loanwords in Greek fintech. Keep brand names (MEXEM, WisdomTree) unchanged and regulatory language factual."
   };
 
   return rules[locale] ?? "Use the target locale conventions and keep marketing copy natural, compliant, and aligned with brand tone.";

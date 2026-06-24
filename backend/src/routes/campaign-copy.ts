@@ -22,7 +22,7 @@ import { requireAuthOrApiKey } from "../middleware/serviceAuth";
 const router = Router();
 
 const SUPPORTED_LOCALES = [
-  "it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB",
+  "it-IT", "fr-FR", "nl-NL", "nl-BE", "fr-BE", "es-ES", "en-GB", "el-GR",
 ] as const;
 
 const briefSchema = z.object({

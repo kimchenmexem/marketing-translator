@@ -1,4 +1,4 @@
-export type LocaleCode = "it-IT" | "fr-FR" | "nl-NL" | "nl-BE" | "fr-BE" | "es-ES" | "en-GB";
+export type LocaleCode = "it-IT" | "fr-FR" | "nl-NL" | "nl-BE" | "fr-BE" | "es-ES" | "en-GB" | "el-GR";
 
 export * from "./compliance";
 export * from "./publisher";
