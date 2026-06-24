@@ -40,6 +40,7 @@
     "test:fr-trading-rules": "ts-node --transpile-only src/test/fr-trading-rules-tests.ts",
     "test:es-trading-rules": "ts-node --transpile-only src/test/es-trading-rules-tests.ts",
     "test:nl-trading-rules": "ts-node --transpile-only src/test/nl-trading-rules-tests.ts",
+    "test:el-trading-rules": "ts-node --transpile-only src/test/el-trading-rules-tests.ts",
     "test:admin-auth": "ts-node --transpile-only src/test/admin-auth-tests.ts",
     "test:translation-failures": "ts-node --transpile-only src/test/translation-failure-tests.ts",
     "test:integration": "ts-node --transpile-only src/test/integration-tests.ts",

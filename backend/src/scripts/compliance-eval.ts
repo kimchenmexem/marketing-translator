@@ -34,7 +34,18 @@ interface Case {
 
 const LOCALE = (process.env.EVAL_LOCALE ?? "en-GB") as any;
 
-const CASES: Case[] = [
+// Greek (el-GR) golden set — used when EVAL_LOCALE=el-GR.
+const GREEK_CASES: Case[] = [
+  // Compliant
+  { text: "Η MEXEM είναι ευρωπαϊκός broker με πρόσβαση σε πάνω από 170 αγορές. Οι επενδύσεις ενέχουν κίνδυνο, συμπεριλαμβανομένης της πιθανής απώλειας του κεφαλαίου.", expect: "approved", strict: true, note: "neutral + risk disclosure" },
+  { text: "Επενδύστε σε ευρωπαϊκές μετοχές και ETF με τη MEXEM. Το άνοιγμα λογαριασμού είναι δωρεάν. Το κεφάλαιό σας διατρέχει κίνδυνο. Δεν αποτελεί επενδυτική συμβουλή.", expect: "approved", strict: true, note: "factual CTA + disclaimers" },
+  // Violations
+  { text: "Εγγυημένες αποδόσεις 20% χωρίς ρίσκο με τη MEXEM!", expect: "flagged", category: "no_guarantees", strict: true, note: "guaranteed returns + risk-free (banned phrases)" },
+  { text: "Η MEXEM θα σας κάνει εκατομμυριούχο μέσα σε έναν μήνα.", expect: "flagged", category: "no_guarantees", note: "get-rich promise (inflected — LLM)" },
+  { text: "Επενδυτική συμβουλή: πρέπει να αγοράσετε μετοχές της Tesla τώρα, είναι η καλύτερη επένδυση.", expect: "flagged", category: "no_financial_advice", note: "direct investment advice" },
+];
+
+const EN_CASES: Case[] = [
   // ── Compliant (must NOT be over-flagged) ──────────────────────────────────
   {
     text: "MEXEM is a European broker offering access to over 170 markets. All investments involve risk, including the possible loss of capital.",
@@ -101,6 +112,8 @@ const CASES: Case[] = [
     expect: "flagged", category: "past_performance", note: "past performance implying future, no disclaimer",
   },
 ];
+
+const CASES: Case[] = LOCALE === "el-GR" ? GREEK_CASES : EN_CASES;
 
 async function mapPool<T, R>(items: T[], limit: number, fn: (t: T, i: number) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);

@@ -8,6 +8,8 @@ import { applySpanishTradingGate } from "./spanishTradingGate";
 import type { SpTradingFinding, SpTradingRepair } from "./spanishTradingLint";
 import { applyDutchTradingGate } from "./dutchTradingGate";
 import type { NlTradingFinding, NlTradingRepair } from "./dutchTradingLint";
+import { applyGreekTradingGate } from "./greekTradingGate";
+import type { ElTradingFinding, ElTradingRepair } from "./greekTradingLint";
 import { prisma } from "../db";
 
 export type ReviewStage = "initial" | "repair" | "regeneration";
@@ -39,6 +41,10 @@ export interface QualityGateResult {
   nlTradingRepairs?: NlTradingRepair[];
   /** Dutch trading-terminology findings left as warnings (not auto-mutated). */
   nlTradingWarnings?: NlTradingFinding[];
+  /** Deterministic Greek trading-terminology repairs applied (el-GR). */
+  elTradingRepairs?: ElTradingRepair[];
+  /** Greek trading-terminology findings left as warnings (not auto-mutated). */
+  elTradingWarnings?: ElTradingFinding[];
 }
 
 interface ReviewTrailEntry {
@@ -74,7 +80,8 @@ export async function runQualityGate(
   const fpre = applyFrenchTradingGate(sourceText, translation, targetLocale);
   const spre = applySpanishTradingGate(sourceText, fpre.text, targetLocale);
   const npre = applyDutchTradingGate(sourceText, spre.text, targetLocale);
-  const preText = npre.text;
+  const gpre = applyGreekTradingGate(sourceText, npre.text, targetLocale);
+  const preText = gpre.text;
 
   const inner = await runQualityGateInner(
     sourceText, preText, targetLocale, textType, sourceLanguage, systemPrompt, existingVersions
@@ -85,22 +92,26 @@ export async function runQualityGate(
   const fpost = applyFrenchTradingGate(sourceText, inner.outputText, targetLocale, { silent: !changed });
   const spost = applySpanishTradingGate(sourceText, fpost.text, targetLocale, { silent: !changed });
   const npost = applyDutchTradingGate(sourceText, spost.text, targetLocale, { silent: !changed });
+  const gpost = applyGreekTradingGate(sourceText, npost.text, targetLocale, { silent: !changed });
 
   // Pre-pass repairs are the canonical record; add post-pass repairs only when
   // the LLM actually changed the text.
   const frRepairs = changed ? dedupeRepairs([...fpre.repairs, ...fpost.repairs]) : fpre.repairs;
   const esRepairs = changed ? dedupeRepairs([...spre.repairs, ...spost.repairs]) : spre.repairs;
   const nlRepairs = changed ? dedupeRepairs([...npre.repairs, ...npost.repairs]) : npre.repairs;
+  const elRepairs = changed ? dedupeRepairs([...gpre.repairs, ...gpost.repairs]) : gpre.repairs;
 
   return {
     ...inner,
-    outputText: npost.text,
+    outputText: gpost.text,
     frTradingRepairs: frRepairs,
     frTradingWarnings: fpost.warnings,
     esTradingRepairs: esRepairs,
     esTradingWarnings: spost.warnings,
     nlTradingRepairs: nlRepairs,
     nlTradingWarnings: npost.warnings,
+    elTradingRepairs: elRepairs,
+    elTradingWarnings: gpost.warnings,
   };
 }
 

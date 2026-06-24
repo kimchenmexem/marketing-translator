@@ -58,7 +58,7 @@ export function matchWholePhrase(text: string, phrase: string): string | null {
  * translated differently from the bundle's canonical text still counts.
  */
 const DISCLAIMER_MARKERS =
-  /\b(risk|risks|risico'?s?|risque|risques|riesgo|riesgos|rischio|rischi|loss|lose|losing|verlies|verliezen|perte|perdre|p[ée]rdida|perder|perdita|perdere|warning|caution|disclaimer|avertissement|advertencia|avvertenza|waarschuwing|let op|aviso)\b|capital|past performance|performances? pass[ée]es?|rendimientos? pasados?|rendimenti passati|in het verleden|terms (?:and|&) conditions|conditions g[ée]n[ée]rales|t[ée]rminos y condiciones|termini e condizioni|algemene voorwaarden|\bvoorwaarden\b/iu;
+  /\b(risk|risks|risico'?s?|risque|risques|riesgo|riesgos|rischio|rischi|loss|lose|losing|verlies|verliezen|perte|perdre|p[ée]rdida|perder|perdita|perdere|warning|caution|disclaimer|avertissement|advertencia|avvertenza|waarschuwing|let op|aviso)\b|capital|past performance|performances? pass[ée]es?|rendimientos? pasados?|rendimenti passati|in het verleden|terms (?:and|&) conditions|conditions g[ée]n[ée]rales|t[ée]rminos y condiciones|termini e condizioni|algemene voorwaarden|\bvoorwaarden\b|κίνδυν|απώλει|ζημί|προειδοποίηση|παρελθούσες αποδόσεις|προηγούμενες αποδόσεις/iu;
 
 /** True when the text contains any recognised disclaimer / risk-disclosure language. */
 export function hasAnyDisclaimer(text: string): boolean {
