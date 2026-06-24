@@ -248,7 +248,7 @@ function resolveEvidence(text: string, finding: LlmFinding): string {
 
 /** Explicit "this is not advice / educational only" disclaimer, across locales. */
 const NOT_ADVICE_DISCLAIMER =
-  /\b(do(es)? not constitute (investment |financial )?advice|not (intended as |investment |financial )?advice|(educational|informational) purposes only|for (educational|informational) purposes|ne constitue pas un conseil|à titre (informatif|éducatif)|no constituye (asesoramiento|consejo)|fines (informativos|educativos)|non costituisce (consulenza|consiglio)|vormt geen (beleggings)?advies|informatieve doeleinden)\b/iu;
+  /\b(do(es)? not constitute (investment |financial )?advice|not (intended as |investment |financial )?advice|(educational|informational) purposes only|for (educational|informational) purposes|ne constitue pas un conseil|à titre (informatif|éducatif)|no constituye (asesoramiento|consejo)|fines (informativos|educativos)|non costituisce (consulenza|consiglio)|vormt geen (beleggings)?advies|informatieve doeleinden)\b|δεν (?:αποτελεί|συνιστά) (?:επενδυτική |οικονομική |χρηματοοικονομική )?συμβουλή|για (?:ενημερωτικούς|εκπαιδευτικούς) (?:σκοπούς|λόγους)/iu;
 
 /** "Missing risk / performance disclosure" categories — satisfied when the text
  *  actually carries a risk disclaimer, so they should not be raised then. */

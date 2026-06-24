@@ -34,6 +34,11 @@ export const qualityGateConfig = {
     const v = (process.env.NL_TRADING_GATE ?? "repair").toLowerCase();
     return v === "warn" || v === "off" ? v : "repair";
   })(),
+  /** Greek (el-GR) trading-terminology gate — same modes. */
+  grTradingGateMode: ((): "repair" | "warn" | "off" => {
+    const v = (process.env.GR_TRADING_GATE ?? "repair").toLowerCase();
+    return v === "warn" || v === "off" ? v : "repair";
+  })(),
   /** Max tokens for the review call */
   reviewMaxTokens: 800,
   /** Max tokens for the repair call */

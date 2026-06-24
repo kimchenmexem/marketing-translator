@@ -41,6 +41,10 @@ const PROMO = "Earn guaranteed 20% returns with MEXEM. Profits assured every mon
 assert(!suppressLlmFinding("no_guarantees", "guaranteed 20% returns", PROMO), "guarantee claim (no disclaimer) → kept");
 assert(!suppressLlmFinding("risk_balance", "guaranteed 20% returns", PROMO), "benefits w/o any risk disclosure → kept");
 assert(!suppressLlmFinding("no_financial_advice", "you should buy MEXEM shares now", "Buy MEXEM shares now — our top pick!"), "advice w/o a not-advice disclaimer → kept");
+// Greek: a not-advice finding on text carrying the Greek not-advice disclaimer → suppressed.
+const EL_ARTICLE = "Επενδύστε σε ευρωπαϊκές μετοχές με τη MEXEM. Το κεφάλαιό σας διατρέχει κίνδυνο. Δεν αποτελεί επενδυτική συμβουλή.";
+assert(suppressLlmFinding("no_financial_advice", "Επενδύστε σε μετοχές", EL_ARTICLE), "EL not-advice disclaimer present → suppressed");
+assert(!suppressLlmFinding("no_financial_advice", "αγοράστε μετοχές Tesla", "Πρέπει να αγοράσετε μετοχές της Tesla τώρα."), "EL advice w/o not-advice disclaimer → kept");
 // A guarantee claim is NOT excused merely because a risk disclaimer also appears.
 assert(
   !suppressLlmFinding("no_guarantees", "guaranteed returns", "Guaranteed returns! (Capital at risk.)"),
